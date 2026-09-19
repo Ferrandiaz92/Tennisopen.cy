@@ -187,6 +187,10 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .bacts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px}
 .bacts button{border:0;border-radius:999px;padding:7px 14px;font-weight:700;font-size:12px;background:var(--acc-ink);color:var(--acc)}
 .bacts button:last-child{background:transparent;color:var(--acc-ink);border:2px solid var(--acc-ink)}
+.sync{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 0;font-size:12px;font-weight:600;color:rgba(246,241,227,.8);text-align:center}
+.sync i{width:8px;height:8px;border-radius:50%;background:#9aa7a0;flex:none}
+.sync.ok i{background:#5fe08a;box-shadow:0 0 0 3px rgba(95,224,138,.25)}
+.sync.bad{color:#ffb4a3}.sync.bad i{background:#ff7a5c}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results": {}, "shareUrl": ""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2627,14 +2631,18 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false
+  tab: 'men', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
   const f = sessionStorage.getItem('lt-filter'); if (f) S.filter = f;
   const o = sessionStorage.getItem('lt-sort'); if (o) S.sort = o;
 } catch (e) { /* storage unavailable */ }
-const STANDALONE = typeof claude === 'undefined';
+const STANDALONE = true; // hosted on GitHub Pages; shared scores live in Firebase
+const DB_URL = 'https://tennisopen-7bc8d-default-rtdb.europe-west1.firebasedatabase.app';
+const ORG_PIN = '1992';
+const RESULTS_URL = DB_URL + '/tennis/results';
+const POLL_MS = 8000;
 const remember = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } };
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2655,14 +2663,20 @@ function header() {
   return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
 }
 
+function syncBar() {
+  const s = S.sync;
+  if (s.status === 'live') return `<p class="sync ok"><i></i>Live \u00b7 updated ${s.at}</p>`;
+  if (s.status === 'offline') return `<p class="sync bad"><i></i>No connection \u2014 showing the last results${s.at ? ' from ' + s.at : ''}. Retrying\u2026</p>`;
+  return '<p class="sync"><i></i>Loading latest results\u2026</p>';
+}
+
 function nav() {
   const tabs = [['men', 'Men'], ['women', 'Women'], ['sched', 'Order of play']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <button class="ghost" data-act="share">Share \u00b7 QR code</button></div>
-    ${S.canEdit ? (STANDALONE
-      ? '<div class="banner">Organizer mode \u2014 tap any match to enter a score. Scores are saved on this device.<div class="bacts"><button data-act="download">Download updated file</button><button data-act="exitorg">Exit organizer mode</button></div></div>'
-      : '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score.</div>') : ''}`;
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div></div>' : ''}
+    ${syncBar()}`;
 }
 
 function mcell(x) {
@@ -2757,7 +2771,11 @@ function renderModal() {
   const md = S.modal;
   if (!md) { $modal.innerHTML = ''; return; }
   let body = '';
-  if (md.type === 'match') {
+  if (md.type === 'pin') {
+    body = `<p class="dmeta">Organizer</p><h3 id="dt">Enter your PIN</h3>
+      <div class="dl-row"><label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Organizer PIN"></div>
+      <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="pin">Unlock</button><button class="btn txt" data-act="close">Cancel</button></div>`;
+  } else if (md.type === 'match') {
     const m = matchById(md.id); const r = getResult(S.data, m); const cat = CAT_BY_KEY[m.cat];
     const meta = `Round ${m.round} \u00b7 ${ROUND_TIMES[m.round - 1]} \u00b7 Court ${m.court}`;
     const title = `${cat.league === 'men' ? "Men\u2019s" : "Women\u2019s"} ${cat.label}`;
@@ -2815,28 +2833,42 @@ function buildDoc(state) {
     '<' + T + ' id="app">' + g('app') + '</' + T + '></body></html>';
 }
 
-async function persist(next) {
-  if (STANDALONE) {
-    S.data = next; S.busy = false; S.modal = null;
-    try { localStorage.setItem('lt-results', JSON.stringify(next.results)); } catch (e) { toast('Could not save on this device.'); }
-    renderModal(); render(); toast('Saved \u2014 standings updated');
-    return;
-  }
+async function persist(next, matchId) {
+  // Writes one match to the shared database, then shows it immediately.
   S.busy = true; renderModal();
   try {
-    const art = await claude.use('artifact');
-    if (!art) throw { code: 'not_granted' };
-    await art.publish(buildDoc(next)); // page reloads with the new version
+    const url = `${RESULTS_URL}/${encodeURIComponent(matchId)}.json`;
+    const res = next.results[matchId]
+      ? await fetch(url, { method: 'PUT', body: JSON.stringify(next.results[matchId]) })
+      : await fetch(url, { method: 'DELETE' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.data = next; S.busy = false; S.modal = null;
+    S.sync = { status: 'live', at: clock() };
+    renderModal(); render(); toast('Saved \u2014 standings updated for everyone');
   } catch (e) {
     S.busy = false;
-    const code = e && e.code;
-    if (code === 'conflict') return; // view is reloading to the latest version
-    const msg = code === 'not_writer' || code === 'not_granted' || code === 'not_declared'
-      ? 'This link is read-only. Only the organizer can save scores.'
-      : code === 'rate_limited' ? 'Too many saves at once. Wait a few seconds and try again.'
-      : 'Could not save. Check your connection and try again.';
-    if (S.modal) S.modal.error = msg;
+    if (S.modal) S.modal.error = 'Could not save. Check your connection and press Save again.';
     renderModal();
+  }
+}
+
+const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+async function pollResults() {
+  if (document.hidden || S.busy || S.modal) return;
+  try {
+    const res = await fetch(RESULTS_URL + '.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const remote = (await res.json()) || {};
+    const clean = {};
+    Object.keys(remote).forEach(k => { const v = remote[k]; if (Array.isArray(v) && Number.isInteger(v[0]) && Number.isInteger(v[1])) clean[k] = v; });
+    const changed = JSON.stringify(clean) !== JSON.stringify(S.data.results) || S.sync.status !== 'live';
+    S.data = { ...S.data, results: clean };
+    S.sync = { status: 'live', at: clock() };
+    if (changed) render(); else { const el = document.querySelector('.sync'); if (el) el.outerHTML = syncBar(); }
+  } catch (e) {
+    S.sync = { status: 'offline', at: S.sync.at };
+    const el = document.querySelector('.sync'); if (el) el.outerHTML = syncBar();
   }
 }
 
@@ -2848,18 +2880,18 @@ function saveScore() {
   const na = Number(a), nb = Number(b);
   if (!Number.isInteger(na) || !Number.isInteger(nb) || na < 0 || nb < 0 || na > 99 || nb > 99) return fail('Scores must be whole numbers from 0 to 99.');
   if (na === nb) return fail('A match needs a winner. Scores can\u2019t be level.');
-  persist({ ...S.data, results: { ...S.data.results, [m.id]: [na, nb] } });
+  persist({ ...S.data, results: { ...S.data.results, [m.id]: [na, nb] } }, m.id);
 }
 
 function clearScore() {
   const res = { ...S.data.results }; delete res[S.modal.id];
-  persist({ ...S.data, results: res });
+  persist({ ...S.data, results: res }, S.modal.id);
 }
 
 function saveUrl() {
   const v = (document.getElementById('newurl').value || '').trim();
   if (v && !/^https?:\/\//i.test(v)) { S.modal.error = 'Enter a full link starting with https://'; renderModal(); return; }
-  persist({ ...S.data, shareUrl: v });
+  S.modal.error = '';
 }
 
 function downloadFile() {
@@ -2871,8 +2903,21 @@ function downloadFile() {
   toast('Downloaded. Upload it to your host to show players the latest scores.');
 }
 function exitOrganizer() {
-  try { localStorage.removeItem('lt-org'); localStorage.removeItem('lt-results'); } catch (e) { /* ignore */ }
-  location.hash = ''; location.reload();
+  try { localStorage.removeItem('lt-org'); } catch (e) { /* ignore */ }
+  S.canEdit = false; history.replaceState(null, '', location.pathname + location.search); render();
+  toast('Organizer mode locked. Scores are safe in the database.');
+}
+
+function askPin() {
+  S.modal = { type: 'pin', error: '' }; renderModal();
+}
+function submitPin() {
+  const v = (document.getElementById('pin').value || '').trim();
+  if (v !== ORG_PIN) { S.modal.error = 'Wrong PIN. Try again.'; renderModal(); return; }
+  try { localStorage.setItem('lt-org', '1'); } catch (e) { /* ignore */ }
+  S.canEdit = true; S.modal = null; renderModal(); render();
+  history.replaceState(null, '', location.pathname + location.search);
+  toast('Organizer mode unlocked');
 }
 
 /* ---------- Events ---------- */
@@ -2888,7 +2933,7 @@ document.addEventListener('click', ev => {
   else if (act === 'close') closeModal();
   else if (act === 'save') saveScore();
   else if (act === 'clear') clearScore();
-  else if (act === 'saveurl') saveUrl();
+  else if (act === 'pin') submitPin();
   else if (act === 'download') downloadFile();
   else if (act === 'exitorg') exitOrganizer();
   else if (act === 'selecturl') el.select();
@@ -2903,28 +2948,18 @@ document.addEventListener('change', ev => {
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && S.modal) closeModal();
-  if (ev.key === 'Enter' && S.modal && S.modal.type === 'match' && S.canEdit && ev.target.tagName === 'INPUT') saveScore();
+  if (ev.key === 'Enter' && S.modal && ev.target.tagName === 'INPUT') { if (S.modal.type === 'match' && S.canEdit) saveScore(); else if (S.modal.type === 'pin') submitPin(); }
 });
 
 /* ---------- Boot ---------- */
 $page.insertAdjacentHTML('beforebegin', RACKET_SYMBOL);
-render();
-(async function detectOrganizer() {
-  try {
-    if (STANDALONE) {
-      const init = () => { try {
-        if (location.hash === '#organizer') localStorage.setItem('lt-org', '1');
-        if (localStorage.getItem('lt-org') === '1') {
-          const r = JSON.parse(localStorage.getItem('lt-results') || 'null');
-          if (r) S.data.results = r; else localStorage.setItem('lt-results', JSON.stringify(S.data.results));
-          S.canEdit = true; render();
-        }
-      } catch (e) { /* storage unavailable */ } };
-      init(); window.addEventListener('hashchange', init);
-      return;
-    }
-    const user = await claude.use('user');
-    if (user && user.canEdit()) { S.canEdit = true; render(); }
-  } catch (e) { /* read-only view */ }
+(function boot() {
+  try { if (localStorage.getItem('lt-org') === '1') S.canEdit = true; } catch (e) { /* ignore */ }
+  const checkHash = () => { if (location.hash === '#organizer' && !S.canEdit) askPin(); };
+  window.addEventListener('hashchange', checkHash);
+  render(); checkHash();
+  pollResults();
+  setInterval(pollResults, POLL_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pollResults(); });
 })();
 </script></body></html>
