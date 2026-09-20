@@ -191,6 +191,14 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .sync i{width:8px;height:8px;border-radius:50%;background:#9aa7a0;flex:none}
 .sync.ok i{background:#5fe08a;box-shadow:0 0 0 3px rgba(95,224,138,.25)}
 .sync.bad{color:#ffb4a3}.sync.bad i{background:#ff7a5c}
+
+.gh{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.dlg{max-height:calc(100vh - 32px)}
+.dlg.wide{max-width:660px}
+.rules h4{margin:18px 0 6px;font-size:15px;font-weight:800;color:var(--ink);padding-bottom:4px;border-bottom:2px solid var(--acc)}
+.rules ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.55}
+.rules li{margin:3px 0}
+.rules .ex{margin-top:14px;background:var(--row);border:1px solid var(--line);border-left:5px solid var(--acc2);border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.55}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results": {}, "shareUrl": ""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2674,7 +2682,7 @@ function nav() {
   const tabs = [['men', 'Men'], ['women', 'Women'], ['sched', 'Order of play']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
-    <button class="ghost" data-act="share">Share \u00b7 QR code</button></div>
+    <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
     ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div></div>' : ''}
     ${syncBar()}`;
 }
@@ -2716,7 +2724,8 @@ function catCard(cat) {
 function standings(league) {
   const cats = CATS.filter(c => c.league === league);
   const tools = `<div class="tools"><div class="seg" role="group" aria-label="Sort players"><button data-act="sort" data-sort="pos" aria-pressed="${S.sort === 'pos'}">By position</button><button data-act="sort" data-sort="draw" aria-pressed="${S.sort === 'draw'}">Draw order</button></div></div>`;
-  const foot = `<p class="foot"><b>Each player plays 4 matches.</b> W${'\u2011'}L adds up wins and losses; Games W${'\u2011'}L adds up games won and lost.<br>Tie\u2011breaker (2 players): head\u2011to\u2011head winner ranks higher <span class="dot"></span> Tie\u2011breaker (3+ players): best games differential (GW${'\u2011'}GL) ranks higher<br>Tap any match for details.</p>`;
+  const skip = cats.filter(c => c.players.length === 6).map(c => `<br><b>${c.label}: Round 5 is not played \u2014 P1 vs P6 \u00b7 P2 vs P5 \u00b7 P3 vs P4</b>`).join('');
+  const foot = `<p class="foot"><b>Each player plays 4 matches.</b> W${'\u2011'}L adds up wins and losses; Games W${'\u2011'}L adds up games won and lost.<br>Tie\u2011breaker (2 players): head\u2011to\u2011head winner ranks higher <span class="dot"></span> Tie\u2011breaker (3+ players): best games differential (GW${'\u2011'}GL) ranks higher<br>Tap any match for details.${skip}</p>`;
   return tools + cats.map(catCard).join('') + foot;
 }
 
@@ -2763,7 +2772,47 @@ function render() {
 }
 
 /* ---------- Modals ---------- */
+const RULES_HTML = `
+<p class="dmeta">Tournament rules</p><h3 id="dt">Format &amp; rules</h3>
+<div class="rules">
+<h4>Tournament format</h4>
+<ul>
+<li>Singles tournament. Group stage, round robin.</li>
+<li>4 levels: 2 men\u2019s levels and 2 women\u2019s levels (Category A and Category B).</li>
+<li>5 or 6 players per group. Each player plays 4 matches against players in their group.</li>
+<li>1st place in each group is the winner.</li>
+<li><b>Groups of 6</b> (Men\u2019s Category B and Women\u2019s Category A): a full round robin would be 5 matches, so <b>Round 5 is not played</b> (P1 vs P6, P2 vs P5, P3 vs P4). This way everyone plays exactly 4 matches. P1\u2013P6 are the draw numbers shown next to each name.</li>
+</ul>
+<h4>Match format</h4>
+<ul>
+<li>Best of 1 set, first to 4 games (4\u20130, 4\u20131, 4\u20132 or 4\u20133). No tie\u2011breaks.</li>
+<li><b>Golden point</b> at 40\u201340 (deuce): no advantage. The next point wins the game, and the receiver chooses which side to receive on.</li>
+<li>Report your final score to the organizer straight after the match.</li>
+</ul>
+<h4>Basic rules</h4>
+<ul>
+<li><b>Scoring a game:</b> 0 (love), 15, 30, 40, game. At 40\u201340 play the golden point.</li>
+<li><b>Serve:</b> the server alternates every game. Serve diagonally into the opposite service box from behind the baseline. You get two serves; missing both is a double fault and you lose the point. A serve that clips the net and lands in the right box is a let: replay the serve.</li>
+<li><b>Ball in or out:</b> a ball touching the line is in. You make the calls on your side of the net. If you are not sure, the ball is good.</li>
+<li><b>Point lost</b> if the ball bounces twice, you hit it before it crosses the net, you touch the net, or you hit the ball twice.</li>
+<li><b>Ball from another court:</b> if a ball lands on your court during a point, call \u201clet\u201d. The point is replayed and the server has 2 serves.</li>
+<li><b>Change ends</b> after every odd game (1st, 3rd, 5th). The server says the score out loud before each point, their own score first.</li>
+<li><b>Fair play:</b> stay quiet during points and shake hands at the end. If the organizer cannot see where the ball landed and the two players do not agree, the point is replayed.</li>
+</ul>
+<h4>How positions are decided</h4>
+<ul>
+<li>Players are ranked by <b>matches won</b> (W\u2011L). Games W\u2011L is the total games won and lost across the 4 matches.</li>
+<li><b>Two players tied on wins:</b> the winner of the match between them ranks higher.</li>
+<li><b>Three or more players tied on wins:</b> the best games differential (GW\u2011GL) ranks higher. Head\u2011to\u2011head is not used in that case.</li>
+<li>The POS column shows <b>H2H</b> or <b>GD</b> under the number when a tie\u2011break decided the position.</li>
+<li>If players are still level after the tie\u2011breaks, the organizers decide.</li>
+</ul>
+<div class="ex"><b>Example:</b> Player 2 and Player 3 both finish with 2 wins and 2 losses, so they are tied for 2nd. It is a two\u2011player tie, so head\u2011to\u2011head decides. If Player 2 beat Player 3, Player 2 takes 2nd and Player 3 takes 3rd, even if Player 3 has the better games differential (for example +5 against +4).<br><br>If Players 2, 3 and 4 all finish on 2 wins, it is a three\u2011player tie. Then only the games differential counts, so the player with the best GW\u2011GL takes 2nd.</div>
+</div>
+<div class="acts"><button class="btn pri" data-act="close">Got it</button></div>`;
+
 function openMatch(id) { S.modal = { type: 'match', id, error: '' }; renderModal(); }
+function openRules() { S.modal = { type: 'rules', error: '' }; renderModal(); }
 function openShare() { S.modal = { type: 'share', error: '' }; renderModal(); }
 function closeModal() { S.modal = null; renderModal(); }
 
@@ -2771,7 +2820,9 @@ function renderModal() {
   const md = S.modal;
   if (!md) { $modal.innerHTML = ''; return; }
   let body = '';
-  if (md.type === 'pin') {
+  if (md.type === 'rules') {
+    body = RULES_HTML;
+  } else if (md.type === 'pin') {
     body = `<p class="dmeta">Organizer</p><h3 id="dt">Enter your PIN</h3>
       <div class="dl-row"><label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Organizer PIN"></div>
       <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="pin">Unlock</button><button class="btn txt" data-act="close">Cancel</button></div>`;
@@ -2781,9 +2832,9 @@ function renderModal() {
     const title = `${cat.league === 'men' ? "Men\u2019s" : "Women\u2019s"} ${cat.label}`;
     let rows, acts;
     if (S.canEdit) {
-      rows = `<div class="dl-row"><label for="sa">${esc(PLAYERS[m.a])}</label><input id="sa" type="number" inputmode="numeric" min="0" max="99" value="${r ? r[0] : ''}" aria-label="Games won by ${esc(PLAYERS[m.a])}"></div>
-              <div class="dl-row"><label for="sb">${esc(PLAYERS[m.b])}</label><input id="sb" type="number" inputmode="numeric" min="0" max="99" value="${r ? r[1] : ''}" aria-label="Games won by ${esc(PLAYERS[m.b])}"></div>
-              <p class="hint">Enter games won by each player. The player with more games wins the match.</p>`;
+      rows = `<div class="dl-row"><label for="sa">${esc(PLAYERS[m.a])}</label><input id="sa" type="number" inputmode="numeric" min="0" max="4" value="${r ? r[0] : ''}" aria-label="Games won by ${esc(PLAYERS[m.a])}"></div>
+              <div class="dl-row"><label for="sb">${esc(PLAYERS[m.b])}</label><input id="sb" type="number" inputmode="numeric" min="0" max="4" value="${r ? r[1] : ''}" aria-label="Games won by ${esc(PLAYERS[m.b])}"></div>
+              <p class="hint">Enter the games won by each player. First to 4 games wins (4\u20130, 4\u20131, 4\u20132, 4\u20133).</p>`;
       acts = `<button class="btn pri" data-act="save" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save score'}</button>
               ${r ? '<button class="btn dng" data-act="clear">Clear score</button>' : ''}<button class="btn txt" data-act="close">Cancel</button>`;
     } else {
@@ -2805,7 +2856,8 @@ function renderModal() {
       <p class="err" role="alert">${esc(md.error)}</p>
       <div class="acts">${url ? '<button class="btn pri" data-act="copy">Copy link</button>' : ''}${S.canEdit && !STANDALONE ? `<button class="btn" data-act="saveurl" ${S.busy ? 'disabled' : ''}>Save link</button>` : ''}<button class="btn txt" data-act="close">Close</button></div>`;
   }
-  $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dt">${body}</div></div>`;
+  $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'rules' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">${body}</div></div>`;
+  if (md.type === 'rules') { const d = $modal.querySelector('.dlg'); d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); d.scrollTop = 0; return; }
   const first = $modal.querySelector('input:not([readonly])') || $modal.querySelector('button');
   if (first) first.focus();
 }
@@ -2864,9 +2916,11 @@ async function pollResults() {
     Object.keys(remote).forEach(k => { const v = remote[k]; if (Array.isArray(v) && Number.isInteger(v[0]) && Number.isInteger(v[1])) clean[k] = v; });
     const changed = JSON.stringify(clean) !== JSON.stringify(S.data.results) || S.sync.status !== 'live';
     S.data = { ...S.data, results: clean };
-    S.sync = { status: 'live', at: clock() };
+    S.sync = { status: 'live', at: clock() }; S.fails = 0;
     if (changed) render(); else { const el = document.querySelector('.sync'); if (el) el.outerHTML = syncBar(); }
   } catch (e) {
+    S.fails = (S.fails || 0) + 1;
+    if (S.fails < 2) return; // ignore a single blip
     S.sync = { status: 'offline', at: S.sync.at };
     const el = document.querySelector('.sync'); if (el) el.outerHTML = syncBar();
   }
@@ -2878,8 +2932,8 @@ function saveScore() {
   const fail = t => { S.modal.error = t; renderModal(); const el = document.getElementById('sa'); };
   if (a === '' || b === '') return fail('Enter games won for both players.');
   const na = Number(a), nb = Number(b);
-  if (!Number.isInteger(na) || !Number.isInteger(nb) || na < 0 || nb < 0 || na > 99 || nb > 99) return fail('Scores must be whole numbers from 0 to 99.');
-  if (na === nb) return fail('A match needs a winner. Scores can\u2019t be level.');
+  const hi = Math.max(na, nb), lo = Math.min(na, nb);
+  if (!Number.isInteger(na) || !Number.isInteger(nb) || hi !== 4 || lo < 0 || lo > 3) return fail('The match is first to 4 games. Valid scores: 4\u20130, 4\u20131, 4\u20132 or 4\u20133.');
   persist({ ...S.data, results: { ...S.data.results, [m.id]: [na, nb] } }, m.id);
 }
 
@@ -2930,6 +2984,7 @@ document.addEventListener('click', ev => {
   else if (act === 'sort') { S.sort = el.dataset.sort; remember('lt-sort', S.sort); render(); }
   else if (act === 'match') openMatch(el.dataset.id);
   else if (act === 'share') openShare();
+  else if (act === 'rules') openRules();
   else if (act === 'close') closeModal();
   else if (act === 'save') saveScore();
   else if (act === 'clear') clearScore();
