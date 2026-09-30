@@ -2512,8 +2512,8 @@ var qrcode = function() {
 </script><script id="logic">/* ---------- Tournament data ---------- */
 const PLAYERS = {
   shishorin: 'George Shishorin', colella: 'Adriano Colella', tuzze: 'Luigi Tuzze',
-  loginidi: 'Mikhail Loginidi', chadunin: 'Dmitry Chadunin',
-  liakishev: 'Nikolai Liakishev', metnev: 'Vladislav Metnev', kozlov: 'Bogdan Kozlov',
+  loginidi: 'Mikhail Loginidi', chadunin: 'Dmitry Chadunin', rondina: 'Federico Rondina',
+  onoszko: 'Noa Onoszko', kozlov: 'Bogdan Kozlov',
   martinez: 'Luis Martinez', kolesnyk: 'Oleksandr Kolesnyk', kouloundis: 'Demetris Kouloundis',
   shishorina: 'Violetta Shishorina', bodrikova: 'Irina Bodrikova', christodoulou: 'Eliza Christodoulou',
   gaponova: 'Anna Gaponova', azi: 'Elena Azi', guseva: 'Lena Guseva',
@@ -2522,8 +2522,8 @@ const PLAYERS = {
 };
 
 const CATS = [
-  { key: 'MA', league: 'men',   label: 'Category A', players: ['shishorin', 'colella', 'tuzze', 'loginidi', 'chadunin'] },
-  { key: 'MB', league: 'men',   label: 'Category B', players: ['liakishev', 'metnev', 'kozlov', 'martinez', 'kolesnyk', 'kouloundis'] },
+  { key: 'MA', league: 'men',   label: 'Category A', players: ['shishorin', 'colella', 'tuzze', 'rondina', 'chadunin'] },
+  { key: 'MB', league: 'men',   label: 'Category B', players: ['onoszko', 'loginidi', 'kozlov', 'martinez', 'kolesnyk', 'kouloundis'] },
   { key: 'WA', league: 'women', label: 'Category A', players: ['shishorina', 'bodrikova', 'christodoulou', 'gaponova', 'azi', 'guseva'] },
   { key: 'WB', league: 'women', label: 'Category B', players: ['lopatina', 'gruzinova', 'reiman', 'andreeva', 'solyanik'] }
 ];
@@ -2535,19 +2535,19 @@ const ROUND_TIMES = ['4:00pm', '4:25pm', '4:50pm', '5:15pm', '5:40pm', '6:10pm',
 const RAW = [
   [1, 1, 'WA', 'shishorina', 'gaponova'], [1, 2, 'WB', 'reiman', 'solyanik'], [1, 3, 'MB', 'kozlov', 'kolesnyk'],
   [2, 1, 'MA', 'tuzze', 'colella'], [2, 2, 'WA', 'christodoulou', 'azi'], [2, 3, 'MB', 'martinez', 'kouloundis'],
-  [3, 1, 'MB', 'metnev', 'liakishev'], [3, 2, 'MA', 'shishorin', 'chadunin'], [3, 3, 'WA', 'bodrikova', 'guseva'],
+  [3, 1, 'MB', 'loginidi', 'onoszko'], [3, 2, 'MA', 'shishorin', 'chadunin'], [3, 3, 'WA', 'bodrikova', 'guseva'],
   [4, 1, 'WA', 'christodoulou', 'shishorina'], [4, 2, 'WB', 'gruzinova', 'solyanik'], [4, 3, 'WB', 'lopatina', 'andreeva'],
-  [5, 1, 'MB', 'metnev', 'kozlov'], [5, 2, 'MA', 'loginidi', 'colella'], [5, 3, 'MB', 'martinez', 'kolesnyk'],
+  [5, 1, 'MB', 'loginidi', 'kozlov'], [5, 2, 'MA', 'rondina', 'colella'], [5, 3, 'MB', 'martinez', 'kolesnyk'],
   [6, 1, 'WA', 'bodrikova', 'gaponova'], [6, 2, 'WA', 'azi', 'guseva'], [6, 3, 'WB', 'reiman', 'andreeva'],
-  [7, 1, 'MA', 'tuzze', 'chadunin'], [7, 2, 'MB', 'metnev', 'kouloundis'], [7, 3, 'WB', 'lopatina', 'solyanik'],
-  [8, 1, 'MB', 'martinez', 'liakishev'], [8, 2, 'MA', 'loginidi', 'shishorin'], [8, 3, 'WA', 'azi', 'shishorina'],
+  [7, 1, 'MA', 'tuzze', 'chadunin'], [7, 2, 'MB', 'loginidi', 'kouloundis'], [7, 3, 'WB', 'lopatina', 'solyanik'],
+  [8, 1, 'MB', 'martinez', 'onoszko'], [8, 2, 'MA', 'rondina', 'shishorin'], [8, 3, 'WA', 'azi', 'shishorina'],
   [9, 1, 'WA', 'christodoulou', 'bodrikova'], [9, 2, 'WB', 'reiman', 'lopatina'], [9, 3, 'WB', 'gruzinova', 'andreeva'],
-  [10, 1, 'MB', 'kozlov', 'liakishev'], [10, 2, 'MA', 'chadunin', 'colella'], [10, 3, 'MB', 'kolesnyk', 'kouloundis'],
+  [10, 1, 'MB', 'kozlov', 'onoszko'], [10, 2, 'MA', 'chadunin', 'colella'], [10, 3, 'MB', 'kolesnyk', 'kouloundis'],
   [11, 1, 'WA', 'azi', 'gaponova'], [11, 2, 'WA', 'christodoulou', 'guseva'], [11, 3, 'WB', 'gruzinova', 'reiman'],
-  [12, 1, 'MA', 'tuzze', 'shishorin'], [12, 2, 'MB', 'metnev', 'martinez'], [12, 3, 'MA', 'chadunin', 'loginidi'],
-  [13, 1, 'MB', 'kolesnyk', 'liakishev'], [13, 2, 'WB', 'solyanik', 'andreeva'], [13, 3, 'MB', 'kozlov', 'kouloundis'],
+  [12, 1, 'MA', 'tuzze', 'shishorin'], [12, 2, 'MB', 'loginidi', 'martinez'], [12, 3, 'MA', 'chadunin', 'rondina'],
+  [13, 1, 'MB', 'kolesnyk', 'onoszko'], [13, 2, 'WB', 'solyanik', 'andreeva'], [13, 3, 'MB', 'kozlov', 'kouloundis'],
   [14, 1, 'WA', 'bodrikova', 'shishorina'], [14, 2, 'WB', 'gruzinova', 'lopatina'], [14, 3, 'WA', 'guseva', 'gaponova'],
-  [15, 1, 'MA', 'tuzze', 'loginidi'], [15, 2, 'MA', 'shishorin', 'colella']
+  [15, 1, 'MA', 'tuzze', 'rondina'], [15, 2, 'MA', 'shishorin', 'colella']
 ];
 
 const MATCHES = RAW.map(([round, court, cat, a, b]) => ({ id: cat + '-' + a + '-' + b, round, court, cat, a, b }));
