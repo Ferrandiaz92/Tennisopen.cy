@@ -2603,7 +2603,10 @@ function ensurePlayer(name, g) { const id = lookupName(name) || resolve(name); i
 CATS.forEach(c => { c.players = c.players.map(resolve); });
 
 // ================= TOURNAMENT BUILDER: the setup lives in Firebase and is edited from organizer mode =================
-const DEFAULT_CFG = { month: '2026-11', name: 'Singles League', start: '16:00', roundMin: 25, status: 'registration', info: '', cats: {} };
+const defaultMonth = () => { const t = new Date(), y = t.getUTCFullYear(), m = t.getUTCMonth(), p = n => String(n).padStart(2, '0');
+  const first = new Date(Date.UTC(y, m, 1 + (6 - new Date(Date.UTC(y, m, 1)).getUTCDay() + 7) % 7)).toISOString().slice(0, 10);
+  return t.toISOString().slice(0, 10) > first ? (m === 11 ? (y + 1) + '-01' : y + '-' + p(m + 2)) : y + '-' + p(m + 1); };
+const DEFAULT_CFG = { month: defaultMonth(), name: 'Singles League', start: '16:00', roundMin: 25, status: 'registration', info: '', cats: {} };
 const CAT_DEFS = { MA: ['men', 'Category A'], MB: ['men', 'Category B'], WA: ['women', 'Category A'], WB: ['women', 'Category B'], XA: ['mixed', 'Category A'], XB: ['mixed', 'Category B'] };
 const CAT_ORDER = Object.keys(CAT_DEFS);
 const leagueWord = lg => ({ men: 'Men', women: 'Women', mixed: 'Mixed' })[lg];
@@ -2914,7 +2917,8 @@ function standings(league) {
   const cats = CATS.filter(c => c.league === league);
   if (!cats.length) return `<section class="card"><p class="foot" style="color:var(--ink)">No ${leagueTitle(league).toLowerCase()} groups in this tournament.</p></section>`;
   const tools = `<div class="tools"><div class="seg" role="group" aria-label="Sort players"><button data-act="sort" data-sort="pos" aria-pressed="${S.sort === 'pos'}">By position</button><button data-act="sort" data-sort="draw" aria-pressed="${S.sort === 'draw'}">Draw order</button></div></div>`;
-  const skip = (cats.some(c => c.rests) ? '<br><b>One or more players rest in each round (everyone rests equally) \u2014 see Order of play.</b>' : '') + (cats.some(c => c.format === 'americano') ? '<br><b>Americano: partners rotate every round. Ranking is by total games won.</b>' : '');
+  const hasD = cats.some(c => c.rests && c.format === 'doubles'), hasS = cats.some(c => c.rests && c.format === 'singles'), hasA = cats.some(c => c.format === 'americano');
+  const skip = (hasD || hasS ? '<br><b>' + (hasD && hasS ? 'One player or pair' : hasD ? 'One pair' : 'One player') + ' rests in each round (everyone rests once) \u2014 see Order of play.</b>' : '') + (hasA ? '<br><b>Americano: partners rotate every round' + (cats.some(c => c.format === 'americano' && c.rests) ? ' and players who are not on court rest that round' : '') + '. Ranking is by total games won.</b>' : '');
   const foot = `<p class="foot"><b>Each player plays ${Math.max(...cats.map(c => c.perPlayer))} matches.</b> W${'\u2011'}L adds up wins and losses; Games W${'\u2011'}L adds up games won and lost.<br>Tie\u2011breaker (2 players): head\u2011to\u2011head winner ranks higher <span class="dot"></span> Tie\u2011breaker (3+ players): best games differential (GW${'\u2011'}GL) ranks higher<br>Tap any match for details.${skip}</p>`;
   return tools + cats.map(catCard).join('') + foot;
 }
@@ -3283,7 +3287,18 @@ function setupBody(md) {
   <p class="sumr">${ngroups} group${ngroups === 1 ? '' : 's'} \u00b7 ${rounds} rounds \u00b7 3 courts${rounds ? ' \u00b7 ends about ' + fmt12((sh || 0) * 60 + (sm || 0) + rounds * d.roundMin) : ''}</p>
   <div class="sc">${radio('registration', 'Registration open', 'Everyone sees the players and open spots. No schedule yet.')}${radio('live', 'Publish draw', 'Builds the schedule and standings. Every group must be full.')}</div>
   <p class="err" role="alert">${esc(md.error)}</p>
-  <div class="acts"><button class="btn pri" data-act="savesetup" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button></div>`;
+  <div class="acts"><button class="btn pri" data-act="savesetup" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button><button class="btn dng" data-act="resetsetup" ${S.busy ? 'disabled' : ''}>Start over</button></div>
+  <p class="hint">Start over deletes all categories, players and scores of this tournament so you can begin again. Archive first to keep the results.</p>`;
+}
+async function resetSetup() {
+  const n = Object.keys(S.data.results || {}).length, path = TOURNAMENT.resultsPath;
+  if (!confirm('Delete this tournament setup? All categories and players will be removed' + (n ? ', and the ' + n + ' scores entered will be deleted (archive first to keep them)' : '') + '. Player names stay saved for next time.')) return;
+  S.busy = true; renderModal();
+  try {
+    const a = await fetch(DB_URL + '/tennis/setup.json', { method: 'DELETE' }), b = await fetch(DB_URL + '/' + path + '.json', { method: 'DELETE' });
+    if (!a.ok || !b.ok) throw new Error('HTTP');
+    S.cfg = DEFAULT_CFG; applySetup(); S.busy = false; S.modal = null; renderModal(); render(); toast('Setup deleted \u2014 you can start again');
+  } catch (e) { S.busy = false; if (S.modal) S.modal.error = 'Could not delete. Check your connection and the Firebase rules.'; renderModal(); }
 }
 async function saveSetup() {
   readDraft(); const md = S.modal, d = md.draft, errs = [], act = CAT_ORDER.filter(k => d.cats[k] && !d.cats[k].off);
@@ -3496,6 +3511,7 @@ document.addEventListener('click', ev => {
   else if (act === 'pickp') pickAdvance(el.dataset.n);
   else if (act === 'picknew') pickNew(el.dataset.n);
   else if (act === 'savesetup') saveSetup();
+  else if (act === 'resetsetup') resetSetup();
   else if (act === 'hsel') { S.hsel = el.dataset.id; render(); window.scrollTo(0, 0); }
   else if (act === 'hback') { S.hsel = null; render(); }
   else if (act === 'hview') { S.hview = el.dataset.v; S.hsel = null; render(); }
