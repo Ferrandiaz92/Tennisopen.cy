@@ -253,6 +253,18 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .mem small{font-size:11px;opacity:.65;font-weight:600}.mem span:first-child{font-size:11px;font-weight:800;color:var(--acc2)}
 .tieres{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:8px 12px;margin-bottom:4px;border-radius:12px;background:var(--row);font-weight:700;font-size:13px}.tieres b{background:var(--acc);color:var(--acc-ink);border-radius:999px;padding:3px 12px}.tieres span:last-child{text-align:right}.pts2{font-weight:800;font-size:16px}
 .mem .pn{display:block;font-size:11px;opacity:.7;font-weight:600;margin-top:1px}
+.dtrow{margin:12px 0 4px}.dtrow .lbl{display:block;font-size:12px;font-weight:700;margin-bottom:4px}
+.stepper{display:flex;align-items:center;gap:10px}.stp{flex:0 0 auto;width:50px;height:50px;border-radius:50%;border:0;background:var(--head);color:#fff;font-size:28px;line-height:1;padding:0 0 3px}
+.stv{flex:1;text-align:center;background:var(--row);border-radius:14px;padding:8px 6px}.stv b{display:block;font-size:19px}.stv small{display:block;color:var(--acc2);font-weight:700;font-size:12px;margin-top:1px}
+.lnk{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-weight:600;font-size:13px;padding:8px 0;cursor:pointer}
+.dtrow select,.dtrow input[type=date]{border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;color:var(--ink);font:inherit;font-size:18px;font-weight:700}
+.dtrow .sf label{font-size:12px;font-weight:700;display:flex;flex-direction:column;gap:4px;margin-left:auto}.dtrow .sf label select{font-size:16px}
+.tbar{display:flex;gap:8px;overflow-x:auto;justify-content:center;flex-wrap:wrap;margin:14px 0 0}
+.tchip{border:2px solid rgba(246,241,227,.35);background:transparent;color:var(--cream);border-radius:16px;padding:7px 14px;text-align:left;font:inherit;cursor:pointer}
+.tchip b{display:block;font-size:14px}.tchip small{display:block;font-size:11px;opacity:.8;font-weight:600}
+.tchip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.nextb{display:block;width:100%;margin:14px 0 0;border:2px dashed var(--acc);background:rgba(255,255,255,.06);color:var(--cream);border-radius:14px;padding:11px 14px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.nextb b{color:var(--acc)}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2613,10 +2625,10 @@ const defaultMonth = () => { const t = new Date(), y = t.getUTCFullYear(), m = t
   const first = new Date(Date.UTC(y, m, 1 + (6 - new Date(Date.UTC(y, m, 1)).getUTCDay() + 7) % 7)).toISOString().slice(0, 10);
   return t.toISOString().slice(0, 10) > first ? (m === 11 ? (y + 1) + '-01' : y + '-' + p(m + 2)) : y + '-' + p(m + 1); };
 const DEFAULT_CFG = { month: defaultMonth(), name: 'Singles League', start: '16:00', roundMin: 25, status: 'registration', info: '', cats: {} };
-const CAT_DEFS = { MA: ['men', 'Category A'], MB: ['men', 'Category B'], WA: ['women', 'Category A'], WB: ['women', 'Category B'], XA: ['mixed', 'Category A'], XB: ['mixed', 'Category B'], TM: ['teams', 'Team tournament'] };
+const CAT_DEFS = { MA: ['men', 'Category A'], MB: ['men', 'Category B'], WA: ['women', 'Category A'], WB: ['women', 'Category B'], XA: ['mixed', 'Category A'], XB: ['mixed', 'Category B'], TA: ['teams', 'Category A'], TB: ['teams', 'Category B'] };
 const CAT_ORDER = Object.keys(CAT_DEFS);
 const leagueWord = lg => ({ men: 'Men', women: 'Women', mixed: 'Mixed', teams: 'Teams' })[lg];
-const leagueTitle = lg => ({ men: 'Men\u2019s', women: 'Women\u2019s', mixed: 'Mixed', teams: '' })[lg];
+const leagueTitle = lg => ({ men: 'Men\u2019s', women: 'Women\u2019s', mixed: 'Mixed', teams: 'Teams' })[lg];
 const catTitle = k => (leagueTitle(CAT_DEFS[k][0]) + ' ' + CAT_DEFS[k][1]).trim();
 const FORMATS = { singles: 'Singles', doubles: 'Doubles (fixed pairs)', americano: 'Americano (rotating partners)', team: 'Team tournament' };
 const formatsFor = k => CAT_DEFS[k][0] === 'teams' ? ['team'] : CAT_DEFS[k][0] === 'mixed' ? ['doubles'] : ['singles', 'doubles', 'americano'];
@@ -2625,13 +2637,15 @@ const roundsFor = (f, n) => f === 'americano' ? ({ 4: 3, 5: 5, 6: 6, 7: 7, 8: 7 
 const scoringFor = c => c.scoring === 'to4' || c.scoring === 'set' ? c.scoring : (c.format === 'team' || (+c.size || 7) >= 6 ? 'to4' : 'set');
 const scoringText = s => s === 'set' ? 'full set' : 'first to 4 games';
 const catNames = c => { const p = c && c.players; return (Array.isArray(p) ? p : Object.values(p || {})).filter(Boolean); };
-const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4',
+const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: !!c.mix,
   teams: (Array.isArray(c.teams) ? c.teams : Object.values(c.teams || {})).map(t => ({ name: t.name || '', p: (Array.isArray(t.p) ? t.p : Object.values(t.p || {})).filter(Boolean) })) });
 const firstSaturday = ym => { const [y, m] = ym.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); return new Date(Date.UTC(y, m - 1, 1 + (6 - wd + 7) % 7)).toISOString().slice(0, 10); };
+const cfgDate = c => /^\d{4}-\d{2}-\d{2}$/.test(c.date || '') ? c.date : firstSaturday(/^\d{4}-\d{2}$/.test(c.month) ? c.month : DEFAULT_CFG.month);
 const fmt12 = m => { const h = Math.floor(m / 60) % 24; return (h % 12 || 12) + ':' + String(m % 60).padStart(2, '0') + (h < 12 ? 'am' : 'pm'); };
 const seatId = (key, i) => { const id = 'seat_' + key + '_' + (i + 1); if (!PLAYERS[id]) PLAYERS[id] = 'Player ' + (i + 1) + ' (TBD)'; return id; };
 const sideName = side => side.map(i => PLAYERS[i]).join(' / ');
-const RAW = [], RESTS = {}, MATCHES = [], ROUND_TIMES = [], CAT_BY_KEY = {}, SETUP_ERRORS = [];
+const RAW = [], RESTS = {}, MATCHES = [], ROUND_TIMES = [], CAT_BY_KEY = {}, SETUP_ERRORS = [], QUEUES = [], TEAM_MEMBERS = {};
+let COURTS = 3;
 const TOURNAMENT = { id: '', name: '', date: '', format: '', resultsPath: '' };
 // rest order for odd groups: middle round = P1, then P2/P3, P4/P5, ... outwards (7 players: P6 P4 P2 P1 P3 P5 P7)
 const restOrder = n => { const o = Array(n), mid = (n - 1) / 2; o[mid] = 1; for (let k = 1; k <= mid; k++) { o[mid - k] = 2 * k; o[mid + k] = 2 * k + 1; } return o; };
@@ -2686,7 +2700,7 @@ function americanoRounds(ids, seed) {                      // rotating partners;
 }
 function teamId(s) {                                       // "Name One / Name Two" -> one competitor
   const ids = String(s).split(' / ').map(x => resolve(x.trim())), id = 'tm_' + ids.join('_');
-  PLAYERS[id] = ids.map(lastName).join(' / '); return id;
+  PLAYERS[id] = ids.map(lastName).join(' / '); TEAM_MEMBERS[id] = ids; return id;
 }
 
 // ---- Team tournament: teams of 3 or 4 mixed players; singles first, then doubles; 1 point per match won ----
@@ -2712,22 +2726,46 @@ const tieMatches = (type, k, ties) => {
   return k % 2 ? [{ kind: 'S', s: [3] }, { kind: 'S', s: [4] }, { kind: 'D', s: [1, 2] }]                           // men's doubles M1 + M2, women play singles
                : [{ kind: 'S', s: [1] }, { kind: 'S', s: [2] }, { kind: 'D', s: [3, 4] }];                          // women's doubles W1 + W2, men play singles
 };
-function buildTeams(ck, c, base) {
+// ---- Court packing: rounds from every group are packed into time slots that hold up to COURTS matches ----
+function packRounds(queues, cap) {                         // queues: [[{w, ps}, ...], ...] -> slots: [[[queue, round], ...], ...]
+  const idx = queues.map(() => 0), slots = [];
+  while (idx.some((i, q) => i < queues[q].length)) {
+    let room = cap; const used = new Set(), slot = [];
+    queues.forEach((q, qi) => { const rd = q[idx[qi]]; if (!rd || rd.w > room || rd.ps.some(p => used.has(p))) return; slot.push([qi, idx[qi]++]); room -= rd.w; rd.ps.forEach(p => used.add(p)); });
+    if (!slot.length) { const qi = idx.findIndex((i, q) => i < queues[q].length); slot.push([qi, idx[qi]++]); }
+    slots.push(slot);
+  }
+  return slots;
+}
+const catQueues = (c, cap) => {                            // widths only: used for the time estimate in the setup screen
+  const rd = w => ({ w, ps: [] });
+  if (c.format === 'team') {
+    const n = c.size, ties = n / 2, S1 = ties * (c.teamType === '4' ? 2 : 1), D1 = ties, q = [];
+    const ch = x => { const o = []; for (let i = 0; i < x; i += cap) o.push(Math.min(cap, x - i)); return o; };
+    for (let r = 1; r < n; r++) (c.mix ? ch(S1 + D1) : ch(S1).concat(ch(D1))).forEach(w => q.push(rd(w)));
+    return [q];
+  }
+  const n = c.size, widths = c.format === 'americano' ? Array(roundsFor('americano', n)).fill(Math.floor(n / 4)) : Array(n % 2 ? n : n - 1).fill(n % 2 ? (n - 1) / 2 : n / 2);
+  return Array.from({ length: c.groups }, () => widths.map(rd));
+};
+
+function buildTeams(ck, c) {
   const n = c.size, T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], title = catTitle(ck);
   if (!sizesFor('team').includes(n)) { SETUP_ERRORS.push(title + ': the number of teams must be 6 or 8 (every player needs at least 5 matches) \u2014 skipped.'); return 0; }
   if (c.teams.length !== n || c.teams.some(t => (t.p || []).filter(Boolean).length !== T.n)) { SETUP_ERRORS.push(title + ' needs ' + n + ' complete teams of ' + T.n + ' players \u2014 skipped.'); return 0; }
   const members = c.teams.map(t => t.p.map(x => resolve(x))), all = members.flat();
   if (new Set(all).size !== all.length) { SETUP_ERRORS.push(title + ': a player is in two teams \u2014 skipped.'); return 0; }
-  const ids = c.teams.map((t, i) => { const id = 'tm_team' + (i + 1); PLAYERS[id] = t.name || 'Team ' + (i + 1); return id; });
+  const ids = c.teams.map((t, i) => { const id = 'tm_' + ck.toLowerCase() + (i + 1); PLAYERS[id] = t.name || 'Team ' + (i + 1); return id; });
   const idx = Object.fromEntries(ids.map((id, i) => [id, i]));
   CATS.push({ key: ck, league: 'teams', label: CAT_DEFS[ck][1], players: ids, teams: c.teams.map((t, i) => ({ id: ids[i], name: PLAYERS[ids[i]], members: members[i] })), format: 'team', teamType: c.teamType, size: n, scoring: scoringFor(c), rests: false, perPlayer: 0 });
-  let slot = base;
+  const rounds = [];
   rrRounds(ids).forEach((rd, r) => {
     const sing = [], dbl = [];
-    rd.games.forEach(([[a], [b]]) => tieMatches(c.teamType, r + 1, n - 1).forEach(pt => (pt.kind === 'S' ? sing : dbl).push([pt.kind, a, b, pt.s.map(j => members[idx[a]][j - 1]), pt.s.map(j => members[idx[b]][j - 1])])));
-    [sing, dbl].forEach(list => { for (let i = 0; i < list.length; i += 3) { slot++; list.slice(i, i + 3).forEach(([kind, a, b, A, B], j) => RAW.push([slot, j + 1, ck, A, B, { kind, tie: [a, b], tr: r + 1 }])); } });
+    rd.games.forEach(([[a], [b]]) => tieMatches(c.teamType, r + 1, n - 1).forEach(pt => { const list = pt.kind === 'S' ? sing : dbl; list.push([pt.kind, a, b, pt.s.map(j => members[idx[a]][j - 1]), pt.s.map(j => members[idx[b]][j - 1]), r + 1, ck + '-T' + (r + 1) + pt.kind + (list.length + 1)]); }));
+    (c.mix ? [sing.concat(dbl)] : [sing, dbl]).forEach(list => { for (let i = 0; i < list.length; i += COURTS) rounds.push({ games: list.slice(i, i + COURTS).map(([kind, a, b, A, B, tr, id]) => [A, B, { kind, tie: [a, b], tr, id }]), rest: [] }); });
   });
-  return slot - base;
+  QUEUES.push({ key: ck, fmt: 'team', rounds });
+  return 0;
 }
 function rankTeams(state, cat) {
   const rows = cat.players.map((tid, i) => ({ pid: tid, draw: i + 1, w: 0, l: 0, gw: 0, gl: 0, sw: 0, sl: 0, dw: 0, dl: 0, played: 0, pos: null, tb: null })), by = {};
@@ -2746,16 +2784,16 @@ function rankTeams(state, cat) {
 
 function buildTournament(cfg) {
   cfg = cfg || DEFAULT_CFG;
-  [CATS, RAW, MATCHES, ROUND_TIMES, SETUP_ERRORS, NEW_PLAYERS, DUP_WARNINGS].forEach(a => { a.length = 0; });
-  [RESTS, CAT_BY_KEY, NEW_IDS].forEach(o => Object.keys(o).forEach(k => delete o[k]));
-  const date = firstSaturday(/^\d{4}-\d{2}$/.test(cfg.month) ? cfg.month : DEFAULT_CFG.month);
+  [CATS, RAW, MATCHES, ROUND_TIMES, SETUP_ERRORS, NEW_PLAYERS, DUP_WARNINGS, QUEUES].forEach(a => { a.length = 0; });
+  COURTS = Math.max(3, Math.min(6, +cfg.courts || 3));
+  [RESTS, CAT_BY_KEY, NEW_IDS, TEAM_MEMBERS].forEach(o => Object.keys(o).forEach(k => delete o[k]));
+  const date = cfgDate(cfg);
   Object.assign(TOURNAMENT, { id: date + '-league', name: cfg.name || 'Singles League', date, format: 'Round robin', resultsPath: 'tennis/tournaments/' + date + '-league/results' });
   if (cfg.status !== 'live') return;                    // registration phase: no schedule yet
-  let base = 0;
   CAT_ORDER.forEach(ck => {
     const raw = (cfg.cats || {})[ck]; if (!raw || raw.off) return;
     const c = catCfg(raw), n = c.size;
-    if (c.format === 'team') { base += buildTeams(ck, c, base); return; }
+    if (c.format === 'team') { buildTeams(ck, c); return; }
     if (!formatsFor(ck).includes(c.format) || !sizesFor(c.format).includes(n)) { SETUP_ERRORS.push(catTitle(ck) + ': unsupported format or group size \u2014 skipped.'); return; }
     if (c.players.length !== c.groups * n) SETUP_ERRORS.push(catTitle(ck) + ' has ' + c.players.length + ' of ' + c.groups * n + ' places filled \u2014 open seats show as TBD.');
     for (let g = 0; g < c.groups; g++) {
@@ -2764,16 +2802,16 @@ function buildTournament(cfg) {
       if (new Set(ids).size !== n) { SETUP_ERRORS.push(catTitle(ck) + ' lists the same player twice \u2014 group skipped.'); continue; }
       const rounds = c.format === 'americano' ? americanoRounds(ids, TOURNAMENT.id + key + ids.join()) : rrRounds(ids);
       CATS.push({ key, league: CAT_DEFS[ck][0], label: CAT_DEFS[ck][1] + (c.groups > 1 ? ' \u00b7 Group ' + (g + 1) : ''), players: ids, format: c.format, size: n, scoring: scoringFor(c), rests: rounds.some(rd => rd.rest.length), perPlayer: 0 });
-      rounds.forEach((rd, r) => {
-        RESTS[base + r + 1] = rd.rest.map(pid => ({ pid, cat: key }));
-        rd.games.forEach(([A, B], i) => RAW.push([base + r + 1, i + 1, key, A, B]));
-      });
-      base += rounds.length;                             // groups play one after another on the same 3 courts
+      QUEUES.push({ key, fmt: c.format, rounds });
     }
   });
+  const slots = packRounds(QUEUES.map(q => q.rounds.map(rd => ({ w: rd.games.length, ps: rd.games.flatMap(([A, B]) => [...A, ...B]).flatMap(p => TEAM_MEMBERS[p] || [p]) }))), COURTS);
+  slots.forEach((slot, t) => { let court = 0; slot.forEach(([qi, ri]) => { const q = QUEUES[qi], rd = q.rounds[ri];
+    rd.games.forEach(([A, B, meta], gi) => RAW.push([t + 1, ++court, q.key, A, B, q.fmt === 'americano' ? { id: q.key + '-R' + (ri + 1) + 'M' + (gi + 1) } : meta]));
+    RESTS[t + 1] = (RESTS[t + 1] || []).concat(rd.rest.map(pid => ({ pid, cat: q.key }))); }); });
   const [h, m] = String(cfg.start || '16:00').split(':').map(Number), step = Math.max(5, +cfg.roundMin || 25);
-  for (let i = 0; i < base; i++) ROUND_TIMES.push(fmt12((h || 0) * 60 + (m || 0) + i * step));
-  RAW.forEach(([round, court, cat, A, B, meta]) => MATCHES.push({ id: A.length === 1 && !meta ? cat + '-' + A[0] + '-' + B[0] : cat + '-R' + round + 'C' + court, round, court, cat, A, B, a: A.length === 1 && !meta ? A[0] : null, b: B.length === 1 && !meta ? B[0] : null, kind: meta ? meta.kind : null, tie: meta ? meta.tie : null, tr: meta ? meta.tr : null }));
+  for (let i = 0; i < slots.length; i++) ROUND_TIMES.push(fmt12((h || 0) * 60 + (m || 0) + i * step));
+  RAW.forEach(([round, court, cat, A, B, meta]) => { const team = meta && meta.kind; MATCHES.push({ id: meta && meta.id ? meta.id : A.length === 1 ? cat + '-' + A[0] + '-' + B[0] : cat + '-R' + round + 'C' + court, round, court, cat, A, B, a: A.length === 1 && !team ? A[0] : null, b: B.length === 1 && !team ? B[0] : null, kind: team || null, tie: meta && meta.tie || null, tr: meta && meta.tr || null }); });
   CATS.forEach(c => {
     CAT_BY_KEY[c.key] = c;
     c.perPlayer = Math.max(...c.players.map(p => MATCHES.filter(x => x.cat === c.key && (x.tie ? x.tie.includes(p) : (x.A.includes(p) || x.B.includes(p)))).length));
@@ -2884,7 +2922,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', setups: {}, tid: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -2940,7 +2978,7 @@ function nav() {
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
-    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Tournament setup</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="newtour">+ New tournament</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
     ${syncBar()}`;
 }
 
@@ -3006,7 +3044,7 @@ function matchCard(m) {
   };
   const aria = `Court ${m.court}, ${sideName(m.A)} versus ${sideName(m.B)}` + (r ? `, ${r[0]} to ${r[1]}` : '');
   return `<button class="mt" data-act="match" data-id="${esc(m.id)}" aria-label="${esc(aria)}">
-    <div class="mt-top"><span>Court ${m.court}</span><span class="chip ${lg}">${cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') : leagueWord(lg) + ' \u00b7 ' + cat.label.replace('Category ', 'Cat ')}</span></div>${cat.format === 'team' ? `<div class="tieln">${esc(PLAYERS[m.tie[0]])} vs ${esc(PLAYERS[m.tie[1]])}</div>` : ''}
+    <div class="mt-top"><span>Court ${m.court}</span><span class="chip ${lg}">${cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 Cat ' + cat.label.replace('Category ', '') : leagueWord(lg) + ' \u00b7 ' + cat.label.replace('Category ', 'Cat ')}</span></div>${cat.format === 'team' ? `<div class="tieln">${esc(PLAYERS[m.tie[0]])} vs ${esc(PLAYERS[m.tie[1]])}</div>` : ''}
     ${line(m.A, r && r[0], r && r[1])}<span class="vs">VS</span>${line(m.B, r && r[1], r && r[0])}</button>`;
 }
 
@@ -3030,7 +3068,7 @@ function schedule() {
 function render() {
   document.documentElement.dataset.theme = S.tab === 'women' ? 'women' : 'men';
   const deco = `<svg class="deco d1" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg><svg class="deco d2" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg>`;
-  $page.innerHTML = `<div class="wrap"><div class="frame">${deco}${header()}${nav()}${bodyHtml()}</div></div>`;
+  $page.innerHTML = `<div class="wrap"><div class="frame">${deco}${header()}${tourBar()}${nav()}${otherBanner()}${bodyHtml()}</div></div>`;
 }
 
 /* ---------- Modals ---------- */
@@ -3039,7 +3077,7 @@ function rulesInfo() {
   return CAT_ORDER.filter(k => cats[k] && !cats[k].off).map(k => { const c = catCfg(cats[k]); return { k, title: catTitle(k), f: c.format, n: c.size, g: c.groups, sc: scoringFor(c), tt: c.teamType }; });
 }
 function formatRules() {
-  const info = rulesInfo(), li = [`<li><b>${dateLong(TOURNAMENT.date)}</b> \u00b7 3 courts.</li>`];
+  const info = rulesInfo(), li = [`<li><b>${dateLong(TOURNAMENT.date)}</b> \u00b7 ${COURTS} courts.</li>`];
   const grp = (c, unit) => c.g > 1 ? c.g + ' groups of ' + c.n + ' ' + unit : c.n + ' ' + unit;
   if (!info.length) li.push('<li>Round-robin groups: everyone plays everyone once.</li>', '<li>1st place in each group wins.</li>');
   info.forEach(c => {
@@ -3110,7 +3148,7 @@ function renderModal() {
       <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="pin">Unlock</button><button class="btn txt" data-act="close">Cancel</button></div>`;
   } else if (md.type === 'match') {
     const m = matchById(md.id); const r = getResult(S.data, m); const cat = CAT_BY_KEY[m.cat];
-    const meta = `Round ${m.round} \u00b7 ${ROUND_TIMES[m.round - 1]} \u00b7 Court ${m.court}`;
+    const meta = `Round ${m.round} \u00b7 ${ROUND_TIMES[m.round - 1]} \u00b7 Court ${m.court}${cat.format === 'team' ? ' \u00b7 ' + catTitle(cat.key) : ''}`;
     const title = cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 ' + PLAYERS[m.tie[0]] + ' vs ' + PLAYERS[m.tie[1]] : `${leagueTitle(cat.league)} ${cat.label}`;
     let rows, acts;
     if (S.canEdit) {
@@ -3267,24 +3305,69 @@ async function fetchJson(path) {
   try { const res = await fetch(DB_URL + path + '.json', { cache: 'no-store', signal: ctl.signal }); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
   finally { clearTimeout(t); }
 }
+const todayISO = () => new Date().toLocaleDateString('sv-SE');
+const shortDate = id => new Date(id + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+function statusLabel(c) { const d = cfgDate(c), t = todayISO(); if (c.status !== 'live') return 'Registration open'; return t < d ? 'Draw published' : t === d ? 'Playing today' : 'Results'; }
 function applySetup() {
   buildTournament(S.cfg);
   S.cfgJson = JSON.stringify(S.cfg);
   RESULTS_URL = DB_URL + '/' + TOURNAMENT.resultsPath;
-  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 round robin results';
-  SCHED_SUB = '3 courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date);
+  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 ' + statusLabel(S.cfg);
+  SCHED_SUB = COURTS + ' courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date);
   S.data = { results: {}, shareUrl: '' }; S.filter = '';
+}
+async function loadSetups() {                              // every tournament (past, today, upcoming), keyed by its date
+  const all = (await fetchJson('/tennis/setups')) || {}, out = {};
+  Object.keys(all).forEach(id => { out[id] = normCfg(all[id]); });
+  S.legacySetup = false;
+  if (!Object.keys(out).length) { const old = normCfg(await fetchJson('/tennis/setup')); if (old) { out[cfgDate(old)] = old; S.legacySetup = true; } }
+  S.setups = out; S.setupsJson = JSON.stringify(out);
+}
+function chooseTid(prefer) {                               // the next tournament that has not finished yet
+  const ids = Object.keys(S.setups).sort(), t = todayISO();
+  return prefer && S.setups[prefer] ? prefer : (ids.find(id => id >= t) || ids[ids.length - 1] || '');
+}
+async function ensureMigrated() {                          // older versions kept one tournament at /tennis/setup
+  if (!S.legacySetup || !S.tid) return;
+  await fetch(DB_URL + '/tennis/setups/' + S.tid + '.json', { method: 'PUT', body: JSON.stringify(S.setups[S.tid]) });
+  await fetch(DB_URL + '/tennis/setup.json', { method: 'DELETE' }); S.legacySetup = false;
+}
+async function refreshCfg() {
+  try { await loadSetups(); S.cfg = S.setups[S.tid] || S.cfg; } catch (e) { /* keep what we have */ }
+  applySetup();
 }
 async function loadSetup() {
   try { registerPlayers(await fetchJson('/tennis/players')); registerGenders(await fetchJson('/tennis/genders')); } catch (e) { /* offline: built-in names only */ }
-  try { S.cfg = (await fetchJson('/tennis/setup')) || DEFAULT_CFG; } catch (e) { S.cfg = S.cfg || DEFAULT_CFG; }
+  let prefer = ''; try { prefer = new URLSearchParams(location.search).get('t') || sessionStorage.getItem('lt-tid') || ''; } catch (e) { /* ignore */ }
+  try { await loadSetups(); } catch (e) { /* offline */ }
+  S.tid = chooseTid(prefer); S.cfg = S.setups[S.tid] || DEFAULT_CFG;
 }
 async function pollSetup() {
   if (document.hidden || S.modal) return;
   try {
-    const cfg = (await fetchJson('/tennis/setup')) || DEFAULT_CFG;
-    if (JSON.stringify(cfg) !== S.cfgJson) { S.cfg = cfg; applySetup(); render(); pollResults(); }
+    const before = S.setupsJson; await loadSetups();
+    if (S.setupsJson === before) return;
+    if (!S.setups[S.tid]) S.tid = chooseTid('');
+    const cfg = S.setups[S.tid] || DEFAULT_CFG;
+    if (JSON.stringify(cfg) !== S.cfgJson) { S.cfg = cfg; applySetup(); render(); pollResults(); } else render();
   } catch (e) { /* keep what we have */ }
+}
+function selectTid(id) {
+  if (!S.setups[id]) return;
+  S.tid = id; remember('lt-tid', id); S.cfg = S.setups[id]; applySetup();
+  if ((S.tab === 'mixed' || S.tab === 'teams') && !hasLeague(S.tab)) S.tab = 'men';
+  render(); pollResults(); window.scrollTo(0, 0);
+}
+function tourBar() {                                       // chips to switch tournament, only when more than one exists
+  const ids = Object.keys(S.setups).sort(); if (ids.length < 2) return '';
+  return '<div class="tbar" role="group" aria-label="Choose tournament">' + ids.map(id => `<button class="tchip ${id === S.tid ? 'on' : ''}" data-act="seltid" data-id="${id}"><b>${shortDate(id)}</b><small>${statusLabel(S.setups[id])}</small></button>`).join('') + '</div>';
+}
+function otherBanner() {                                   // pointer to the other tournament, so nobody mixes them up
+  if (S.tab === 'history' || Object.keys(S.setups).length < 2) return '';
+  const ids = Object.keys(S.setups).sort(), t = todayISO(), live = S.cfg.status === 'live';
+  const id = live ? ids.find(x => x > S.tid && S.setups[x].status !== 'live') : ids.find(x => x !== S.tid && S.setups[x].status === 'live' && x >= t);
+  if (!id) return '';
+  return `<button class="nextb" data-act="seltid" data-id="${id}">${live ? 'Next tournament' : 'Also on'}: <b>${shortDate(id)}</b> \u00b7 ${statusLabel(S.setups[id])} \u203a</button>`;
 }
 function bodyHtml() {
   if (S.tab === 'history') return historyView();
@@ -3305,9 +3388,9 @@ function validScore(scoring, a, b) {
 const hasLeague = lg => (S.cfg && S.cfg.status === 'live') ? CATS.some(c => c.league === lg) : CAT_ORDER.some(k => CAT_DEFS[k][0] === lg && S.cfg && S.cfg.cats && S.cfg.cats[k] && !S.cfg.cats[k].off);
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
-  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(firstSaturday(cfg.month))}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a player.</b>' : ''}</p>`;
+  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
   const cards = CAT_ORDER.filter(k => CAT_DEFS[k][0] === league && cats[k] && !cats[k].off).map(k => {
-    if (k === 'TM') return teamCard(catCfg(cats[k]));
+    if (CAT_DEFS[k][0] === 'teams') return teamCard(k, catCfg(cats[k]));
     const c = catCfg(cats[k]), cap = c.groups * c.size, names = c.players, left = cap - names.length, dbl = c.format === 'doubles';
     const rows = Array.from({ length: cap }, (_, i) => (c.groups > 1 && i % c.size === 0 ? `<p class="gh2">Group ${i / c.size + 1}</p>` : '') + (names[i]
       ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button>` : ''}</div>`
@@ -3317,20 +3400,30 @@ function registrationView(league) {
   }).join('');
   return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`);
 }
-function openSetup() {
-  const d = JSON.parse(JSON.stringify(S.cfg || DEFAULT_CFG)); d.cats = d.cats || {};
-  CAT_ORDER.forEach(k => { if (d.cats[k]) d.cats[k] = catCfg(d.cats[k]); });
-  S.modal = { type: 'setup', draft: d, error: '' }; renderModal();
+function openSetup(creating) {
+  let d;
+  if (creating) {
+    const ids = Object.keys(S.setups).sort(), cur = S.cfg || DEFAULT_CFG;
+    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, status: 'registration', info: '', cats: {} };
+  } else { d = JSON.parse(JSON.stringify(S.cfg || DEFAULT_CFG)); d.cats = d.cats || {}; CAT_ORDER.forEach(k => { if (d.cats[k]) d.cats[k] = catCfg(d.cats[k]); }); }
+  d.courts = d.courts || 3;
+  S.modal = { type: 'setup', draft: d, error: '', creating: !!creating, origId: creating ? '' : S.tid }; renderModal();
 }
 function readDraft() {
   const d = S.modal.draft, q = f => $modal.querySelector('[data-f="' + f + '"]');
-  if (q('month')) { d.month = q('month').value || d.month; d.name = q('name').value.trim() || 'Singles League'; d.start = q('start').value || d.start; d.roundMin = Math.max(10, +q('roundMin').value || 25); d.info = q('info').value.trim(); }
+  if (q('name')) {
+    d.name = q('name').value.trim() || 'Singles League'; d.info = q('info').value.trim();
+    if (q('sh') && q('sm')) d.start = q('sh').value + ':' + q('sm').value;
+    if (q('roundMin')) d.roundMin = +q('roundMin').value || 25;
+    if (q('courts')) d.courts = +q('courts').value || 3;
+    if (q('date') && q('date').value) { d.date = q('date').value; d.month = d.date.slice(0, 7); }
+  }
   const st = $modal.querySelector('[data-f="status"]:checked'); if (st) d.status = st.value;
   CAT_ORDER.forEach(k => {
     const on = $modal.querySelector('[data-f="on"][data-cat="' + k + '"]'); if (!on) return;
     if (on.checked) { d.cats[k] = d.cats[k] || catCfg({ format: formatsFor(k)[0] }); d.cats[k].off = false; } else if (d.cats[k]) d.cats[k].off = true;
     const c = d.cats[k], sel = f => $modal.querySelector('[data-f="' + f + '"][data-cat="' + k + '"]');
-    if (k === 'TM' && c) { const tt = sel('teamtype'); if (tt) { if (tt.value !== c.teamType) { c.teamType = tt.value; c.teams = []; } c.size = +sel('size').value; c.scoring = sel('scoring').value; c.groups = 1; c.format = 'team'; } return; }
+    if (CAT_DEFS[k][0] === 'teams' && c) { const tt = sel('teamtype'); if (tt) { if (tt.value !== c.teamType) { c.teamType = tt.value; c.teams = []; } c.size = +sel('size').value; c.scoring = sel('scoring').value; c.groups = 1; c.format = 'team'; c.mix = !!(sel('mix') && sel('mix').checked); } return; }
     if (!c || !sel('format')) return;
     const nf = sel('format').value;
     if (nf !== c.format) { if ((nf === 'doubles') !== (c.format === 'doubles')) c.players = []; c.format = nf; }
@@ -3338,26 +3431,30 @@ function readDraft() {
     c.groups = +sel('groups').value; c.scoring = sel('scoring').value;
   });
 }
+const monthShift = (ym, n) => { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7); };
+const monthLong = ym => { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
+const hourOpts = st => { const h = String(st).split(':')[0].padStart(2, '0'); return Array.from({ length: 19 }, (_, i) => String(i + 5).padStart(2, '0')).concat([h]).filter((v, k, a) => a.indexOf(v) === k).sort().map(v => `<option value="${v}" ${v === h ? 'selected' : ''}>${v}</option>`).join(''); };
+const minOpts = st => { const m = String(st).split(':')[1] || '00'; return Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).concat([m]).filter((v, k, a) => a.indexOf(v) === k).sort().map(v => `<option value="${v}" ${v === m ? 'selected' : ''}>${v}</option>`).join(''); };
 function setupBody(md) {
-  const d = md.draft; let ngroups = 0, rounds = 0;
+  const d = md.draft; let ngroups = 0; const queues = [], courts = d.courts || 3;
   const opt = (v, t, cur) => `<option value="${v}" ${String(v) === String(cur) ? 'selected' : ''}>${t}</option>`;
   const blocks = CAT_ORDER.map(k => {
-    if (k === 'TM') {
-      const c = d.cats.TM, on = !!c && !c.off;
-      let h = `<div class="sc"><label class="scr"><input type="checkbox" data-f="on" data-cat="TM" ${on ? 'checked' : ''}><b>${catTitle('TM')}</b></label>`;
+    if (CAT_DEFS[k][0] === 'teams') {
+      const c = d.cats[k], on = !!c && !c.off;
+      let h = `<div class="sc"><label class="scr"><input type="checkbox" data-f="on" data-cat="${k}" ${on ? 'checked' : ''}><b>${catTitle(k)}</b></label>`;
       if (on) {
-        ngroups += 1; rounds += slotsFor(c);
-        h += `<div class="sf"><label>Team size <select data-f="teamtype" data-cat="TM">${Object.keys(TEAM_TYPES).map(t => opt(t, TEAM_TYPES[t].label, c.teamType)).join('')}</select></label>
-          <label>Teams <select data-f="size" data-cat="TM">${sizesFor('team').map(n => opt(n, n, c.size)).join('')}</select></label>
-          <label>Match <select data-f="scoring" data-cat="TM">${opt('auto', 'Auto (first to 4 games)', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
-          <span class="cnt">${c.teams.length} / ${c.size} teams</span></div><p class="hint">${TEAM_TYPES[c.teamType].rule(c.size)}</p>`;
+        ngroups += 1; queues.push(...catQueues(c, courts));
+        h += `<div class="sf"><label>Team size <select data-f="teamtype" data-cat="${k}">${Object.keys(TEAM_TYPES).map(t => opt(t, TEAM_TYPES[t].label, c.teamType)).join('')}</select></label>
+          <label>Teams <select data-f="size" data-cat="${k}">${sizesFor('team').map(n => opt(n, n, c.size)).join('')}</select></label>
+          <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (first to 4 games)', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
+          <span class="cnt">${c.teams.length} / ${c.size} teams</span></div><p class="hint">${TEAM_TYPES[c.teamType].rule(c.size)}</p><label class="scr"><input type="checkbox" data-f="mix" data-cat="${k}" ${c.mix ? 'checked' : ''}><span>Fill every court <small>the last singles may share a time slot with the first doubles</small></span></label>`;
       }
       return h + '</div>';
     }
     const c = d.cats[k], on = !!c && !c.off;
     let h = `<div class="sc"><label class="scr"><input type="checkbox" data-f="on" data-cat="${k}" ${on ? 'checked' : ''}><b>${catTitle(k)}</b></label>`;
     if (on) {
-      const cap = c.groups * c.size, dbl = c.format === 'doubles'; ngroups += c.groups; rounds += c.groups * roundsFor(c.format, c.size);
+      const cap = c.groups * c.size, dbl = c.format === 'doubles'; ngroups += c.groups; queues.push(...catQueues(c, courts));
       h += `<div class="sf"><label>Format <select data-f="format" data-cat="${k}">${formatsFor(k).map(f => opt(f, FORMATS[f], c.format)).join('')}</select></label>
         <label>${dbl ? 'Pairs' : 'Players'} per group <select data-f="size" data-cat="${k}">${sizesFor(c.format).map(n => opt(n, n, c.size)).join('')}</select></label>
         <label>Groups <select data-f="groups" data-cat="${k}">${[1, 2, 3, 4].map(n => opt(n, n, c.groups)).join('')}</select></label>
@@ -3366,29 +3463,37 @@ function setupBody(md) {
     }
     return h + '</div>';
   }).join('');
-  const [sh, sm] = String(d.start).split(':').map(Number);
+  const rounds = packRounds(queues, courts).length, [sh, sm] = String(d.start).split(':').map(Number);
   const radio = (v, t, s) => `<label class="scr"><input type="radio" name="st" data-f="status" value="${v}" ${d.status === v ? 'checked' : ''}><span><b>${t}</b><br><small>${s}</small></span></label>`;
-  return `<p class="dmeta">Organizer</p><h3 id="dt">Tournament setup</h3>
+  return `<p class="dmeta">Organizer</p><h3 id="dt">${md.creating ? 'New tournament' : 'Tournament setup'}</h3>
   <div class="sf"><label>Name <input type="text" data-f="name" value="${esc(d.name)}"></label></div>
-  <div class="sf"><label>Month <input type="month" data-f="month" value="${esc(d.month)}"></label><span class="cnt">${dateLong(firstSaturday(d.month))}</span></div>
-  <div class="sf"><label>Start <input type="time" data-f="start" value="${esc(d.start)}"></label><label>Minutes per round <input type="number" data-f="roundMin" min="10" max="60" value="${d.roundMin}"></label></div>
+  <div class="dtrow"><b class="lbl">Date</b>
+    <div class="stepper"><button class="stp" data-act="mprev" aria-label="Previous month">\u2039</button><div class="stv"><b>${monthLong(d.month)}</b><small>${dateLong(cfgDate(d))}</small></div><button class="stp" data-act="mnext" aria-label="Next month">\u203a</button></div>
+    ${d.date ? `<div class="sf"><input type="date" data-f="date" value="${esc(d.date)}"><button class="lnk" data-act="datefirst">Back to the first Saturday</button></div>` : '<button class="lnk" data-act="datecustom">Use a different date</button>'}</div>
+  <div class="dtrow"><b class="lbl">Start time</b>
+    <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select>
+    <label>Courts <select data-f="courts">${[3, 4, 5, 6].map(v => opt(v, v, courts)).join('')}</select></label>
+    <label>Minutes per round <select data-f="roundMin">${[15, 20, 25, 30, 35, 40, 45, 50, 60].concat([+d.roundMin]).filter((v, k, a) => a.indexOf(v) === k).sort((a, b) => a - b).map(v => opt(v, v, d.roundMin)).join('')}</select></label></div></div>
   <div class="sf"><label style="flex:1">Note for players (optional) <input type="text" data-f="info" maxlength="160" style="width:100%" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></label></div>
   <p class="hint">Choose the categories here. Add players afterwards from the Men, Women and Mixed tabs: tap an open spot.</p>
   ${blocks}
-  <p class="sumr">${ngroups} group${ngroups === 1 ? '' : 's'} \u00b7 ${rounds} rounds \u00b7 3 courts${rounds ? ' \u00b7 ends about ' + fmt12((sh || 0) * 60 + (sm || 0) + rounds * d.roundMin) : ''}</p>
+  <p class="sumr">${ngroups} group${ngroups === 1 ? '' : 's'} \u00b7 ${rounds} rounds \u00b7 ${courts} courts${rounds ? ' \u00b7 ends about ' + fmt12((sh || 0) * 60 + (sm || 0) + rounds * d.roundMin) : ''}</p>
   <div class="sc">${radio('registration', 'Registration open', 'Everyone sees the players and open spots. No schedule yet.')}${radio('live', 'Publish draw', 'Builds the schedule and standings. Every group must be full.')}</div>
   <p class="err" role="alert">${esc(md.error)}</p>
-  <div class="acts"><button class="btn pri" data-act="savesetup" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button><button class="btn dng" data-act="resetsetup" ${S.busy ? 'disabled' : ''}>Start over</button></div>
-  <p class="hint">Start over deletes all categories, players and scores of this tournament so you can begin again. Archive first to keep the results.</p>`;
+  <div class="acts"><button class="btn pri" data-act="savesetup" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button>${md.creating ? '' : `<button class="btn dng" data-act="resetsetup" ${S.busy ? 'disabled' : ''}>Delete tournament</button>`}</div>
+  ${md.creating ? '' : '<p class="hint">Delete removes this tournament\u2019s categories, players and scores. Other tournaments are not affected. Archive first to keep the results.</p>'}`;
 }
 async function resetSetup() {
+  const id = S.tid; if (!id) return;
   const n = Object.keys(S.data.results || {}).length, path = TOURNAMENT.resultsPath;
-  if (!confirm('Delete this tournament setup? All categories and players will be removed' + (n ? ', and the ' + n + ' scores entered will be deleted (archive first to keep them)' : '') + '. Player names stay saved for next time.')) return;
+  if (!confirm('Delete the tournament on ' + dateLong(id) + '? Its categories, players' + (n ? ' and the ' + n + ' scores entered' : '') + ' will be removed (archive first to keep the results). Other tournaments are not affected.')) return;
   S.busy = true; renderModal();
   try {
-    const a = await fetch(DB_URL + '/tennis/setup.json', { method: 'DELETE' }), b = await fetch(DB_URL + '/' + path + '.json', { method: 'DELETE' });
+    await ensureMigrated();
+    const a = await fetch(DB_URL + '/tennis/setups/' + id + '.json', { method: 'DELETE' }), b = await fetch(DB_URL + '/' + path + '.json', { method: 'DELETE' });
     if (!a.ok || !b.ok) throw new Error('HTTP');
-    S.cfg = DEFAULT_CFG; applySetup(); S.busy = false; S.modal = null; renderModal(); render(); toast('Setup deleted \u2014 you can start again');
+    delete S.setups[id]; S.setupsJson = JSON.stringify(S.setups); S.tid = chooseTid(''); remember('lt-tid', S.tid); S.cfg = S.setups[S.tid] || DEFAULT_CFG;
+    applySetup(); S.busy = false; S.modal = null; renderModal(); render(); toast('Tournament deleted');
   } catch (e) { S.busy = false; if (S.modal) S.modal.error = 'Could not delete. Check your connection and the Firebase rules.'; renderModal(); }
 }
 async function saveSetup() {
@@ -3397,18 +3502,23 @@ async function saveSetup() {
     if (n > cap) errs.push(catTitle(k) + ' has ' + n + ' ' + u + ' for ' + cap + ' places \u2014 remove some or raise the group size.');
     if (d.status === 'live' && n !== cap) errs.push(catTitle(k) + ' needs exactly ' + cap + ' ' + u + ' (has ' + n + ').'); });
   if (d.status === 'live' && !act.length) errs.push('Select at least one category.');
+  const newId = cfgDate(d), oldId = md.origId || '';
+  if (newId !== oldId && S.setups[newId]) errs.push('There is already a tournament on ' + dateLong(newId) + ' \u2014 choose another date.');
   if (errs.length) { md.error = errs.join(' '); renderModal(); return; }
-  const prev = S.cfg;
-  if (prev && prev.status === 'live' && prev.month !== d.month && Object.keys(S.data.results).length && !confirm('The current tournament has scores and will be replaced on the page. Archive it first if you have not. Continue?')) return;
-  const cfg = { month: d.month, name: d.name, start: d.start, roundMin: d.roundMin, status: d.status, info: d.info || '', cats: d.cats };
+  if (oldId && newId !== oldId && S.cfg && S.cfg.status === 'live' && Object.keys(S.data.results).length && !confirm('This tournament has scores. Changing its date starts a new, empty results sheet. Archive it first if you have not. Continue?')) return;
+  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, status: d.status, info: d.info || '', cats: d.cats };
   S.busy = true; renderModal();
   try {
-    const res = await fetch(DB_URL + '/tennis/setup.json', { method: 'PUT', body: JSON.stringify(cfg) });
+    await ensureMigrated();
+    const res = await fetch(DB_URL + '/tennis/setups/' + newId + '.json', { method: 'PUT', body: JSON.stringify(cfg) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    S.cfg = (await fetchJson('/tennis/setup').catch(() => null)) || cfg; applySetup();
+    if (oldId && oldId !== newId) await fetch(DB_URL + '/tennis/setups/' + oldId + '.json', { method: 'DELETE' });
+    S.tid = newId; remember('lt-tid', newId);
+    try { await loadSetups(); } catch (e) { S.setups[newId] = cfg; }
+    S.cfg = S.setups[newId] || cfg; applySetup();
     if (Object.keys(NEW_IDS).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(NEW_IDS) });
     S.busy = false; S.modal = null; renderModal(); render(); pollResults(); toast('Saved \u2014 everyone sees the update');
-  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules for tennis/setup.'; renderModal(); }
+  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules for tennis/setups.'; renderModal(); }
 }
 
 /* ---- picking players straight from the Men / Women / Mixed lists ---- */
@@ -3451,7 +3561,8 @@ function pickNew(name) {
   pickAdvance(name.replace(/(^|\s)\S/g, x => x.toUpperCase()));
 }
 async function savePlayers(k, arr) {
-  const res = await fetch(DB_URL + '/tennis/setup/cats/' + k + '/players.json', { method: 'PUT', body: JSON.stringify(arr) });
+  await ensureMigrated();
+  const res = await fetch(DB_URL + '/tennis/setups/' + S.tid + '/cats/' + k + '/players.json', { method: 'PUT', body: JSON.stringify(arr) });
   if (!res.ok) throw new Error('HTTP ' + res.status);
 }
 async function commitEntry(k, names) {
@@ -3463,7 +3574,7 @@ async function commitEntry(k, names) {
     await savePlayers(k, c.players);
     if (Object.keys(newIds).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(newIds) });
     if (Object.keys(newG).length) { await fetch(DB_URL + '/tennis/genders.json', { method: 'PATCH', body: JSON.stringify(newG) }); Object.keys(newG).forEach(i => { delete NEW_GENDERS[i]; }); }
-    S.cfg = (await fetchJson('/tennis/setup').catch(() => null)) || S.cfg; applySetup();
+    await refreshCfg();
     S.busy = false; S.modal = null; renderModal(); render(); toast('Added to the list');
   } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules.'; renderModal(); }
 }
@@ -3471,7 +3582,7 @@ async function removeEntry(k, i) {
   const c = catCfg(((S.cfg || {}).cats || {})[k] || {}), name = c.players[i];
   if (!name || !confirm('Remove ' + name + ' from ' + catTitle(k) + '?')) return;
   c.players.splice(i, 1);
-  try { await savePlayers(k, c.players); S.cfg = (await fetchJson('/tennis/setup').catch(() => null)) || S.cfg; applySetup(); render(); toast('Removed'); }
+  try { await savePlayers(k, c.players); await refreshCfg(); render(); toast('Removed'); }
   catch (e) { toast('Could not remove. Check your connection.'); }
 }
 document.addEventListener('input', ev => {
@@ -3483,42 +3594,46 @@ document.addEventListener('change', ev => {
 });
 
 /* ---------- Team tournament views ---------- */
-function teamCard(c) {
+const teamCats = () => CAT_ORDER.filter(k => CAT_DEFS[k][0] === 'teams');
+const teamCfg = k => catCfg((((S.cfg || {}).cats || {})[k]) || {});
+function teamCard(k, c) {
   const T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], n = c.size, teams = c.teams, left = n - teams.length;
   const rows = Array.from({ length: n }, (_, i) => {
     const t = teams[i];
-    if (!t) return S.canEdit ? `<button class="seat open add" data-act="teamadd"><span>${i + 1}</span><span>+ Add team</span></button>` : `<div class="seat open"><span>${i + 1}</span><span>Open team spot</span></div>`;
-    return `<div class="team"><div class="th2"><b>${esc(t.name)}</b>${S.canEdit ? `<button class="rm" data-act="teamdel" data-i="${i}" aria-label="Remove team ${esc(t.name)}">\u00d7</button>` : ''}</div>` +
-      T.slots.map((sl, j) => { const nm = (t.p || [])[j], inner = `<span>P${j + 1}</span><span>${nm ? esc(nm) : '\u2014'}<small class="pn">${T.plan(j, n)}</small></span><small>${sl.role}</small>`; return S.canEdit ? `<button class="mem" data-act="teamedit" data-i="${i}" data-j="${j}">${inner}</button>` : `<div class="mem">${inner}</div>`; }).join('') + '</div>';
+    if (!t) return S.canEdit ? `<button class="seat open add" data-act="teamadd" data-cat="${k}"><span>${i + 1}</span><span>+ Add team</span></button>` : `<div class="seat open"><span>${i + 1}</span><span>Open team spot</span></div>`;
+    return `<div class="team"><div class="th2"><b>${esc(t.name)}</b>${S.canEdit ? `<button class="rm" data-act="teamdel" data-cat="${k}" data-i="${i}" aria-label="Remove team ${esc(t.name)}">\u00d7</button>` : ''}</div>` +
+      T.slots.map((sl, j) => { const nm = (t.p || [])[j], inner = `<span>P${j + 1}</span><span>${nm ? esc(nm) : '\u2014'}<small class="pn">${T.plan(j, n)}</small></span><small>${sl.role}</small>`; return S.canEdit ? `<button class="mem" data-act="teamedit" data-cat="${k}" data-i="${i}" data-j="${j}">${inner}</button>` : `<div class="mem">${inner}</div>`; }).join('') + '</div>';
   }).join('');
-  return `<section class="card"><div class="card-head"><h2 class="tag">Team tournament</h2><span class="pill"><i></i>${left > 0 ? left + ' team spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + teams.length + ' of ' + n : 'Full \u00b7 ' + n + ' of ' + n}</span></div><p class="fmt">${T.label} \u00b7 ${scoringText(scoringFor(c))}</p><p class="hint" style="margin:0 6px 8px">${T.rule(n)}</p>${rows}</section>`;
+  return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' team spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + teams.length + ' of ' + n : 'Full \u00b7 ' + n + ' of ' + n}</span></div><p class="fmt">${T.label} \u00b7 ${scoringText(scoringFor(c))}</p><p class="hint" style="margin:0 6px 8px">${T.rule(n)}</p>${rows}</section>`;
 }
-function teamsView() {
-  const cat = CATS.find(c => c.format === 'team');
-  if (!cat) return '<section class="card"><p class="foot" style="color:var(--ink)">No team tournament in this draw.</p></section>';
-  const rows = rankTeams(S.data, cat), p = categoryProgress(S.data, cat);
+function teamBlock(cat) {
+  const rows = rankTeams(S.data, cat), p = categoryProgress(S.data, cat), title = catTitle(cat.key);
   const status = p.complete ? '<span class="pill final"><i></i>Final classification</span>' : `<span class="pill"><i></i>Live standings \u00b7 ${p.done} of ${p.total} matches played</span>`;
   const body = rows.map(s => { const t = cat.teams.find(x => x.id === s.pid);
     return `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname">${esc(PLAYERS[s.pid])}</span><small class="hp">${t.members.map((m, j) => 'P' + (j + 1) + ' ' + esc(PLAYERS[m])).join(' \u00b7 ')}</small></td><td class="wl">${s.sw}${dash}${s.sl}</td><td class="wl">${s.dw}${dash}${s.dl}</td><td class="gm"><b>${s.gw}</b><i>/</i><b>${s.gl}</b></td><td class="wl pts2">${s.w}</td><td class="pos">${s.pos || dash}</td></tr>`; }).join('');
   const ties = {};
-  catMatches(cat.key).forEach(m => { const key = m.tr + '|' + m.tie.join('|'), t = ties[key] = ties[key] || { tr: m.tr, a: m.tie[0], b: m.tie[1], pa: 0, pb: 0, done: 0, total: 0 }; t.total++; const r = getResult(S.data, m); if (r) { t.done++; if (r[0] > r[1]) t.pa++; else t.pb++; } });
+  catMatches(cat.key).forEach(m => { const key = m.tr + '|' + m.tie.join('|'), t = ties[key] = ties[key] || { tr: m.tr, a: m.tie[0], b: m.tie[1], pa: 0, pb: 0, done: 0 }; const r = getResult(S.data, m); if (r) { t.done++; if (r[0] > r[1]) t.pa++; else t.pb++; } });
   let last = 0;
   const tl = Object.values(ties).sort((x, y) => x.tr - y.tr).map(t => (t.tr !== last ? (last = t.tr, `<p class="gh2">Match-up ${t.tr} of ${cat.size - 1}</p>`) : '') +
     `<div class="tieres"><span>${esc(PLAYERS[t.a])}</span><b>${t.done ? t.pa + ' \u2013 ' + t.pb : 'vs'}</b><span>${esc(PLAYERS[t.b])}</span></div>`).join('');
-  return `<section class="card"><div class="card-head"><h2 class="tag">Team tournament</h2>${status}</div><div class="scroll"><table class="hist"><thead><tr><th class="l">TEAM</th><th class="a2">SINGLES<br>W${dash}L</th><th class="a2">DOUBLES<br>W${dash}L</th><th class="a2">GAMES<br>W${dash}L</th><th>PTS</th><th class="pos">POS</th></tr></thead><tbody>${body}</tbody></table></div></section>
-  <section class="card"><div class="card-head"><h2 class="tag">Team match-ups</h2></div>${tl}</section>
-  <p class="foot"><b>Every match won = 1 point.</b> The team with the most points ranks first; level teams are separated by games difference.<br>Singles are played first, then doubles. Tap a match in Order of play for details.</p>`;
+  return `<section class="card"><div class="card-head"><h2 class="tag">${title}</h2>${status}</div><div class="scroll"><table class="hist"><thead><tr><th class="l">TEAM</th><th class="a2">SINGLES<br>W${dash}L</th><th class="a2">DOUBLES<br>W${dash}L</th><th class="a2">GAMES<br>W${dash}L</th><th>PTS</th><th class="pos">POS</th></tr></thead><tbody>${body}</tbody></table></div></section>
+  <section class="card"><div class="card-head"><h2 class="tag">Team match-ups</h2><span class="pill"><i></i>${title}</span></div>${tl}</section>`;
 }
-function openTeamAdd() { S.modal = { type: 'tpick', step: 0, name: '', members: [], team: -1, q: '', error: '' }; renderModal(); }
-function openTeamEdit(i, j) {
-  const t = catCfg(((S.cfg || {}).cats || {}).TM || {}).teams[i]; if (!t) return;
-  S.modal = { type: 'tpick', step: j + 1, name: t.name, members: (t.p || []).slice(), team: i, replace: true, q: '', error: '' }; renderModal();
+function teamsView() {
+  const cats = CATS.filter(c => c.format === 'team');
+  if (!cats.length) return '<section class="card"><p class="foot" style="color:var(--ink)">No team tournament in this draw.</p></section>';
+  return cats.map(teamBlock).join('') + `<p class="foot"><b>Every match won = 1 point.</b> The team with the most points ranks first; level teams are separated by games difference.<br>Singles are played first, then doubles. Tap a match in Order of play for details.</p>`;
+}
+function openTeamAdd(k) { S.modal = { type: 'tpick', cat: k, step: 0, name: '', members: [], team: -1, q: '', error: '' }; renderModal(); }
+function openTeamEdit(k, i, j) {
+  const t = teamCfg(k).teams[i]; if (!t) return;
+  S.modal = { type: 'tpick', cat: k, step: j + 1, name: t.name, members: (t.p || []).slice(), team: i, replace: true, q: '', error: '' }; renderModal();
 }
 function tpickBody(md) {
-  const c = catCfg(((S.cfg || {}).cats || {}).TM || {}), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'];
-  if (md.step === 0) return `<p class="dmeta">Team tournament \u00b7 ${T.label}</p><h3 id="dt">Team name</h3><input id="tn" class="sq" type="text" maxlength="28" placeholder="e.g. Team Red" autocomplete="off" value="${esc(md.name)}"><p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="tnext">Next</button><button class="btn txt" data-act="close">Cancel</button></div>`;
+  const c = teamCfg(md.cat), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'];
+  if (md.step === 0) return `<p class="dmeta">${catTitle(md.cat)} \u00b7 ${T.label}</p><h3 id="dt">Team name</h3><input id="tn" class="sq" type="text" maxlength="28" placeholder="e.g. Team Red" autocomplete="off" value="${esc(md.name)}"><p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="tnext">Next</button><button class="btn txt" data-act="close">Cancel</button></div>`;
   const sl = T.slots[md.step - 1];
-  return `<p class="dmeta">${esc(md.name)} \u00b7 player ${md.step} of ${T.n}</p><h3 id="dt">P${md.step} \u00b7 ${sl.role}</h3>
+  return `<p class="dmeta">${catTitle(md.cat)} \u00b7 ${esc(md.name)} \u00b7 player ${md.step} of ${T.n}</p><h3 id="dt">P${md.step} \u00b7 ${sl.role}</h3>
   <input id="pq" class="sq" type="search" placeholder="Search or type a new name\u2026" autocomplete="off" autocapitalize="words" value="${esc(md.q)}">
   <div id="plist">${tpickList(md)}</div><p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn txt" data-act="close">Cancel</button></div>`;
 }
@@ -3534,20 +3649,19 @@ function listHtml(all, q0, rowAct, newAct) {
   return h || '<p class="hint">Nobody left to pick. Type a name to add a new player.</p>';
 }
 function tpickCandidates(md) {
-  const c = catCfg(((S.cfg || {}).cats || {}).TM || {}), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], g = T.slots[md.step - 1].g;
-  const taken = c.teams.flatMap(t => t.p || []).concat(md.members.filter((_, j) => j !== md.step - 1)).map(normName);
+  const c = teamCfg(md.cat), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], g = T.slots[md.step - 1].g;
+  const taken = teamCats().flatMap(k => teamCfg(k).teams.flatMap(t => t.p || [])).concat(md.members.filter((_, j) => j !== md.step - 1)).map(normName);
   return Object.keys(PLAYERS).filter(id => id.indexOf('seat') !== 0 && id.indexOf('tm_') !== 0 && (!GENDER[id] || GENDER[id] === g) && !taken.includes(normName(PLAYERS[id]))).map(id => PLAYERS[id]).sort((a, b) => a.localeCompare(b));
 }
 const tpickList = md => listHtml(tpickCandidates(md), md.q, 'tpickp', 'tpicknew');
 function teamNext() {
   const md = S.modal, el = $modal.querySelector('#tn'), name = el ? el.value.trim().replace(/\s+/g, ' ') : '';
-  const c = catCfg(((S.cfg || {}).cats || {}).TM || {});
   if (!name) { md.error = 'Enter a team name.'; renderModal(); return; }
-  if (c.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) { md.error = 'There is already a team with that name.'; renderModal(); return; }
+  if (teamCats().some(k => teamCfg(k).teams.some(t => t.name.toLowerCase() === name.toLowerCase()))) { md.error = 'There is already a team with that name.'; renderModal(); return; }
   md.name = name; md.step = 1; md.error = ''; renderModal();
 }
 function tpickAdvance(name) {
-  const md = S.modal, c = catCfg(((S.cfg || {}).cats || {}).TM || {}), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], id = lookupName(name);
+  const md = S.modal, c = teamCfg(md.cat), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], id = lookupName(name);
   md.members[md.step - 1] = id ? PLAYERS[id] : name;
   if (md.replace || md.step >= T.n) { commitTeam(); return; }
   md.step++; md.q = ''; md.error = ''; renderModal();
@@ -3557,30 +3671,40 @@ function tpickNew(name) {
   if (id) { if (tpickCandidates(md).includes(PLAYERS[id])) tpickAdvance(PLAYERS[id]); else { md.error = PLAYERS[id] + ' is already in a team.'; renderModal(); } return; }
   tpickAdvance(name.replace(/(^|\s)\S/g, x => x.toUpperCase()));
 }
-async function saveTeams(teams) {
-  const res = await fetch(DB_URL + '/tennis/setup/cats/TM/teams.json', { method: 'PUT', body: JSON.stringify(teams) });
+async function saveTeams(k, teams) {                       // PATCH keeps the other fields and creates the category node if it is missing
+  await ensureMigrated(); const base = DB_URL + '/tennis/setups/' + S.tid + '/cats/';
+  if (S.legacyTM && S.cfg && S.cfg.cats && S.cfg.cats.TA) {  // move an old "TM" setup to Category A first, so nothing is lost
+    await fetch(base + 'TA.json', { method: 'PATCH', body: JSON.stringify(S.cfg.cats.TA) });
+    await fetch(base + 'TM.json', { method: 'DELETE' }); S.legacyTM = false;
+  }
+  const c = teamCfg(k), res = await fetch(base + k + '.json', { method: 'PATCH', body: JSON.stringify({ teams, format: 'team', teamType: c.teamType, size: c.size, groups: 1, scoring: c.scoring, mix: c.mix, off: false }) });
   if (!res.ok) throw new Error('HTTP ' + res.status);
 }
 async function commitTeam() {
-  const md = S.modal, c = catCfg(((S.cfg || {}).cats || {}).TM || {}), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4']; S.busy = true;
+  const md = S.modal, k = md.cat, c = teamCfg(k), T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4']; S.busy = true;
   const ids = md.members.map((n, j) => ensurePlayer(n, T.slots[j].g)), newIds = { ...NEW_IDS }, newG = { ...NEW_GENDERS };
   const teams = c.teams.map(t => ({ name: t.name, p: (t.p || []).slice() })), entry = { name: md.name, p: ids.map(i => PLAYERS[i]) };
   if (md.team >= 0) teams[md.team] = entry; else teams.push(entry);
   try {
-    await saveTeams(teams);
+    await saveTeams(k, teams);
     if (Object.keys(newIds).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(newIds) });
     if (Object.keys(newG).length) { await fetch(DB_URL + '/tennis/genders.json', { method: 'PATCH', body: JSON.stringify(newG) }); Object.keys(newG).forEach(i => { delete NEW_GENDERS[i]; }); }
-    S.cfg = (await fetchJson('/tennis/setup').catch(() => null)) || S.cfg; applySetup();
+    await refreshCfg();
     S.busy = false; S.modal = null; renderModal(); render(); toast(md.replace ? 'Player updated' : 'Team added');
   } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules.'; renderModal(); }
 }
-async function removeTeam(i) {
-  const c = catCfg(((S.cfg || {}).cats || {}).TM || {}), t = c.teams[i];
+async function removeTeam(k, i) {
+  const c = teamCfg(k), t = c.teams[i];
   if (!t || !confirm('Remove team ' + t.name + '?')) return;
   const teams = c.teams.filter((_, x) => x !== i).map(x => ({ name: x.name, p: x.p }));
-  try { await saveTeams(teams); S.cfg = (await fetchJson('/tennis/setup').catch(() => null)) || S.cfg; applySetup(); render(); toast('Team removed'); }
+  try { await saveTeams(k, teams); await refreshCfg(); render(); toast('Team removed'); }
   catch (e) { toast('Could not remove. Check your connection.'); }
 }
+function normCfg(c) {                                      // older setups stored the team tournament as "TM": treat it as Category A
+  if (c && c.cats && c.cats.TM) { c = JSON.parse(JSON.stringify(c)); if (!c.cats.TA) c.cats.TA = c.cats.TM; delete c.cats.TM; S.legacyTM = true; }
+  return c;
+}
+
 /* ---------- Tournament history (archive + player records) ---------- */
 function snapshot() {
   const st = S.data;
@@ -3617,7 +3741,7 @@ async function loadHistory() {
   if (S.tab === 'history' && !S.modal) render();
 }
 const fmtDate = iso => { const p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : esc(iso || ''); };
-const catShort = c => c.league === 'teams' ? 'Teams' : leagueWord(c.league) + ' ' + String(c.label).replace('Category ', '');
+const catShort = c => c.league === 'teams' ? 'Teams ' + String(c.label).replace('Category ', '') : leagueWord(c.league) + ' ' + String(c.label).replace('Category ', '');
 const catFull = c => (leagueTitle(c.league) + ' ' + c.label).trim();
 const evName = (ev, pid) => (ev.players && ev.players[pid]) || pid;
 const nameHtml = n => { const p = String(n).split(' '); return `<span class="fn">${esc(p[0])}</span> <span class="ln">${esc(p.slice(1).join(' '))}</span>`; };
@@ -3695,17 +3819,22 @@ document.addEventListener('click', ev => {
   else if (act === 'pin') submitPin();
   else if (act === 'download') downloadFile();
   else if (act === 'archive') archiveTournament();
-  else if (act === 'setup') openSetup();
+  else if (act === 'setup') openSetup(false);
+  else if (act === 'newtour') openSetup(true);
+  else if (act === 'seltid') selectTid(el.dataset.id);
   else if (act === 'regadd') openPick(el.dataset.cat);
   else if (act === 'regdel') removeEntry(el.dataset.cat, +el.dataset.i);
   else if (act === 'pickp') pickAdvance(el.dataset.n);
   else if (act === 'picknew') pickNew(el.dataset.n);
-  else if (act === 'teamadd') openTeamAdd();
-  else if (act === 'teamedit') openTeamEdit(+el.dataset.i, +el.dataset.j);
-  else if (act === 'teamdel') removeTeam(+el.dataset.i);
+  else if (act === 'teamadd') openTeamAdd(el.dataset.cat);
+  else if (act === 'teamedit') openTeamEdit(el.dataset.cat, +el.dataset.i, +el.dataset.j);
+  else if (act === 'teamdel') removeTeam(el.dataset.cat, +el.dataset.i);
   else if (act === 'tnext') teamNext();
   else if (act === 'tpickp') tpickAdvance(el.dataset.n);
   else if (act === 'tpicknew') tpickNew(el.dataset.n);
+  else if (act === 'mprev' || act === 'mnext') { readDraft(); const dd = S.modal.draft; dd.month = monthShift(dd.month, act === 'mnext' ? 1 : -1); dd.date = ''; renderModal(); }
+  else if (act === 'datecustom') { readDraft(); const dd = S.modal.draft; dd.date = cfgDate({ month: dd.month }); renderModal(); }
+  else if (act === 'datefirst') { readDraft(); S.modal.draft.date = ''; renderModal(); }
   else if (act === 'savesetup') saveSetup();
   else if (act === 'resetsetup') resetSetup();
   else if (act === 'hsel') { S.hsel = el.dataset.id; render(); window.scrollTo(0, 0); }
