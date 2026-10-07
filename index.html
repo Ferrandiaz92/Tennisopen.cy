@@ -3090,36 +3090,27 @@ function rulesInfo() {
   return CAT_ORDER.filter(k => cats[k] && !cats[k].off).map(k => { const c = catCfg(cats[k]); return { k, title: catTitle(k), f: c.format, n: c.size, g: c.groups, sc: scoringFor(c), tt: c.teamType }; });
 }
 function formatRules() {
-  const info = rulesInfo(), li = [`<li><b>${dateLong(TOURNAMENT.date)}</b> \u00b7 ${COURTS} courts.</li>`];
-  const grp = (c, unit) => c.g > 1 ? c.g + ' groups of ' + c.n + ' ' + unit : c.n + ' ' + unit;
-  if (!info.length) li.push('<li>Round-robin groups: everyone plays everyone once.</li>', '<li>1st place in each group wins.</li>');
-  if (info.length) {                                       // at-a-glance summary before the details of each category
-    const tw = { '4': '2 men + 2 women', '3m': '2 men + 1 woman', '3w': '1 man + 2 women', '2m': '2 men', '2w': '2 women' };
-    const kindOf = c => c.f === 'team' ? 'Team tournament' : c.f === 'americano' ? 'Americano (partners change every round)' : c.f === 'doubles' ? (CAT_DEFS[c.k][0] === 'mixed' ? 'Mixed doubles' : 'Doubles (fixed pairs)') : 'Singles';
-    const lgs = [...new Set(info.filter(c => c.f !== 'team').map(c => CAT_DEFS[c.k][0]))], who = [];
-    if (lgs.includes('men') && lgs.includes('women')) who.push('men and women, in separate categories'); else if (lgs.includes('men')) who.push('men'); else if (lgs.includes('women')) who.push('women');
-    if (lgs.includes('mixed')) who.push('mixed (men and women together)');
-    [...new Set(info.filter(c => c.f === 'team').map(c => c.tt || '4'))].forEach(ty => who.push('teams of ' + (TEAM_TYPES[ty] || TEAM_TYPES['4']).n + ' (' + tw[ty] + ')'));
-    li.push(`<li><b>Format:</b> ${[...new Set(info.map(kindOf))].join(' + ')}.</li>`, `<li><b>Players:</b> ${who.join('; ')}.</li>`,
-      `<li><b>Stage:</b> ${info.every(c => c.f === 'team') ? 'round robin \u2014 every team plays every other team once' : 'group stage only (round robin)'}. No knockout round.</li>`,
-      `<li><b>Levels:</b> ${[...new Set(info.map(c => CAT_DEFS[c.k][1]))].join(' and ')}.</li>`);
-  }
-  info.forEach(c => {
-    const lg = CAT_DEFS[c.k][0], lvl = CAT_DEFS[c.k][1], rest = c.n % 2;
-    let kind, t;
-    if (c.f === 'team') {
-      const ty = c.tt || '4', pp = ty.charAt(0) === '2' ? (c.n - 1) + ' singles and ' + (c.n - 1) + ' doubles' : (c.n - 1) + ' matches';
-      kind = 'Team tournament'; t = `${c.n} teams of ${(TEAM_TYPES[ty] || TEAM_TYPES['4']).n} (${ty === '4' ? '2 men + 2 women' : ty === '3m' ? '2 men + 1 woman' : ty === '3w' ? '1 man + 2 women' : ty === '2m' ? '2 men' : '2 women'}). Round robin: every team plays every other team once, so each player plays ${pp}. Singles first, then doubles. Every match won = 1 point; the team with the most points wins.${c.n % 2 ? ' One team rests in each round.' : ''}`;
-    } else if (c.f === 'americano') {
-      kind = leagueTitle(lg) + ' Americano'; t = `${grp(c, 'players')}. Partners change every round; each player plays ${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches. The most games won ranks first.${c.n > 4 && c.n < 8 ? ' Players who are not on court rest that round.' : ''}`;
-    } else if (c.f === 'doubles') {
-      kind = lg === 'mixed' ? 'Mixed doubles' : leagueTitle(lg) + ' doubles'; t = `${grp(c, 'pairs')}. Round robin: every pair plays every other pair once, so each pair plays ${c.n - 1} matches.${rest ? ' One pair rests in each round.' : ''}`;
-    } else {
-      kind = leagueTitle(lg) + ' singles'; t = `${grp(c, 'players')}. Round robin: everyone plays everyone once, so each player plays ${c.n - 1} matches.${rest ? ' One player rests in each round.' : ''}`;
-    }
-    li.push(`<li><b>${kind} \u00b7 ${lvl}:</b> ${t}</li>`);
+  const info = rulesInfo();
+  if (!info.length) return '<h4>Tournament format</h4><ul><li><b>Round robin</b> in groups: everyone plays everyone once.</li><li>No knockout round: 1st place in each group wins.</li></ul>';
+  const tw = { '4': '2 men + 2 women', '3m': '2 men + 1 woman', '3w': '1 man + 2 women', '2m': '2 men', '2w': '2 women' };
+  const lgOf = c => CAT_DEFS[c.k][0], grp = info.some(c => c.f !== 'team'), tms = info.some(c => c.f === 'team');
+  const kindOf = c => c.f === 'team' ? 'Team tournament' : c.f === 'americano' ? 'Americano' : c.f === 'doubles' ? (lgOf(c) === 'mixed' ? 'Mixed doubles' : 'Doubles') : 'Singles';
+  const lgs = [...new Set(info.filter(c => c.f !== 'team').map(lgOf))], who = [];
+  if (lgs.includes('men') && lgs.includes('women')) who.push('men and women'); else if (lgs.includes('men')) who.push('men'); else if (lgs.includes('women')) who.push('women');
+  if (lgs.includes('mixed')) who.push('mixed');
+  [...new Set(info.filter(c => c.f === 'team').map(c => c.tt || '4'))].forEach(ty => who.push('teams of ' + (TEAM_TYPES[ty] || TEAM_TYPES['4']).n + ' (' + tw[ty] + ')'));
+  const levels = [...new Set(info.map(c => CAT_DEFS[c.k][1]))].join(' and ');
+  const li = [`<li><b>${[...new Set(info.map(kindOf))].join(' + ')}</b> \u2014 ${who.join('; ')}. ${grp ? 'In groups by category' : 'Categories'}: ${levels}.</li>`];
+  const bySig = {}; info.forEach(c => { (bySig[[c.f, c.n, c.g, c.tt || ''].join('|')] = bySig[[c.f, c.n, c.g, c.tt || ''].join('|')] || []).push(c); });
+  const many = Object.keys(bySig).length > 1;
+  Object.values(bySig).forEach(cs => {
+    const c = cs[0], u = c.f === 'doubles' ? 'pair' : 'player', odd = c.n % 2; let t;
+    if (c.f === 'team') t = `${c.n} teams of ${(TEAM_TYPES[c.tt || '4'] || TEAM_TYPES['4']).n}: every team plays every other team once (${(c.tt || '4').charAt(0) === '2' ? (c.n - 1) + ' singles + ' + (c.n - 1) + ' doubles' : (c.n - 1) + ' matches'} per player). Singles first, then doubles; every match won = 1 point.${odd ? ' One team rests each round.' : ''}`;
+    else if (c.f === 'americano') t = `${c.n} players per group; partners change every round (${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches each). Most games won ranks first.${c.n > 4 && c.n < 8 ? ' Players not on court rest.' : ''}`;
+    else t = `${c.n} ${u}s per group${c.g > 1 ? ', ' + c.g + ' groups per category' : ''}. Round robin: everyone plays everyone once (${c.n - 1} matches each).${odd ? ' One ' + u + ' rests each round.' : ''}`;
+    li.push(`<li>${many ? '<b>' + cs.map(x => x.title).join(', ') + ':</b> ' : ''}${t}</li>`);
   });
-  if (info.some(c => c.f === 'singles' || c.f === 'doubles')) li.push('<li>1st place in each group wins.</li>');
+  li.push(`<li>No knockout round: ${grp && tms ? '1st place in each group wins; in the team tournament, the team with the most points.' : tms ? 'the team with the most points wins.' : '1st place in each group wins.'}</li>`);
   return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
 }
 function matchRules() {
