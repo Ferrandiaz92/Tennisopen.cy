@@ -271,6 +271,7 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .tieres.wait span{opacity:.7;font-style:italic}.kw{color:var(--win);font-weight:800}.champ{margin:12px 8px 2px;font-weight:700;font-size:15px}
 .kopre{margin:14px 4px 2px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.05);font-size:13px}
 .kopre b{font-weight:800}.kr{display:grid;grid-template-columns:auto 1fr;gap:1px 12px;font-weight:600;padding:6px 0 4px;border-top:1px dashed var(--line);margin-top:6px}.kr span:first-child{color:var(--acc2);font-weight:800}.kr small{grid-column:2;opacity:.7;font-weight:600}
+.seat.ko{grid-template-columns:92px 1fr}.seat.ko span:first-child{font-size:12px;font-weight:800;color:var(--acc2);opacity:1}.seat.ko small{display:block;font-size:11px;font-weight:600;opacity:.65;margin-top:1px}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2644,7 +2645,7 @@ const roundsFor = (f, n) => f === 'americano' ? ({ 4: 3, 5: 5, 6: 6, 7: 7, 8: 7 
 const scoringFor = c => c.scoring === 'to4' || c.scoring === 'set' ? c.scoring : (c.format === 'team' || (+c.size || 7) >= 6 ? 'to4' : 'set');
 const scoringText = s => s === 'set' ? 'full set' : 'first to 4 games';
 const catNames = c => { const p = c && c.players; return (Array.isArray(p) ? p : Object.values(p || {})).filter(Boolean); };
-const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: false, ko: ['final', 'semis'].includes(c.ko) ? c.ko : 'none', koSemi: ['to4', 'set'].includes(c.koSemi) ? c.koSemi : 'auto', koFinal: ['to4', 'set'].includes(c.koFinal) ? c.koFinal : 'auto',
+const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: false, ko: ['final', 'semis'].includes(c.ko) ? c.ko : 'none', ko3: !!c.ko3, koSemi: ['to4', 'set'].includes(c.koSemi) ? c.koSemi : 'auto', koFinal: ['to4', 'set'].includes(c.koFinal) ? c.koFinal : 'auto',
   teams: (Array.isArray(c.teams) ? c.teams : Object.values(c.teams || {})).map(t => ({ name: t.name || '', p: (Array.isArray(t.p) ? t.p : Object.values(t.p || {})).filter(Boolean) })) });
 const firstSaturday = ym => { const [y, m] = ym.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); return new Date(Date.UTC(y, m - 1, 1 + (6 - wd + 7) % 7)).toISOString().slice(0, 10); };
 const cfgDate = c => /^\d{4}-\d{2}-\d{2}$/.test(c.date || '') ? c.date : firstSaturday(/^\d{4}-\d{2}$/.test(c.month) ? c.month : DEFAULT_CFG.month);
@@ -2773,9 +2774,10 @@ function koMatches(ck, c) {
   const pos = (grp, p) => ({ type: 'pos', cat: key(grp), pos: p, label: ord[p - 1] + (g > 1 ? ' Group ' + grp : '') });
   const win = n => ({ type: 'win', of: kc + '-SF' + n, label: 'Winner SF' + n });
   const mk = (id, name, stage, a, b, scoring) => ({ id: kc + '-' + id, name, stage, a, b, scoring, cat: kc, league: CAT_DEFS[ck][0], label: CAT_DEFS[ck][1] });
-  if (c.ko === 'final') return [mk('F', 'Final', 'F', pos(1, 1), g === 2 ? pos(2, 1) : pos(1, 2), fin)];
+  const third = c.ko3 && (g === 2 || c.ko === 'semis' || c.size >= 4), lose = n => ({ type: 'lose', of: kc + '-SF' + n, label: 'Loser SF' + n });
+  if (c.ko === 'final') return [...(third ? [mk('T', '3rd place', 'T', g === 2 ? pos(1, 2) : pos(1, 3), g === 2 ? pos(2, 2) : pos(1, 4), sc)] : []), mk('F', 'Final', 'F', pos(1, 1), g === 2 ? pos(2, 1) : pos(1, 2), fin)];
   const sf = g === 2 ? [[pos(1, 1), pos(2, 2)], [pos(2, 1), pos(1, 2)]] : [[pos(1, 1), pos(1, 4)], [pos(1, 2), pos(1, 3)]];
-  return [mk('SF1', 'Semifinal 1', 'SF', sf[0][0], sf[0][1], semi), mk('SF2', 'Semifinal 2', 'SF', sf[1][0], sf[1][1], semi), mk('F', 'Final', 'F', win(1), win(2), fin)];
+  return [mk('SF1', 'Semifinal 1', 'SF', sf[0][0], sf[0][1], semi), mk('SF2', 'Semifinal 2', 'SF', sf[1][0], sf[1][1], semi), ...(third ? [mk('T', '3rd place', 'T', lose(1), lose(2), semi)] : []), mk('F', 'Final', 'F', win(1), win(2), fin)];
 }
 function updateKnockouts(state) {                          // fills the knockout sides from the group tables and earlier knockout results
   MATCHES.forEach(m => {
@@ -2786,7 +2788,8 @@ function updateKnockouts(state) {                          // fills the knockout
         const row = rankCategory(state, gc)[spec.pos - 1]; return row && row.pos === spec.pos ? { ids: [row.pid] } : { ph: spec.label + ' (tied)' };
       }
       const src = MATCHES.find(x => x.id === spec.of), r = src && getResult(state, src);
-      return r && src.A.length && src.B.length ? { ids: r[0] > r[1] ? src.A : src.B } : { ph: spec.label };
+      if (!(r && src.A.length && src.B.length)) return { ph: spec.label };
+      return { ids: (r[0] > r[1]) === (spec.type === 'win') ? src.A : src.B };
     };
     const a = res(m.ko.a), b = res(m.ko.b);
     m.A = a.ids || []; m.B = b.ids || []; m.phShow = [a.ph || '', b.ph || ''];
@@ -2859,7 +2862,7 @@ function buildTournament(cfg) {
     rd.games.forEach(([A, B, meta], gi) => RAW.push([t + 1, ++court, q.key, A, B, q.fmt === 'americano' ? { id: q.key + '-R' + (ri + 1) + 'M' + (gi + 1) } : meta]));
     RESTS[t + 1] = (RESTS[t + 1] || []).concat(rd.rest.map(pid => ({ pid, cat: q.key }))); }); });
   let nslots = slots.length;                               // knockout rounds go at the bottom: semifinals, then the final
-  [KO_LIST.filter(m => m.stage === 'SF'), KO_LIST.filter(m => m.stage === 'F')].forEach(list => { for (let i = 0; i < list.length; i += COURTS) { nslots++; list.slice(i, i + COURTS).forEach((m, j) => RAW.push([nslots, j + 1, m.cat, [], [], { id: m.id, ko: { name: m.name, stage: m.stage, a: m.a, b: m.b }, scoring: m.scoring }])); } });
+  [KO_LIST.filter(m => m.stage === 'SF'), KO_LIST.filter(m => m.stage === 'T'), KO_LIST.filter(m => m.stage === 'F')].forEach(list => { for (let i = 0; i < list.length; i += COURTS) { nslots++; list.slice(i, i + COURTS).forEach((m, j) => RAW.push([nslots, j + 1, m.cat, [], [], { id: m.id, ko: { name: m.name, stage: m.stage, a: m.a, b: m.b }, scoring: m.scoring }])); } });
   const [h, m] = String(cfg.start || '16:00').split(':').map(Number), step = Math.max(5, +cfg.roundMin || 25);
   for (let i = 0; i < nslots; i++) ROUND_TIMES.push(fmt12((h || 0) * 60 + (m || 0) + i * step));
   RAW.forEach(([round, court, cat, A, B, meta]) => { const team = meta && meta.kind; MATCHES.push({ id: meta && meta.id ? meta.id : A.length === 1 ? cat + '-' + A[0] + '-' + B[0] : cat + '-R' + round + 'C' + court, round, court, cat, A, B, a: A.length === 1 && !team ? A[0] : null, b: B.length === 1 && !team ? B[0] : null, kind: team || null, tie: meta && meta.tie || null, tr: meta && meta.tr || null, ko: meta && meta.ko || null, scoring: meta && meta.scoring || null, phShow: null }); });
@@ -3108,7 +3111,7 @@ function schedule() {
     const rests = (RESTS[i + 1] || []).filter(x => !S.filter || x.pid === S.filter);
     if (!ms.length && !rests.length) return '';
     const next = i === first ? '<span class="next">Up next</span>' : '';
-    const kinds = [...new Set(ms.map(m => m.kind || (m.ko && m.ko.stage)).filter(Boolean))], kt = kinds.length === 1 ? '<span class="kt">' + ({ S: 'Singles', D: 'Doubles', SF: 'Semifinals', F: 'Final' })[kinds[0]] + '</span>' : '';
+    const kinds = [...new Set(ms.map(m => m.kind || (m.ko && m.ko.stage)).filter(Boolean))], kt = kinds.length === 1 ? '<span class="kt">' + ({ S: 'Singles', D: 'Doubles', SF: 'Semifinals', T: '3rd place', F: 'Final' })[kinds[0]] + '</span>' : '';
     return `<section class="round" aria-label="Round ${i + 1}"><div class="rt"><small>Round</small><strong>${i + 1}</strong><em>${time}</em>${kt}${next}</div><div class="courts">${ms.map(matchCard).join('')}</div>${rests.length ? `<p class="rest">Resting: ${rests.map(x => esc(PLAYERS[x.pid])).join(', ')}</p>` : ''}</section>`;
   }).join('');
   const filter = `<div class="filter"><label for="pf">Find my matches</label><select id="pf" data-act="filter"><option value="">All players</option>${playerOptions()}</select></div>`;
@@ -3127,7 +3130,7 @@ function render() {
 /* ---------- Modals ---------- */
 function rulesInfo() {
   const cats = (S.cfg && S.cfg.cats) || {};
-  return CAT_ORDER.filter(k => cats[k] && !cats[k].off).map(k => { const c = catCfg(cats[k]); const sc = scoringFor(c); return { k, title: catTitle(k), f: c.format, n: c.size, g: c.groups, sc, tt: c.teamType, ko: koAllowed(c) ? c.ko : 'none', ks: c.koSemi === 'auto' ? sc : c.koSemi, kf: c.koFinal === 'auto' ? sc : c.koFinal }; });
+  return CAT_ORDER.filter(k => cats[k] && !cats[k].off).map(k => { const c = catCfg(cats[k]); const sc = scoringFor(c); return { k, title: catTitle(k), f: c.format, n: c.size, g: c.groups, sc, tt: c.teamType, ko: koAllowed(c) ? c.ko : 'none', k3: koAllowed(c) && c.ko !== 'none' && !!c.ko3, ks: c.koSemi === 'auto' ? sc : c.koSemi, kf: c.koFinal === 'auto' ? sc : c.koFinal }; });
 }
 function formatRules() {
   const info = rulesInfo();
@@ -3152,7 +3155,7 @@ function formatRules() {
   });
   const koIn = info.filter(c => c.ko !== 'none'), koTxt = c => c.ko === 'final' ? (c.g === 2 ? 'the two group winners play the final' : '1st and 2nd play the final') : (c.g === 2 ? 'the top 2 of each group play semifinals (1st Group 1 vs 2nd Group 2, 1st Group 2 vs 2nd Group 1), then the final' : 'the top 4 play semifinals (1st vs 4th, 2nd vs 3rd), then the final');
   if (koIn.length) {
-    const kb = {}; koIn.forEach(c => { (kb[koTxt(c)] = kb[koTxt(c)] || []).push(c.title); });
+    const kt2 = c => koTxt(c) + (c.k3 ? '; a 3rd place match is also played' : ''), kb = {}; koIn.forEach(c => { (kb[kt2(c)] = kb[kt2(c)] || []).push(c.title); });
     Object.keys(kb).forEach(t => li.push(`<li><b>Knockout${Object.keys(kb).length > 1 || koIn.length < info.filter(c => c.f !== 'team').length ? ' (' + kb[t].join(', ') + ')' : ''}:</b> after the group stage, ${t}.</li>`));
     if (koIn.length < info.filter(c => c.f !== 'team').length || tms) li.push('<li>Other categories: no knockout, 1st place in each group wins' + (tms ? '; team tournament: the team with the most points' : '') + '.</li>');
   } else li.push(`<li>No knockout round: ${grp && tms ? '1st place in each group wins; in the team tournament, the team with the most points.' : tms ? 'the team with the most points wins.' : '1st place in each group wins.'}</li>`);
@@ -3165,7 +3168,7 @@ function matchRules() {
     ? `<li><b>Full set</b>${tag(sc)}: first to 6 games with a 2\u2011game lead (6\u20130 to 6\u20134, or 7\u20135). At 6\u20136 a tie\u2011break decides: 7\u20136.</li>`
     : `<li><b>First to 4 games</b>${tag(sc)} wins: 4\u20130, 4\u20131, 4\u20132 or 4\u20133. No tie\u2011breaks.</li>`);
   const kos = info.filter(c => c.ko !== 'none'), kt = x => x === 'set' ? 'full set' : 'first to 4 games';
-  if (kos.length) li.push(`<li><b>Knockout:</b> ${[...new Set(kos.map(c => (c.ko === 'semis' ? 'semifinals ' + kt(c.ks) + ', ' : '') + 'final ' + kt(c.kf)))].join('; ')}.</li>`);
+  if (kos.length) { const sem = [...new Set(kos.filter(c => c.ko === 'semis').map(c => kt(c.ks)))], fin = [...new Set(kos.map(c => kt(c.kf)))]; li.push(`<li><b>Knockout:</b> ${sem.length ? 'semifinals ' + sem.join(' / ') + '; ' : ''}final ${fin.join(' / ')}${kos.some(c => c.k3) ? '; 3rd place match: same as ' + (sem.length ? 'the semifinals' : 'the group stage') : ''}.</li>`); }
   li.push('<li><b>Golden point</b> at 40\u201340: no advantage. The next point wins the game and the receiver chooses the side.</li>', '<li>Report your final score to the organizer right after the match.</li>');
   return `<h4>Match format</h4><ul>${li.join('')}</ul>`;
 }
@@ -3467,8 +3470,8 @@ function validScore(scoring, a, b) {
 const hasLeague = lg => (S.cfg && S.cfg.status === 'live') ? CATS.some(c => c.league === lg) : CAT_ORDER.some(k => CAT_DEFS[k][0] === lg && S.cfg && S.cfg.cats && S.cfg.cats[k] && !S.cfg.cats[k].off);
 function koPreview(k, c) {                                // what happens after the group stage, shown under the player list
   if (c.format === 'team') return '';
-  if (!koAllowed(c) || c.ko === 'none' || (c.groups === 1 && c.ko === 'semis' && c.size < 4)) return '<p class="kopre"><b>Knockout round:</b> none \u2014 group stage only.</p>';
-  return '<div class="kopre"><b>Knockout round</b> after the group stage' + koMatches(k, c).map(m => `<div class="kr"><span>${esc(m.name)}</span><span>${esc(m.a.label)} vs ${esc(m.b.label)}</span><small>${scoringText(m.scoring)}</small></div>`).join('') + '</div>';
+  if (!koAllowed(c) || c.ko === 'none' || (c.groups === 1 && c.ko === 'semis' && c.size < 4)) return '<p class="gh2">Knockout round</p><div class="seat ko"><span>None</span><span>Group stage only</span></div>';
+  return '<p class="gh2">Knockout round \u00b7 after the group stage</p>' + koMatches(k, c).map(m => `<div class="seat ko"><span>${esc(m.name)}</span><span>${esc(m.a.label)} vs ${esc(m.b.label)}<small>${scoringText(m.scoring)}</small></span></div>`).join('');
 }
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
@@ -3515,6 +3518,7 @@ function readDraft() {
     c.groups = +sel('groups').value; c.scoring = sel('scoring').value;
     if (sel('ko')) c.ko = sel('ko').value; if (sel('koSemi')) c.koSemi = sel('koSemi').value; if (sel('koFinal')) c.koFinal = sel('koFinal').value;
     if (!koAllowed(c)) c.ko = 'none'; else if (c.groups === 1 && c.size < 4 && c.ko === 'semis') c.ko = 'final';
+    if (sel('ko3')) c.ko3 = sel('ko3').value === 'yes'; if (c.ko === 'none') c.ko3 = false;
   });
 }
 const dateFrom = (y, m, day) => { const dim = new Date(Date.UTC(y, m, 0)).getUTCDate(); return y + '-' + String(m).padStart(2, '0') + '-' + String(Math.min(day, dim)).padStart(2, '0'); };
@@ -3555,11 +3559,12 @@ function setupBody(md) {
         ${koAllowed(c) ? `<label>Knockout round <select data-f="ko" data-cat="${k}">${opt('none', 'None \u2014 group stage only', c.ko)}${opt('final', c.groups === 2 ? 'Final: the two group winners' : 'Final: 1st vs 2nd', c.ko)}${c.groups === 2 || c.size >= 4 ? opt('semis', c.groups === 2 ? 'Semifinals + final: top 2 of each group' : 'Semifinals + final: top 4', c.ko) : ''}</select></label>` : ''}
         ${koAllowed(c) && c.ko === 'semis' ? `<label>Semifinal match <select data-f="koSemi" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koSemi)}${opt('to4', 'First to 4 games', c.koSemi)}${opt('set', 'Full set', c.koSemi)}</select></label>` : ''}
         ${koAllowed(c) && c.ko !== 'none' ? `<label>Final match <select data-f="koFinal" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koFinal)}${opt('to4', 'First to 4 games', c.koFinal)}${opt('set', 'Full set', c.koFinal)}</select></label>` : ''}
+        ${koAllowed(c) && c.ko !== 'none' && (c.groups === 2 || c.ko === 'semis' || c.size >= 4) ? `<label>3rd place match <select data-f="ko3" data-cat="${k}">${opt('no', 'No', c.ko3 ? 'yes' : 'no')}${opt('yes', c.ko === 'semis' ? 'Yes \u2014 losers of the semifinals' : c.groups === 2 ? 'Yes \u2014 2nd Group 1 vs 2nd Group 2' : 'Yes \u2014 3rd vs 4th', c.ko3 ? 'yes' : 'no')}</select></label>` : ''}
         <span class="cnt">${c.players.length} / ${cap} ${dbl ? 'pairs' : 'players'}</span></div>`;
     }
     return h + '</div>';
   }).join('');
-  const kc = CAT_ORDER.map(k => d.cats[k]).filter(c => c && !c.off && c.format !== 'team' && koAllowed(c) && c.ko !== 'none'), koSlots = Math.ceil(kc.filter(c => c.ko === 'semis').length * 2 / courts) + Math.ceil(kc.length / courts);
+  const kc = CAT_ORDER.map(k => d.cats[k]).filter(c => c && !c.off && c.format !== 'team' && koAllowed(c) && c.ko !== 'none'), koSlots = Math.ceil(kc.filter(c => c.ko === 'semis').length * 2 / courts) + Math.ceil(kc.length / courts) + Math.ceil(kc.filter(c => c.ko3).length / courts);
   const rounds = packRounds(queues, courts).length + koSlots, [sh, sm] = String(d.start).split(':').map(Number);
   const radio = (v, t, s) => `<label class="scr"><input type="radio" name="st" data-f="status" value="${v}" ${d.status === v ? 'checked' : ''}><span><b>${t}</b><br><small>${s}</small></span></label>`;
   return `<p class="dmeta">Organizer</p><h3 id="dt">${md.creating ? 'New tournament' : 'Tournament setup'}</h3>
@@ -3807,30 +3812,36 @@ const sideText = (m, i) => { const sd = i ? m.B : m.A; return sd.length ? sideNa
 function koRowHtml(name, a, b, r, ready) {
   return `<p class="gh2">${esc(name)}</p><div class="tieres ${ready ? '' : 'wait'}"><span class="${r && r[0] > r[1] ? 'kw' : ''}">${esc(a)}</span><b>${r ? r[0] + ' \u2013 ' + r[1] : 'vs'}</b><span class="${r && r[1] > r[0] ? 'kw' : ''}">${esc(b)}</span></div>`;
 }
+const koWinner = (m, r, nm) => r && (m.A || []).length ? nm((r[0] > r[1] ? m.A : m.B) || []) : '';
+const koSummary = (ms, res, nm) => {                       // champion and 3rd place lines
+  const f = ms.find(m => (m.ko ? m.ko.stage : m.stage) === 'F'), t = ms.find(m => (m.ko ? m.ko.stage : m.stage) === 'T');
+  const cw = f ? koWinner(f, res(f), nm) : '', tw = t ? koWinner(t, res(t), nm) : '';
+  return (cw ? `<p class="champ">Champion: <b>${esc(cw)}</b></p>` : '') + (tw ? `<p class="champ">3rd place: <b>${esc(tw)}</b></p>` : '');
+};
 function koCards(league) {
   const keys = [...new Set(MATCHES.filter(m => m.ko && CAT_BY_KEY[m.cat].league === league).map(m => m.cat))];
   return keys.map(k => {
-    const ms = MATCHES.filter(m => m.cat === k), cat = CAT_BY_KEY[k], fin = ms.find(m => m.ko.stage === 'F'), fr = fin && getResult(S.data, fin);
-    const champ = fr && fin.A.length ? sideName(fr[0] > fr[1] ? fin.A : fin.B) : '';
-    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(cat.league)} ${cat.label.replace(' \u00b7 Knockout', '')}</span></div>${ms.map(m => koRowHtml(m.ko.name, sideText(m, 0), sideText(m, 1), getResult(S.data, m), m.A.length && m.B.length)).join('')}${champ ? `<p class="champ">Champion: <b>${esc(champ)}</b></p>` : ''}</section>`;
+    const ms = MATCHES.filter(m => m.cat === k), cat = CAT_BY_KEY[k];
+    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(cat.league)} ${cat.label.replace(' \u00b7 Knockout', '')}</span></div>${ms.map(m => koRowHtml(m.ko.name, sideText(m, 0), sideText(m, 1), getResult(S.data, m), m.A.length && m.B.length)).join('')}${koSummary(ms, m => getResult(S.data, m), sideName)}</section>`;
   }).join('');
 }
 function koHistory(ev) {
   const ko = ev.knockout || []; if (!ko.length) return '';
   const nm = (k, i) => { const sd = (i ? k.B : k.A) || []; return sd.length ? sd.map(x => evName(ev, x)).join(' / ') : ((k.ph || [])[i] || ''); };
+  const names = sd => (sd || []).map(x => evName(ev, x)).join(' / ');
   return [...new Set(ko.map(k => k.cat))].map(c => {
-    const rows = ko.filter(k => k.cat === c), fin = rows.find(k => k.stage === 'F'), fr = fin && ev.results && ev.results[fin.id];
-    const champ = fr && (fin.A || []).length ? ((fr[0] > fr[1] ? fin.A : fin.B) || []).map(x => evName(ev, x)).join(' / ') : '';
-    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(CAT_DEFS[c][0])} ${CAT_DEFS[c][1]}</span></div>${rows.map(k => koRowHtml(k.name, nm(k, 0), nm(k, 1), ev.results && ev.results[k.id], (k.A || []).length && (k.B || []).length)).join('')}${champ ? `<p class="champ">Champion: <b>${esc(champ)}</b></p>` : ''}</section>`;
+    const rows = ko.filter(k => k.cat === c);
+    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(CAT_DEFS[c][0])} ${CAT_DEFS[c][1]}</span></div>${rows.map(k => koRowHtml(k.name, nm(k, 0), nm(k, 1), ev.results && ev.results[k.id], (k.A || []).length && (k.B || []).length)).join('')}${koSummary(rows, k => ev.results && ev.results[k.id], names)}</section>`;
   }).join('');
 }
 function koWinnerRows(ev) {                                // champion + runner-up of each knockout, for the history list
   const ko = ev.knockout || [];
   return [...new Set(ko.map(k => k.cat))].map(c => {
-    const fin = ko.find(k => k.cat === c && k.stage === 'F'), fr = fin && ev.results && ev.results[fin.id], t = leagueTitle(CAT_DEFS[c][0]) + ' ' + CAT_DEFS[c][1];
+    const fin = ko.find(k => k.cat === c && k.stage === 'F'), thr = ko.find(k => k.cat === c && k.stage === 'T'), t = leagueTitle(CAT_DEFS[c][0]) + ' ' + CAT_DEFS[c][1];
+    const fr = fin && ev.results && ev.results[fin.id], tr = thr && ev.results && ev.results[thr.id];
     const nm = sd => (sd || []).map(x => evName(ev, x)).join(' / ');
     if (!fr || !(fin.A || []).length) return `<span class="hr"><small class="k">${t}</small><strong>Knockout in progress</strong></span>`;
-    return `<span class="hr"><small class="k">${t}</small><strong>${esc(nm(fr[0] > fr[1] ? fin.A : fin.B))}</strong><small class="r">Runner-up: ${esc(nm(fr[0] > fr[1] ? fin.B : fin.A))}</small></span>`;
+    return `<span class="hr"><small class="k">${t}</small><strong>${esc(nm(fr[0] > fr[1] ? fin.A : fin.B))}</strong><small class="r">Runner-up: ${esc(nm(fr[0] > fr[1] ? fin.B : fin.A))}${tr && (thr.A || []).length ? ' \u00b7 3rd place: ' + esc(nm(tr[0] > tr[1] ? thr.A : thr.B)) : ''}</small></span>`;
   }).join('');
 }
 /* ---------- Tournament history (archive + player records) ---------- */
