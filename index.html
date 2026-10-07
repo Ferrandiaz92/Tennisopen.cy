@@ -3416,7 +3416,7 @@ function readDraft() {
     if (q('sh') && q('sm')) d.start = q('sh').value + ':' + q('sm').value;
     if (q('roundMin')) d.roundMin = +q('roundMin').value || 25;
     if (q('courts')) d.courts = +q('courts').value || 3;
-    if (q('date') && q('date').value) { d.date = q('date').value; d.month = d.date.slice(0, 7); }
+    if (q('dd') && q('dm') && q('dy')) { d.date = dateFrom(+q('dy').value, +q('dm').value, +q('dd').value); d.month = d.date.slice(0, 7); }
   }
   const st = $modal.querySelector('[data-f="status"]:checked'); if (st) d.status = st.value;
   CAT_ORDER.forEach(k => {
@@ -3431,6 +3431,13 @@ function readDraft() {
     c.groups = +sel('groups').value; c.scoring = sel('scoring').value;
   });
 }
+const dateFrom = (y, m, day) => { const dim = new Date(Date.UTC(y, m, 0)).getUTCDate(); return y + '-' + String(m).padStart(2, '0') + '-' + String(Math.min(day, dim)).padStart(2, '0'); };
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const dateSelects = iso => {
+  const [y, m, dd] = iso.split('-').map(Number), now = new Date().getFullYear(), ys = [now, now + 1, now + 2, y].filter((v, i, a) => a.indexOf(v) === i).sort();
+  const o = (v, t, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${t}</option>`;
+  return `<select data-f="dd" aria-label="Day">${Array.from({ length: 31 }, (_, i) => o(i + 1, i + 1, dd)).join('')}</select><select data-f="dm" aria-label="Month">${MONTH_NAMES.map((n, i) => o(i + 1, n, m)).join('')}</select><select data-f="dy" aria-label="Year">${ys.map(v => o(v, v, y)).join('')}</select>`;
+};
 const monthShift = (ym, n) => { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7); };
 const monthLong = ym => { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
 const hourOpts = st => { const h = String(st).split(':')[0].padStart(2, '0'); return Array.from({ length: 19 }, (_, i) => String(i + 5).padStart(2, '0')).concat([h]).filter((v, k, a) => a.indexOf(v) === k).sort().map(v => `<option value="${v}" ${v === h ? 'selected' : ''}>${v}</option>`).join(''); };
@@ -3469,7 +3476,7 @@ function setupBody(md) {
   <div class="sf"><label>Name <input type="text" data-f="name" value="${esc(d.name)}"></label></div>
   <div class="dtrow"><b class="lbl">Date</b>
     <div class="stepper"><button class="stp" data-act="mprev" aria-label="Previous month">\u2039</button><div class="stv"><b>${monthLong(d.month)}</b><small>${dateLong(cfgDate(d))}</small></div><button class="stp" data-act="mnext" aria-label="Next month">\u203a</button></div>
-    ${d.date ? `<div class="sf"><input type="date" data-f="date" value="${esc(d.date)}"><button class="lnk" data-act="datefirst">Back to the first Saturday</button></div>` : '<button class="lnk" data-act="datecustom">Use a different date</button>'}</div>
+    ${d.date ? `<div class="sf">${dateSelects(d.date)}</div><button class="lnk" data-act="datefirst">Back to the first Saturday</button>` : '<button class="lnk" data-act="datecustom">Use a different date</button>'}</div>
   <div class="dtrow"><b class="lbl">Start time</b>
     <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select>
     <label>Courts <select data-f="courts">${[3, 4, 5, 6].map(v => opt(v, v, courts)).join('')}</select></label>
