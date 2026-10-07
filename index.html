@@ -3034,29 +3034,47 @@ function render() {
 }
 
 /* ---------- Modals ---------- */
-const rulesHtml = () => `
-<p class="dmeta">Tournament rules</p><h3 id="dt">Format &amp; rules</h3>
-<div class="rules">
-<h4>Tournament format</h4>
-<ul>
-<li>Played on the first Saturday of the month. Group stage, round robin, 3 courts.</li>
-<li>Men\u2019s, Women\u2019s and Mixed categories, Category A and Category B. The groups playing that day are listed in the standings. A category with more players is split into several groups.</li>
-<li>Format per category: <b>singles</b>, <b>doubles</b> (fixed pairs) or <b>Americano</b> (partners change every round). Groups have 4 to 7 players or pairs.</li>
-<li>Everyone plays everyone else in the group once. In groups of 5 or 7, one player or pair rests in every round and everyone rests the same number of times. P1, P2\u2026 are the draw numbers.</li>
-${restNote()}
-<li>1st place in each group is the winner.</li>
-</ul>
-<h4>Match format</h4>
-<ul>
-<li><b>First to 4 games</b> (4\u20130, 4\u20131, 4\u20132 or 4\u20133). No tie\u2011breaks.</li>
-<li><b>Full set:</b> first to 6 games with a 2\u2011game lead (6\u20130 to 6\u20134, or 7\u20135). At 6\u20136 a tie\u2011break gives 7\u20136.</li>
-<li>Which one applies is set per category and shown in the Players tab. Smaller groups usually play a full set.</li>
-<li><b>Americano:</b> partners change every round. Games won count for each player individually, and the ranking is by total games won.</li>
-${hasLeague('teams') ? '<li><b>Team tournament:</b> every team plays every other team once, and every match won is 1 point. Singles are played first, then doubles. Teams of 3: P1 plays all the singles and P2 + P3 play all the doubles together. Teams of 4: M1 and W1 play more singles, M2 and W2 more doubles; the exact number for each player is shown on the Teams tab.</li>' : ''}
-<li><b>Golden point</b> at 40\u201340 (deuce): no advantage. The next point wins the game, and the receiver chooses which side to receive on.</li>
-<li>Report your final score to the organizer straight after the match.</li>
-</ul>
-<h4>Basic rules</h4>
+function rulesInfo() {
+  const cats = (S.cfg && S.cfg.cats) || {};
+  return CAT_ORDER.filter(k => cats[k] && !cats[k].off).map(k => { const c = catCfg(cats[k]); return { k, title: catTitle(k), f: c.format, n: c.size, g: c.groups, sc: scoringFor(c), tt: c.teamType }; });
+}
+function formatRules() {
+  const info = rulesInfo(), li = [`<li><b>${dateLong(TOURNAMENT.date)}</b> \u00b7 3 courts.</li>`];
+  const grp = (c, unit) => c.g > 1 ? c.g + ' groups of ' + c.n + ' ' + unit : c.n + ' ' + unit;
+  if (!info.length) li.push('<li>Round-robin groups: everyone plays everyone once.</li>', '<li>1st place in each group wins.</li>');
+  info.forEach(c => {
+    let t;
+    if (c.f === 'team') t = `${c.n} teams of ${(TEAM_TYPES[c.tt] || TEAM_TYPES['4']).n}. Every team plays every other team once (${c.n - 1} matches per player). Singles first, then doubles. Every match won = 1 point; the most points wins.`;
+    else if (c.f === 'americano') t = `${grp(c, 'players')}. Partners change every round; ${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches per player. The most games won ranks first.`;
+    else if (c.f === 'doubles') t = `${grp(c, 'pairs')}. Round robin: every pair plays every other pair once (${c.n - 1} matches).`;
+    else t = `${grp(c, 'players')}. Round robin: everyone plays everyone once (${c.n - 1} matches).`;
+    li.push(`<li><b>${c.title}:</b> ${t}</li>`);
+  });
+  const odd = info.filter(c => (c.f === 'singles' || c.f === 'doubles') && c.n % 2), d = odd.some(c => c.f === 'doubles'), sg = odd.some(c => c.f === 'singles');
+  if (odd.length) li.push(`<li>${d && sg ? 'One player or pair' : d ? 'One pair' : 'One player'} rests in each round; everyone rests once.</li>`);
+  if (info.some(c => c.f === 'americano' && c.n > 4 && c.n < 8)) li.push('<li>Americano: players who are not on court rest that round.</li>');
+  if (info.some(c => c.f === 'singles' || c.f === 'doubles')) li.push('<li>1st place in each group wins.</li>');
+  return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
+}
+function matchRules() {
+  const info = rulesInfo(), scs = [...new Set(info.map(c => c.sc))]; if (!scs.length) scs.push('to4');
+  const tag = sc => scs.length > 1 ? ' (' + info.filter(c => c.sc === sc).map(c => c.title).join(', ') + ')' : '';
+  const li = scs.map(sc => sc === 'set'
+    ? `<li><b>Full set</b>${tag(sc)}: first to 6 games with a 2\u2011game lead (6\u20130 to 6\u20134, or 7\u20135). At 6\u20136 a tie\u2011break decides: 7\u20136.</li>`
+    : `<li><b>First to 4 games</b>${tag(sc)} wins: 4\u20130, 4\u20131, 4\u20132 or 4\u20133. No tie\u2011breaks.</li>`);
+  li.push('<li><b>Golden point</b> at 40\u201340: no advantage. The next point wins the game and the receiver chooses the side.</li>', '<li>Report your final score to the organizer right after the match.</li>');
+  return `<h4>Match format</h4><ul>${li.join('')}</ul>`;
+}
+function positionRules() {
+  const fs = new Set(rulesInfo().map(c => c.f)); if (!fs.size) fs.add('singles');
+  const li = [];
+  if (fs.has('singles') || fs.has('doubles')) li.push('<li><b>Groups:</b> most wins first. Two level: head\u2011to\u2011head. Three or more level: games difference (games won minus lost). POS shows H2H or GD when a tie\u2011break decided.</li>');
+  if (fs.has('americano')) li.push('<li><b>Americano:</b> most games won first, then games difference.</li>');
+  if (fs.has('team')) li.push('<li><b>Teams:</b> most match points (1 per match won) first, then games difference.</li>');
+  li.push('<li>If still level, the organizers decide.</li>');
+  return `<h4>How positions are decided</h4><ul>${li.join('')}</ul>`;
+}
+const BASIC_RULES = `<h4>Basic rules</h4>
 <ul>
 <li><b>Scoring a game:</b> 0 (love), 15, 30, 40, game. At 40\u201340 play the golden point.</li>
 <li><b>Serve:</b> the server has two serves and alternates every game. A serve that clips the net and lands in the right box is a let: replay the serve.</li>
@@ -3066,20 +3084,8 @@ ${hasLeague('teams') ? '<li><b>Team tournament:</b> every team plays every other
 <li><b>Change ends</b> after every odd game (1st, 3rd, 5th). The server says the score out loud before each point, their own score first.</li>
 <li><b>Fair play:</b> stay quiet during points and shake hands at the end. If the organizer cannot see where the ball landed and the two players do not agree, the point is replayed.</li>
 </ul>
-<h4>How positions are decided</h4>
-<p class="lead">Positions are decided in this order:</p>
-<ol>
-<li><b>Number of wins</b> (W\u2011L): more wins rank higher.</li>
-<li><b>Head\u2011to\u2011head:</b> if two players are tied on wins, the winner of the match between them ranks higher.</li>
-<li><b>Games differential</b> (GW\u2011GL, games won minus games lost): if three or more players are tied on wins, the best differential ranks higher. Head\u2011to\u2011head is not used in that case.</li>
-</ol>
-<ul>
-<li>The POS column shows <b>H2H</b> or <b>GD</b> under the number when a tie\u2011break decided the position.</li>
-<li>If players are still level after the tie\u2011breaks, the organizers decide.</li>
-</ul>
-<div class="ex"><b>Example:</b> Player 2 and Player 3 both finish with 2 wins and 2 losses, so they are tied for 2nd. It is a two\u2011player tie, so head\u2011to\u2011head decides. If Player 2 beat Player 3, Player 2 takes 2nd and Player 3 takes 3rd, even if Player 3 has the better games differential (for example +5 against +4).<br><br>If Players 2, 3 and 4 all finish on 2 wins, it is a three\u2011player tie. Then only the games differential counts, so the player with the best GW\u2011GL takes 2nd.</div>
-</div>
-<div class="acts"><button class="btn pri" data-act="close">Got it</button></div>`;
+`;
+function rulesHtml() { return `<p class="dmeta">${esc(TOURNAMENT.name)}</p><h3 id="dt">Rules</h3><div class="rules">${formatRules()}${matchRules()}${BASIC_RULES}${positionRules()}</div><div class="acts"><button class="btn pri" data-act="close">Got it</button></div>`; }
 
 function openMatch(id) { S.modal = { type: 'match', id, error: '' }; renderModal(); }
 function openRules() { S.modal = { type: 'rules', error: '' }; renderModal(); }
