@@ -217,6 +217,17 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .hl b{font-size:18px;font-weight:800}.hl em{float:right;font-style:normal;font-weight:700;font-size:13px;background:var(--acc);color:var(--acc-ink);border-radius:999px;padding:3px 12px}
 .hl span{display:block;font-size:12px;opacity:.75;margin-top:4px}.hl .hc{opacity:1;font-size:13px;margin-top:8px}
 .hp{display:block;font-size:10.5px;font-weight:500;opacity:.65;margin:3px 0 0 0;line-height:1.35}
+.hl .hw{opacity:1;margin-top:12px;display:block;border-top:1px solid var(--line)}
+.hl .hr{display:flex;flex-direction:column;gap:1px;opacity:1;margin:0;padding:9px 0;border-bottom:1px dashed var(--line);font-size:inherit}.hl .hr:last-child{border-bottom:0}
+.hl .hr .k{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2)}
+.hl .hr strong{font-size:17px;font-weight:800}.hl .hr .r{font-size:12px;opacity:.7}
+.hl .tap{font-size:11px;font-weight:700;text-align:right;opacity:.55;margin-top:2px}
+.pp{border-top:1px solid var(--line);padding:0 2px 8px}
+.pp summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 4px;cursor:pointer}.pp summary::-webkit-details-marker{display:none}
+.pp .pr{font-size:12px;font-weight:700;color:var(--acc2);white-space:nowrap}
+.ph{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:4px 4px 5px}
+.pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
+.pm span:first-child{font-size:11px;opacity:.55}.pm b.w{color:#1f7a3d}.pm b.l{color:#b4432c}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{"MA-chadunin-colella":[1,4],"MA-chadunin-rondina":[1,4],"MA-rondina-colella":[0,4],"MA-rondina-shishorin":[4,1],"MA-shishorin-chadunin":[4,2],"MA-shishorin-colella":[3,4],"MA-tuzze-chadunin":[1,4],"MA-tuzze-colella":[2,4],"MA-tuzze-rondina":[2,4],"MA-tuzze-shishorin":[0,4],"MB-kolesnyk-kouloundis":[0,4],"MB-kolesnyk-onoszko":[0,4],"MB-kozlov-kolesnyk":[4,1],"MB-kozlov-kouloundis":[2,4],"MB-kozlov-onoszko":[0,4],"MB-loginidi-kouloundis":[4,0],"MB-loginidi-kozlov":[4,3],"MB-loginidi-martinez":[1,4],"MB-loginidi-onoszko":[3,4],"MB-martinez-kolesnyk":[4,0],"MB-martinez-kouloundis":[4,3],"MB-martinez-onoszko":[4,1],"WA-azi-gaponova":[4,3],"WA-azi-guseva":[0,4],"WA-azi-shishorina":[0,4],"WA-bodrikova-gaponova":[4,1],"WA-bodrikova-guseva":[2,4],"WA-bodrikova-shishorina":[1,4],"WA-christodoulou-azi":[4,1],"WA-christodoulou-bodrikova":[3,4],"WA-christodoulou-guseva":[3,4],"WA-christodoulou-shishorina":[4,3],"WA-guseva-gaponova":[4,2],"WA-shishorina-gaponova":[4,1],"WB-gruzinova-andreeva":[0,4],"WB-gruzinova-lopatina":[4,0],"WB-gruzinova-reiman":[2,4],"WB-gruzinova-solyanik":[0,4],"WB-lopatina-andreeva":[4,2],"WB-lopatina-solyanik":[2,4],"WB-reiman-andreeva":[4,3],"WB-reiman-lopatina":[0,4],"WB-reiman-solyanik":[4,0],"WB-solyanik-andreeva":[4,2]},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2668,7 +2679,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', hist: null, hsel: null, hview: 'events', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -3019,7 +3030,8 @@ function snapshot() {
       key: c.key, league: c.league, label: c.label, complete: categoryProgress(st, c).complete,
       standings: rankCategory(st, c).map(s => ({ pid: s.pid, draw: s.draw, pos: s.pos, w: s.w, l: s.l, gw: s.gw, gl: s.gl }))
     })),
-    results: st.results
+    results: st.results,
+    rounds: Object.fromEntries(MATCHES.map(m => [m.id, m.round]))
   };
 }
 async function archiveTournament() {
@@ -3056,9 +3068,10 @@ function historyView() {
   const sel = S.hsel && evs.find(e => e.id === S.hsel);
   if (sel) return eventView(sel);
   return seg + evs.map(ev => {
-    const champs = ev.cats.filter(c => c.complete && c.standings && c.standings[0] && c.standings[0].pos === 1)
-      .map(c => `<b>${catShort(c)}:</b> ${esc(evName(ev, c.standings[0].pid))}`).join(' \u00b7 ');
-    return `<button class="hl" data-act="hsel" data-id="${esc(ev.id)}"><b>${esc(ev.name)}</b><em>${fmtDate(ev.date)}</em><span>${esc(ev.format || '')}</span>${champs ? `<span class="hc">Winners \u2014 ${champs}</span>` : ''}</button>`;
+    const rows = ev.cats.map(c => { const st = c.standings || [], w = st[0], r2 = st[1];
+      if (!w || !c.complete) return `<span class="hr"><small class="k">${catFull(c)}</small><strong>In progress</strong></span>`;
+      return `<span class="hr"><small class="k">${catFull(c)}</small><strong>${esc(evName(ev, w.pid))}</strong>${r2 ? `<small class="r">Runner-up: ${esc(evName(ev, r2.pid))}</small>` : ''}</span>`; }).join('');
+    return `<button class="hl" data-act="hsel" data-id="${esc(ev.id)}"><b>${esc(ev.name)}</b><em>${fmtDate(ev.date)}</em><span>${esc(ev.format || '')}</span><span class="hw">${rows}</span><span class="tap">Tap for full results</span></button>`;
   }).join('');
 }
 function eventView(ev) {
@@ -3070,16 +3083,33 @@ function eventView(ev) {
 }
 function playersView(evs) {
   const P = {};
-  evs.forEach(ev => ev.cats.forEach(c => (c.standings || []).forEach(s => {
-    const p = P[s.pid] = P[s.pid] || { name: evName(ev, s.pid), ev: {}, w: 0, l: 0, titles: 0, best: null, log: [] };
-    p.ev[ev.id] = 1; p.w += s.w || 0; p.l += s.l || 0;
-    if (c.complete && s.pos === 1) p.titles++;
-    if (s.pos && (p.best === null || s.pos < p.best)) p.best = s.pos;
-    p.log.push(fmtDate(ev.date) + ' \u00b7 ' + catShort(c) + (s.pos ? ' #' + s.pos : ''));
-  })));
-  const rows = Object.values(P).sort((a, b) => Object.keys(b.ev).length - Object.keys(a.ev).length || b.titles - a.titles || b.w - a.w || a.name.localeCompare(b.name))
-    .map(p => `<tr><td class="pl"><span class="pname">${nameHtml(p.name)}</span><small class="hp">${esc(p.log.join('  |  '))}</small></td><td>${Object.keys(p.ev).length}</td><td class="wl">${p.w}${dash}${p.l}</td><td class="gm">${p.best || dash}</td><td class="pos">${p.titles}</td></tr>`).join('');
-  return `<section class="card"><div class="card-head"><h2 class="tag">Player records</h2><span class="pill"><i></i>${evs.length} tournament${evs.length > 1 ? 's' : ''} archived</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th><th>EVENTS</th><th class="a2">W-L</th><th class="a2">BEST<br>POS</th><th class="pos">TITLES</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  evs.forEach(ev => {
+    const rd = ev.rounds || (ev.id === TOURNAMENT.id ? Object.fromEntries(MATCHES.map(m => [m.id, m.round])) : {});
+    ev.cats.forEach(c => (c.standings || []).forEach(s => {
+      const p = P[s.pid] = P[s.pid] || { pid: s.pid, name: evName(ev, s.pid), cat: c, pos: s.pos || 99, w: 0, l: 0, titles: 0, entries: [] };
+      const ms = Object.keys(ev.results || {}).filter(id => id.startsWith(c.key + '-')).map(id => {
+        const [, a, b] = id.split('-'); if (a !== s.pid && b !== s.pid) return null;
+        const r = ev.results[id], isA = a === s.pid, mine = isA ? r[0] : r[1], theirs = isA ? r[1] : r[0];
+        return { round: rd[id] || 99, opp: evName(ev, isA ? b : a), mine, theirs };
+      }).filter(Boolean).sort((x, y) => x.round - y.round);
+      p.w += s.w || 0; p.l += s.l || 0; if (c.complete && s.pos === 1) p.titles++;
+      p.entries.push({ ev, c, pos: s.pos, w: s.w, l: s.l, ms });
+    }));
+  });
+  const all = Object.values(P), gk = c => (c.league === 'men' ? '0' : '1') + c.label;
+  const groups = {};
+  all.forEach(p => { (groups[gk(p.cat)] = groups[gk(p.cat)] || { cat: p.cat, list: [] }).list.push(p); });
+  const keys = Object.keys(groups).sort();
+  const sel = S.hplayer && P[S.hplayer] ? S.hplayer : '';
+  const opts = '<option value="">All players</option>' + keys.map(k => `<optgroup label="${esc(catFull(groups[k].cat))}">${groups[k].list.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.pid)}" ${p.pid === sel ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>`).join('');
+  const bar = `<div class="filter"><label for="hp">Find a player</label><select id="hp" data-act="hfilter">${opts}</select></div>`;
+  const entry = e => `<div class="ph">${fmtDate(e.ev.date)} \u00b7 ${esc(e.ev.name)} \u00b7 ${catShort(e.c)}${e.pos ? ' \u00b7 #' + e.pos : ''} \u00b7 ${e.w}${dash}${e.l}</div>` +
+    e.ms.map(m => `<div class="pm"><span>${m.round === 99 ? '' : 'R' + m.round}</span><span>vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`).join('');
+  const block = p => `<details class="pp" ${sel ? 'open' : 'open'}><summary><span class="pname">${esc(p.name)}</span><span class="pr">${p.w}${dash}${p.l}${p.titles ? ' \u00b7 ' + p.titles + (p.titles > 1 ? ' titles' : ' title') : ''}</span></summary>${p.entries.map(entry).join('')}</details>`;
+  return bar + keys.map(k => {
+    const list = groups[k].list.filter(p => !sel || p.pid === sel).sort((a, b) => a.pos - b.pos || a.name.localeCompare(b.name));
+    return list.length ? `<section class="card"><div class="card-head"><h2 class="tag">${catFull(groups[k].cat)}</h2></div>${list.map(block).join('')}</section>` : '';
+  }).join('');
 }
 
 /* ---------- Events ---------- */
@@ -3113,6 +3143,9 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('change', ev => {
   if (ev.target.dataset && ev.target.dataset.act === 'filter') { S.filter = ev.target.value; remember('lt-filter', S.filter); render(); const s = document.getElementById('pf'); if (s) s.focus(); }
+});
+document.addEventListener('change', ev => {
+  if (ev.target.dataset && ev.target.dataset.act === 'hfilter') { S.hplayer = ev.target.value; render(); const x = document.getElementById('hp'); if (x) x.focus(); }
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && S.modal) closeModal();
