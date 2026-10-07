@@ -3051,7 +3051,7 @@ function historyView() {
   const seg = `<div class="tools"><div class="seg" role="group" aria-label="History view"><button data-act="hview" data-v="events" aria-pressed="${S.hview === 'events'}">Tournaments</button><button data-act="hview" data-v="players" aria-pressed="${S.hview === 'players'}">Players</button></div></div>`;
   if (S.hist === null) return seg + '<p class="foot">Loading history\u2026</p>';
   const evs = Object.values(S.hist).filter(e => e && e.cats).sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  if (!evs.length) return seg + `<section class="card"><p class="foot">No archived tournaments yet.${S.canEdit ? ' When an event is finished, tap \u201cArchive tournament\u201d above.' : ''}</p></section>`;
+  if (!evs.length) return seg + `<section class="card"><p class="foot" style="color:var(--ink);opacity:.85">No archived tournaments yet.${S.canEdit ? ' When an event is finished, tap \u201cArchive tournament\u201d above.' : ''}</p></section>`;
   if (S.hview === 'players') return seg + playersView(evs);
   const sel = S.hsel && evs.find(e => e.id === S.hsel);
   if (sel) return eventView(sel);
