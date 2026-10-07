@@ -212,7 +212,12 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .rules ol li::marker{font-weight:800;color:var(--acc2)}
 .rules .lead{margin:0 0 4px;font-size:13.5px;font-weight:600}
 .rules ul+ul,.rules ol+ul{margin-top:8px}
-</style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results": {}, "shareUrl": ""}</script><script id="qrlib">//---------------------------------------------------------------------
+.hist{min-width:0}.hist td.pl{min-width:0;white-space:normal}.hist td.gm,.hist td.wl{white-space:nowrap}
+.hl{display:block;width:100%;text-align:left;border:0;margin:20px 0 0;background:var(--panel);color:var(--ink);border-radius:20px;padding:14px 18px;box-shadow:0 6px 0 var(--bg2);font-family:inherit}
+.hl b{font-size:18px;font-weight:800}.hl em{float:right;font-style:normal;font-weight:700;font-size:13px;background:var(--acc);color:var(--acc-ink);border-radius:999px;padding:3px 12px}
+.hl span{display:block;font-size:12px;opacity:.75;margin-top:4px}.hl .hc{opacity:1;font-size:13px;margin-top:8px}
+.hp{display:block;font-size:10.5px;font-weight:500;opacity:.65;margin:3px 0 0 0;line-height:1.35}
+</style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{"MA-chadunin-colella":[1,4],"MA-chadunin-rondina":[1,4],"MA-rondina-colella":[0,4],"MA-rondina-shishorin":[4,1],"MA-shishorin-chadunin":[4,2],"MA-shishorin-colella":[3,4],"MA-tuzze-chadunin":[1,4],"MA-tuzze-colella":[2,4],"MA-tuzze-rondina":[2,4],"MA-tuzze-shishorin":[0,4],"MB-kolesnyk-kouloundis":[0,4],"MB-kolesnyk-onoszko":[0,4],"MB-kozlov-kolesnyk":[4,1],"MB-kozlov-kouloundis":[2,4],"MB-kozlov-onoszko":[0,4],"MB-loginidi-kouloundis":[4,0],"MB-loginidi-kozlov":[4,3],"MB-loginidi-martinez":[1,4],"MB-loginidi-onoszko":[3,4],"MB-martinez-kolesnyk":[4,0],"MB-martinez-kouloundis":[4,3],"MB-martinez-onoszko":[4,1],"WA-azi-gaponova":[4,3],"WA-azi-guseva":[0,4],"WA-azi-shishorina":[0,4],"WA-bodrikova-gaponova":[4,1],"WA-bodrikova-guseva":[2,4],"WA-bodrikova-shishorina":[1,4],"WA-christodoulou-azi":[4,1],"WA-christodoulou-bodrikova":[3,4],"WA-christodoulou-guseva":[3,4],"WA-christodoulou-shishorina":[4,3],"WA-guseva-gaponova":[4,2],"WA-shishorina-gaponova":[4,1],"WB-gruzinova-andreeva":[0,4],"WB-gruzinova-lopatina":[4,0],"WB-gruzinova-reiman":[2,4],"WB-gruzinova-solyanik":[0,4],"WB-lopatina-andreeva":[4,2],"WB-lopatina-solyanik":[2,4],"WB-reiman-andreeva":[4,3],"WB-reiman-lopatina":[0,4],"WB-reiman-solyanik":[4,0],"WB-solyanik-andreeva":[4,2]},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
 //
@@ -2510,8 +2515,10 @@ var qrcode = function() {
     return qrcode;
 }));
 </script><script id="logic">/* ---------- Tournament data ---------- */
+// PLAYER IDS ARE PERMANENT: they identify a player across all tournaments and are part of every match id.
+// To change a name, edit the text on the right only. Never rename the id (results would be orphaned).
 const PLAYERS = {
-  shishorin: 'George Shishorin', colella: 'Adriano Colella', tuzze: 'Luigi Tuzze',
+  shishorin: 'George Shishorin', colella: 'Andrey Kuznetsov', tuzze: 'Luigi Tuzze',
   loginidi: 'Mikhail Loginidi', chadunin: 'Dmitry Chadunin', rondina: 'Federico Rondina',
   onoszko: 'Noa Onoszko', kozlov: 'Bogdan Kozlov',
   martinez: 'Luis Martinez', kolesnyk: 'Oleksandr Kolesnyk', kouloundis: 'Demetris Kouloundis',
@@ -2527,6 +2534,15 @@ const CATS = [
   { key: 'WA', league: 'women', label: 'Category A', players: ['shishorina', 'bodrikova', 'christodoulou', 'gaponova', 'azi', 'guseva'] },
   { key: 'WB', league: 'women', label: 'Category B', players: ['lopatina', 'gruzinova', 'reiman', 'andreeva', 'solyanik'] }
 ];
+
+// ---- One block per tournament. For a NEW tournament: new id, date, format and a NEW resultsPath. ----
+const TOURNAMENT = {
+  id: '2026-10-03-singles',
+  name: 'Singles League',
+  date: '2026-10-03',
+  format: 'Singles \u00b7 round-robin groups \u00b7 first to 4 games \u00b7 Men & Women, Category A/B',
+  resultsPath: 'tennis/results'          // e.g. 'tennis/tournaments/2026-11-14-doubles/results' for the next one
+};
 
 const ROUND_TIMES = ['4:00pm', '4:25pm', '4:50pm', '5:15pm', '5:40pm', '6:10pm', '6:35pm', '7:00pm',
   '7:25pm', '7:50pm', '8:10pm', '8:35pm', '9:00pm', '9:25pm', '9:50pm'];
@@ -2652,7 +2668,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', hist: null, hsel: null, hview: 'events', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -2662,7 +2678,8 @@ try {
 const STANDALONE = true; // hosted on GitHub Pages; shared scores live in Firebase
 const DB_URL = 'https://tennisopen-7bc8d-default-rtdb.europe-west1.firebasedatabase.app';
 const ORG_PIN = '1992';
-const RESULTS_URL = DB_URL + '/tennis/results';
+const RESULTS_URL = DB_URL + '/' + TOURNAMENT.resultsPath;
+const HISTORY_URL = DB_URL + '/tennis/history';
 const POLL_MS = 8000;
 const remember = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } };
 
@@ -2679,6 +2696,7 @@ function header() {
   const t = {
     men: ['Tournament standings', "Men\u2019s", 'League', 'Category A & Category B \u2014 round robin results'],
     women: ['Tournament standings', "Women\u2019s", 'League', 'Category A & Category B \u2014 round robin results'],
+    history: ['Archive', 'Tournament', 'History', 'Past tournaments, final classifications & player records'],
     sched: ['Tournament', 'Order of', 'Play', '3 courts \u00b7 15 rounds \u00b7 first match 4:00pm']
   }[S.tab];
   return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
@@ -2692,11 +2710,11 @@ function syncBar() {
 }
 
 function nav() {
-  const tabs = [['men', 'Men'], ['women', 'Women'], ['sched', 'Order of play']];
+  const tabs = [['men', 'Men'], ['women', 'Women'], ['sched', 'Order of play'], ['history', 'History']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
-    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div></div>' : ''}
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div></div>' : ''}
     ${syncBar()}`;
 }
 
@@ -2781,7 +2799,7 @@ function schedule() {
 function render() {
   document.documentElement.dataset.theme = S.tab === 'women' ? 'women' : 'men';
   const deco = `<svg class="deco d1" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg><svg class="deco d2" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg>`;
-  $page.innerHTML = `<div class="wrap"><div class="frame">${deco}${header()}${nav()}${S.tab === 'sched' ? schedule() : standings(S.tab)}</div></div>`;
+  $page.innerHTML = `<div class="wrap"><div class="frame">${deco}${header()}${nav()}${S.tab === 'sched' ? schedule() : S.tab === 'history' ? historyView() : standings(S.tab)}</div></div>`;
 }
 
 /* ---------- Modals ---------- */
@@ -2990,13 +3008,88 @@ function submitPin() {
   toast('Organizer mode unlocked');
 }
 
+/* ---------- Tournament history (archive + player records) ---------- */
+function snapshot() {
+  const st = S.data;
+  return {
+    id: TOURNAMENT.id, name: TOURNAMENT.name, date: TOURNAMENT.date, format: TOURNAMENT.format,
+    archivedAt: new Date().toISOString(),
+    players: PLAYERS,
+    cats: CATS.map(c => ({
+      key: c.key, league: c.league, label: c.label, complete: categoryProgress(st, c).complete,
+      standings: rankCategory(st, c).map(s => ({ pid: s.pid, draw: s.draw, pos: s.pos, w: s.w, l: s.l, gw: s.gw, gl: s.gl }))
+    })),
+    results: st.results
+  };
+}
+async function archiveTournament() {
+  const done = Object.keys(S.data.results).length, total = MATCHES.length;
+  let msg = 'Archive "' + TOURNAMENT.name + '" (' + TOURNAMENT.date + ') to History? A frozen copy of the final classification is saved.';
+  if (done < total) msg = 'Only ' + done + ' of ' + total + ' matches have a score. ' + msg;
+  if (!confirm(msg)) return;
+  try {
+    const res = await fetch(HISTORY_URL + '/' + encodeURIComponent(TOURNAMENT.id) + '.json', { method: 'PUT', body: JSON.stringify(snapshot()) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    toast('Archived \u2014 see the History tab'); loadHistory();
+  } catch (e) { toast('Could not archive. Check your connection and the Firebase rules for tennis/history.'); }
+}
+async function loadHistory() {
+  try {
+    const res = await fetch(HISTORY_URL + '.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.hist = (await res.json()) || {};
+  } catch (e) { if (!S.hist) S.hist = {}; }
+  if (S.tab === 'history' && !S.modal) render();
+}
+const fmtDate = iso => { const p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : esc(iso || ''); };
+const catShort = c => (c.league === 'men' ? 'Men' : 'Women') + ' ' + String(c.label).replace('Category ', '');
+const catFull = c => (c.league === 'men' ? 'Men\u2019s ' : 'Women\u2019s ') + c.label;
+const evName = (ev, pid) => (ev.players && ev.players[pid]) || pid;
+const nameHtml = n => { const p = String(n).split(' '); return `<span class="fn">${esc(p[0])}</span> <span class="ln">${esc(p.slice(1).join(' '))}</span>`; };
+
+function historyView() {
+  const seg = `<div class="tools"><div class="seg" role="group" aria-label="History view"><button data-act="hview" data-v="events" aria-pressed="${S.hview === 'events'}">Tournaments</button><button data-act="hview" data-v="players" aria-pressed="${S.hview === 'players'}">Players</button></div></div>`;
+  if (S.hist === null) return seg + '<p class="foot">Loading history\u2026</p>';
+  const evs = Object.values(S.hist).filter(e => e && e.cats).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (!evs.length) return seg + `<section class="card"><p class="foot">No archived tournaments yet.${S.canEdit ? ' When an event is finished, tap \u201cArchive tournament\u201d above.' : ''}</p></section>`;
+  if (S.hview === 'players') return seg + playersView(evs);
+  const sel = S.hsel && evs.find(e => e.id === S.hsel);
+  if (sel) return eventView(sel);
+  return seg + evs.map(ev => {
+    const champs = ev.cats.filter(c => c.complete && c.standings && c.standings[0] && c.standings[0].pos === 1)
+      .map(c => `<b>${catShort(c)}:</b> ${esc(evName(ev, c.standings[0].pid))}`).join(' \u00b7 ');
+    return `<button class="hl" data-act="hsel" data-id="${esc(ev.id)}"><b>${esc(ev.name)}</b><em>${fmtDate(ev.date)}</em><span>${esc(ev.format || '')}</span>${champs ? `<span class="hc">Winners \u2014 ${champs}</span>` : ''}</button>`;
+  }).join('');
+}
+function eventView(ev) {
+  const head = `<div class="tools"><button class="ghost" data-act="hback">\u2190 All tournaments</button></div><p class="foot"><b>${esc(ev.name)} \u00b7 ${fmtDate(ev.date)}</b><br>${esc(ev.format || '')}</p>`;
+  return head + ev.cats.map(c => {
+    const rows = (c.standings || []).map(s => `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname">${nameHtml(evName(ev, s.pid))}</span></td><td class="wl">${s.w}${dash}${s.l}</td><td class="gm"><b>${s.gw}</b><i>/</i><b>${s.gl}</b></td><td class="pos">${s.pos || dash}</td></tr>`).join('');
+    return `<section class="card"><div class="card-head"><h2 class="tag">${catFull(c)}</h2><span class="pill ${c.complete ? 'final' : ''}"><i></i>${c.complete ? 'Final classification' : 'Incomplete when archived'}</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th><th class="a2">W-L</th><th class="a2">GAMES<br>W-L</th><th class="pos">POS</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  }).join('');
+}
+function playersView(evs) {
+  const P = {};
+  evs.forEach(ev => ev.cats.forEach(c => (c.standings || []).forEach(s => {
+    const p = P[s.pid] = P[s.pid] || { name: evName(ev, s.pid), ev: {}, w: 0, l: 0, titles: 0, best: null, log: [] };
+    p.ev[ev.id] = 1; p.w += s.w || 0; p.l += s.l || 0;
+    if (c.complete && s.pos === 1) p.titles++;
+    if (s.pos && (p.best === null || s.pos < p.best)) p.best = s.pos;
+    p.log.push(fmtDate(ev.date) + ' \u00b7 ' + catShort(c) + (s.pos ? ' #' + s.pos : ''));
+  })));
+  const rows = Object.values(P).sort((a, b) => Object.keys(b.ev).length - Object.keys(a.ev).length || b.titles - a.titles || b.w - a.w || a.name.localeCompare(b.name))
+    .map(p => `<tr><td class="pl"><span class="pname">${nameHtml(p.name)}</span><small class="hp">${esc(p.log.join('  |  '))}</small></td><td>${Object.keys(p.ev).length}</td><td class="wl">${p.w}${dash}${p.l}</td><td class="gm">${p.best || dash}</td><td class="pos">${p.titles}</td></tr>`).join('');
+  return `<section class="card"><div class="card-head"><h2 class="tag">Player records</h2><span class="pill"><i></i>${evs.length} tournament${evs.length > 1 ? 's' : ''} archived</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th><th>EVENTS</th><th class="a2">W-L</th><th class="a2">BEST<br>POS</th><th class="pos">TITLES</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
 /* ---------- Events ---------- */
+
 document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-act]');
   if (!el) return;
   const act = el.dataset.act;
   if (act === 'scrim') { if (ev.target === el) closeModal(); return; }
-  if (act === 'tab') { S.tab = el.dataset.tab; remember('lt-tab', S.tab); render(); window.scrollTo(0, 0); }
+  if (act === 'tab') { S.tab = el.dataset.tab; remember('lt-tab', S.tab); render(); window.scrollTo(0, 0); if (S.tab === 'history') loadHistory(); }
   else if (act === 'sort') { S.sort = el.dataset.sort; remember('lt-sort', S.sort); render(); }
   else if (act === 'match') openMatch(el.dataset.id);
   else if (act === 'share') openShare();
@@ -3006,6 +3099,10 @@ document.addEventListener('click', ev => {
   else if (act === 'clear') clearScore();
   else if (act === 'pin') submitPin();
   else if (act === 'download') downloadFile();
+  else if (act === 'archive') archiveTournament();
+  else if (act === 'hsel') { S.hsel = el.dataset.id; render(); window.scrollTo(0, 0); }
+  else if (act === 'hback') { S.hsel = null; render(); }
+  else if (act === 'hview') { S.hview = el.dataset.v; S.hsel = null; render(); }
   else if (act === 'exitorg') exitOrganizer();
   else if (act === 'selecturl') el.select();
   else if (act === 'copy') {
@@ -3029,7 +3126,7 @@ $page.insertAdjacentHTML('beforebegin', RACKET_SYMBOL);
   const checkHash = () => { if (location.hash === '#organizer' && !S.canEdit) askPin(); };
   window.addEventListener('hashchange', checkHash);
   render(); checkHash();
-  pollResults();
+  pollResults(); loadHistory();
   setInterval(pollResults, POLL_MS);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pollResults(); });
 })();
