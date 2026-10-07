@@ -228,6 +228,7 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .ph{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:4px 4px 5px}
 .pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
 .pm span:first-child{font-size:11px;opacity:.55}.pm b.w{color:#1f7a3d}.pm b.l{color:#b4432c}
+.bw{margin:10px 8px 0;font-size:12px;font-weight:600;line-height:1.5}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{"MA-chadunin-colella":[1,4],"MA-chadunin-rondina":[1,4],"MA-rondina-colella":[0,4],"MA-rondina-shishorin":[4,1],"MA-shishorin-chadunin":[4,2],"MA-shishorin-colella":[3,4],"MA-tuzze-chadunin":[1,4],"MA-tuzze-colella":[2,4],"MA-tuzze-rondina":[2,4],"MA-tuzze-shishorin":[0,4],"MB-kolesnyk-kouloundis":[0,4],"MB-kolesnyk-onoszko":[0,4],"MB-kozlov-kolesnyk":[4,1],"MB-kozlov-kouloundis":[2,4],"MB-kozlov-onoszko":[0,4],"MB-loginidi-kouloundis":[4,0],"MB-loginidi-kozlov":[4,3],"MB-loginidi-martinez":[1,4],"MB-loginidi-onoszko":[3,4],"MB-martinez-kolesnyk":[4,0],"MB-martinez-kouloundis":[4,3],"MB-martinez-onoszko":[4,1],"WA-azi-gaponova":[4,3],"WA-azi-guseva":[0,4],"WA-azi-shishorina":[0,4],"WA-bodrikova-gaponova":[4,1],"WA-bodrikova-guseva":[2,4],"WA-bodrikova-shishorina":[1,4],"WA-christodoulou-azi":[4,1],"WA-christodoulou-bodrikova":[3,4],"WA-christodoulou-guseva":[3,4],"WA-christodoulou-shishorina":[4,3],"WA-guseva-gaponova":[4,2],"WA-shishorina-gaponova":[4,1],"WB-gruzinova-andreeva":[0,4],"WB-gruzinova-lopatina":[4,0],"WB-gruzinova-reiman":[2,4],"WB-gruzinova-solyanik":[0,4],"WB-lopatina-andreeva":[4,2],"WB-lopatina-solyanik":[2,4],"WB-reiman-andreeva":[4,3],"WB-reiman-lopatina":[0,4],"WB-reiman-solyanik":[4,0],"WB-solyanik-andreeva":[4,2]},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2546,6 +2547,37 @@ const CATS = [
   { key: 'WB', league: 'women', label: 'Category B', players: ['lopatina', 'gruzinova', 'reiman', 'andreeva', 'solyanik'] }
 ];
 
+// ---- PLAYER REGISTRY: how to add players -------------------------------------------------------
+// Just type the player's NAME in the category list below (and in RAW if you like). Ids are automatic.
+//  - Returning player: any spelling order or accents match ("Kuznetsov Andrey", "andrey kuznetsov").
+//  - Other spelling/old name of the SAME person: add it to ALIASES below.
+//  - New player: gets a permanent id automatically. In organizer mode the page warns about
+//    possible duplicates (similar names). Keep every past player in PLAYERS so history stays linked.
+const ALIASES = { colella: ['Adriano Colella'] };   // id -> other names for the same person
+const normName = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+const NAME_INDEX = {}, NEW_PLAYERS = [], DUP_WARNINGS = [];
+Object.keys(PLAYERS).forEach(id => { NAME_INDEX[normName(PLAYERS[id])] = id; (ALIASES[id] || []).forEach(a => { NAME_INDEX[normName(a)] = id; }); });
+function editDist(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function resolve(x) {
+  if (Object.prototype.hasOwnProperty.call(PLAYERS, x)) return x;            // already an id
+  const key = normName(x); if (NAME_INDEX[key]) return NAME_INDEX[key];      // known name or alias
+  const name = String(x).trim().replace(/\s+/g, ' '), parts = name.split(' ');
+  const last = normName(parts[parts.length - 1]).replace(/\s/g, '') || 'player';
+  let id = last; if (PLAYERS[id]) id = last + '_' + (normName(parts[0]).replace(/\s/g, '') || 'x');
+  for (let n = 2, base = id; PLAYERS[id]; n++) id = base + n;
+  PLAYERS[id] = name; NAME_INDEX[key] = id; NEW_PLAYERS.push(name);
+  Object.keys(PLAYERS).forEach(o => {
+    if (o === id) return; const ok = normName(PLAYERS[o]), ol = normName(PLAYERS[o].split(' ').pop());
+    if (editDist(ok, key) <= 2 || ol === normName(parts[parts.length - 1])) DUP_WARNINGS.push('\u201c' + name + '\u201d looks like \u201c' + PLAYERS[o] + '\u201d');
+  });
+  return id;
+}
+CATS.forEach(c => { c.players = c.players.map(resolve); });
+
 // ---- One block per tournament. For a NEW tournament: new id, date, format and a NEW resultsPath. ----
 const TOURNAMENT = {
   id: '2026-10-03-singles',
@@ -2577,7 +2609,7 @@ const RAW = [
   [15, 1, 'MA', 'tuzze', 'rondina'], [15, 2, 'MA', 'shishorin', 'colella']
 ];
 
-const MATCHES = RAW.map(([round, court, cat, a, b]) => ({ id: cat + '-' + a + '-' + b, round, court, cat, a, b }));
+const MATCHES = RAW.map(([round, court, cat, a, b]) => { a = resolve(a); b = resolve(b); return { id: cat + '-' + a + '-' + b, round, court, cat, a, b }; });
 const CAT_BY_KEY = Object.fromEntries(CATS.map(c => [c.key, c]));
 const lastName = id => PLAYERS[id].split(' ').slice(-1)[0];
 
@@ -2713,6 +2745,11 @@ function header() {
   return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
 }
 
+function playerNotes() {
+  const n = [...new Set(NEW_PLAYERS)], d = [...new Set(DUP_WARNINGS)];
+  if (!n.length && !d.length) return '';
+  return '<p class="bw">' + (n.length ? '<b>New players:</b> ' + esc(n.join(', ')) + '. ' : '') + (d.length ? '<b>Check for duplicates:</b> ' + esc(d.join('; ')) + '. If it is the same person, add the name to ALIASES.' : '') + '</p>';
+}
 function syncBar() {
   const s = S.sync;
   if (s.status === 'live') return `<p class="sync ok"><i></i>Live \u00b7 updated ${s.at}</p>`;
@@ -2725,7 +2762,7 @@ function nav() {
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
-    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div></div>' : ''}
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
     ${syncBar()}`;
 }
 
