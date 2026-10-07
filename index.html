@@ -265,6 +265,9 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .tchip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
 .nextb{display:block;width:100%;margin:14px 0 0;border:2px dashed var(--acc);background:rgba(255,255,255,.06);color:var(--cream);border-radius:14px;padding:11px 14px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
 .nextb b{color:var(--acc)}
+.dtrow input.full{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;color:var(--ink);font:inherit;font-size:16px}.dtrow select.full{width:100%;font-size:16px}
+.vs{display:grid;gap:12px;margin:8px 0}.vs label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700}
+.vs select{width:100%;border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;color:var(--ink);font:inherit;font-size:16px}.vs .cnt{margin:0;text-align:right}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -2632,12 +2635,13 @@ const leagueTitle = lg => ({ men: 'Men\u2019s', women: 'Women\u2019s', mixed: 'M
 const catTitle = k => (leagueTitle(CAT_DEFS[k][0]) + ' ' + CAT_DEFS[k][1]).trim();
 const FORMATS = { singles: 'Singles', doubles: 'Doubles (fixed pairs)', americano: 'Americano (rotating partners)', team: 'Team tournament' };
 const formatsFor = k => CAT_DEFS[k][0] === 'teams' ? ['team'] : CAT_DEFS[k][0] === 'mixed' ? ['doubles'] : ['singles', 'doubles', 'americano'];
-const sizesFor = f => f === 'team' ? [6, 8] : f === 'americano' ? [4, 5, 6, 7, 8] : [4, 5, 6, 7];
+const sizesFor = f => f === 'americano' ? [4, 5, 6, 7, 8] : [3, 4, 5, 6, 7];
+const teamSizes = t => t === '4' ? [6, 8] : String(t).charAt(0) === '3' ? [4, 5, 6, 7, 8] : [3, 4, 5, 6, 7, 8];
 const roundsFor = (f, n) => f === 'americano' ? ({ 4: 3, 5: 5, 6: 6, 7: 7, 8: 7 })[n] : (n % 2 ? n : n - 1);
 const scoringFor = c => c.scoring === 'to4' || c.scoring === 'set' ? c.scoring : (c.format === 'team' || (+c.size || 7) >= 6 ? 'to4' : 'set');
 const scoringText = s => s === 'set' ? 'full set' : 'first to 4 games';
 const catNames = c => { const p = c && c.players; return (Array.isArray(p) ? p : Object.values(p || {})).filter(Boolean); };
-const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: !!c.mix,
+const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: false,
   teams: (Array.isArray(c.teams) ? c.teams : Object.values(c.teams || {})).map(t => ({ name: t.name || '', p: (Array.isArray(t.p) ? t.p : Object.values(t.p || {})).filter(Boolean) })) });
 const firstSaturday = ym => { const [y, m] = ym.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); return new Date(Date.UTC(y, m - 1, 1 + (6 - wd + 7) % 7)).toISOString().slice(0, 10); };
 const cfgDate = c => /^\d{4}-\d{2}-\d{2}$/.test(c.date || '') ? c.date : firstSaturday(/^\d{4}-\d{2}$/.test(c.month) ? c.month : DEFAULT_CFG.month);
@@ -2716,11 +2720,20 @@ const TEAM_TYPES = {
   '3w': { n: 3, label: '3 players: 1 man + 2 women',
     slots: [{ g: 'm', role: 'Man \u00b7 plays all singles' }, { g: 'f', role: 'Woman \u00b7 doubles' }, { g: 'f', role: 'Woman \u00b7 doubles' }],
     plan: (j, n) => (n - 1) + (j === 0 ? ' singles' : ' doubles (women\u2019s)'),
-    rule: n => 'Each team plays every other team once, so every player plays ' + (n - 1) + ' matches.<br>P1 plays all the singles (' + (n - 1) + ').<br>P2 + P3 play all the doubles together (' + (n - 1) + ').<br>Singles are played first, then doubles. Every match won = 1 point.' }
+    rule: n => 'Each team plays every other team once, so every player plays ' + (n - 1) + ' matches.<br>P1 plays all the singles (' + (n - 1) + ').<br>P2 + P3 play all the doubles together (' + (n - 1) + ').<br>Singles are played first, then doubles. Every match won = 1 point.' },
+  '2m': { n: 2, label: '2 players: 2 men',
+    slots: [{ g: 'm', role: 'Man' }, { g: 'm', role: 'Man' }],
+    plan: (j, n) => (n - 1) + ' singles + ' + (n - 1) + ' doubles',
+    rule: n => 'Each team plays every other team once. In each match-up P1 and P2 play one singles each, then P1 + P2 play the doubles together.<br>Every player plays ' + (n - 1) + ' singles and ' + (n - 1) + ' doubles.<br>Singles are played first, then doubles. Every match won = 1 point.' },
+  '2w': { n: 2, label: '2 players: 2 women',
+    slots: [{ g: 'f', role: 'Woman' }, { g: 'f', role: 'Woman' }],
+    plan: (j, n) => (n - 1) + ' singles + ' + (n - 1) + ' doubles',
+    rule: n => 'Each team plays every other team once. In each match-up P1 and P2 play one singles each, then P1 + P2 play the doubles together.<br>Every player plays ' + (n - 1) + ' singles and ' + (n - 1) + ' doubles.<br>Singles are played first, then doubles. Every match won = 1 point.' }
 };
 const slotsFor = c => c.format === 'team' ? (c.size - 1) * (Math.ceil((c.size / 2) * (c.teamType === '4' ? 2 : 1) / 3) + Math.ceil(c.size / 2 / 3)) : c.groups * roundsFor(c.format, c.size);
 // same rotation for every team in round k, so every team ends with the same singles/doubles counts per player number
 const tieMatches = (type, k, ties) => {
+  if (String(type).charAt(0) === '2') return [{ kind: 'S', s: [1] }, { kind: 'S', s: [2] }, { kind: 'D', s: [1, 2] }];
   if (type !== '4') return [{ kind: 'S', s: [1] }, { kind: 'D', s: [2, 3] }];
   if (k === ties) return [{ kind: 'S', s: [1] }, { kind: 'S', s: [3] }, { kind: 'D', s: [2, 4] }];                  // mixed doubles M2 + W2, singles M1 and W1
   return k % 2 ? [{ kind: 'S', s: [3] }, { kind: 'S', s: [4] }, { kind: 'D', s: [1, 2] }]                           // men's doubles M1 + M2, women play singles
@@ -2740,9 +2753,9 @@ function packRounds(queues, cap) {                         // queues: [[{w, ps},
 const catQueues = (c, cap) => {                            // widths only: used for the time estimate in the setup screen
   const rd = w => ({ w, ps: [] });
   if (c.format === 'team') {
-    const n = c.size, ties = n / 2, S1 = ties * (c.teamType === '4' ? 2 : 1), D1 = ties, q = [];
+    const n = c.size, ties = Math.floor(n / 2), S1 = ties * (c.teamType === '3m' || c.teamType === '3w' ? 1 : 2), D1 = ties, q = [];
     const ch = x => { const o = []; for (let i = 0; i < x; i += cap) o.push(Math.min(cap, x - i)); return o; };
-    for (let r = 1; r < n; r++) (c.mix ? ch(S1 + D1) : ch(S1).concat(ch(D1))).forEach(w => q.push(rd(w)));
+    for (let r = 0; r < (n % 2 ? n : n - 1); r++) (c.mix ? ch(S1 + D1) : ch(S1).concat(ch(D1))).forEach(w => q.push(rd(w)));
     return [q];
   }
   const n = c.size, widths = c.format === 'americano' ? Array(roundsFor('americano', n)).fill(Math.floor(n / 4)) : Array(n % 2 ? n : n - 1).fill(n % 2 ? (n - 1) / 2 : n / 2);
@@ -2751,18 +2764,18 @@ const catQueues = (c, cap) => {                            // widths only: used 
 
 function buildTeams(ck, c) {
   const n = c.size, T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], title = catTitle(ck);
-  if (!sizesFor('team').includes(n)) { SETUP_ERRORS.push(title + ': the number of teams must be 6 or 8 (every player needs at least 5 matches) \u2014 skipped.'); return 0; }
+  if (!teamSizes(c.teamType).includes(n)) { SETUP_ERRORS.push(title + ': teams of ' + T.n + ' need ' + teamSizes(c.teamType).join(', ') + ' teams \u2014 skipped.'); return 0; }
   if (c.teams.length !== n || c.teams.some(t => (t.p || []).filter(Boolean).length !== T.n)) { SETUP_ERRORS.push(title + ' needs ' + n + ' complete teams of ' + T.n + ' players \u2014 skipped.'); return 0; }
   const members = c.teams.map(t => t.p.map(x => resolve(x))), all = members.flat();
   if (new Set(all).size !== all.length) { SETUP_ERRORS.push(title + ': a player is in two teams \u2014 skipped.'); return 0; }
   const ids = c.teams.map((t, i) => { const id = 'tm_' + ck.toLowerCase() + (i + 1); PLAYERS[id] = t.name || 'Team ' + (i + 1); return id; });
   const idx = Object.fromEntries(ids.map((id, i) => [id, i]));
-  CATS.push({ key: ck, league: 'teams', label: CAT_DEFS[ck][1], players: ids, teams: c.teams.map((t, i) => ({ id: ids[i], name: PLAYERS[ids[i]], members: members[i] })), format: 'team', teamType: c.teamType, size: n, scoring: scoringFor(c), rests: false, perPlayer: 0 });
+  CATS.push({ key: ck, league: 'teams', label: CAT_DEFS[ck][1], players: ids, teams: c.teams.map((t, i) => ({ id: ids[i], name: PLAYERS[ids[i]], members: members[i] })), format: 'team', teamType: c.teamType, size: n, scoring: scoringFor(c), rests: n % 2 === 1, perPlayer: 0 });
   const rounds = [];
   rrRounds(ids).forEach((rd, r) => {
-    const sing = [], dbl = [];
+    const sing = [], dbl = [], restLeft = rd.rest.slice();
     rd.games.forEach(([[a], [b]]) => tieMatches(c.teamType, r + 1, n - 1).forEach(pt => { const list = pt.kind === 'S' ? sing : dbl; list.push([pt.kind, a, b, pt.s.map(j => members[idx[a]][j - 1]), pt.s.map(j => members[idx[b]][j - 1]), r + 1, ck + '-T' + (r + 1) + pt.kind + (list.length + 1)]); }));
-    (c.mix ? [sing.concat(dbl)] : [sing, dbl]).forEach(list => { for (let i = 0; i < list.length; i += COURTS) rounds.push({ games: list.slice(i, i + COURTS).map(([kind, a, b, A, B, tr, id]) => [A, B, { kind, tie: [a, b], tr, id }]), rest: [] }); });
+    (c.mix ? [sing.concat(dbl)] : [sing, dbl]).forEach(list => { for (let i = 0; i < list.length; i += COURTS) rounds.push({ games: list.slice(i, i + COURTS).map(([kind, a, b, A, B, tr, id]) => [A, B, { kind, tie: [a, b], tr, id }]), rest: restLeft.splice(0) }); });
   });
   QUEUES.push({ key: ck, fmt: 'team', rounds });
   return 0;
@@ -3080,17 +3093,32 @@ function formatRules() {
   const info = rulesInfo(), li = [`<li><b>${dateLong(TOURNAMENT.date)}</b> \u00b7 ${COURTS} courts.</li>`];
   const grp = (c, unit) => c.g > 1 ? c.g + ' groups of ' + c.n + ' ' + unit : c.n + ' ' + unit;
   if (!info.length) li.push('<li>Round-robin groups: everyone plays everyone once.</li>', '<li>1st place in each group wins.</li>');
+  if (info.length) {                                       // at-a-glance summary before the details of each category
+    const tw = { '4': '2 men + 2 women', '3m': '2 men + 1 woman', '3w': '1 man + 2 women', '2m': '2 men', '2w': '2 women' };
+    const kindOf = c => c.f === 'team' ? 'Team tournament' : c.f === 'americano' ? 'Americano (partners change every round)' : c.f === 'doubles' ? (CAT_DEFS[c.k][0] === 'mixed' ? 'Mixed doubles' : 'Doubles (fixed pairs)') : 'Singles';
+    const lgs = [...new Set(info.filter(c => c.f !== 'team').map(c => CAT_DEFS[c.k][0]))], who = [];
+    if (lgs.includes('men') && lgs.includes('women')) who.push('men and women, in separate categories'); else if (lgs.includes('men')) who.push('men'); else if (lgs.includes('women')) who.push('women');
+    if (lgs.includes('mixed')) who.push('mixed (men and women together)');
+    [...new Set(info.filter(c => c.f === 'team').map(c => c.tt || '4'))].forEach(ty => who.push('teams of ' + (TEAM_TYPES[ty] || TEAM_TYPES['4']).n + ' (' + tw[ty] + ')'));
+    li.push(`<li><b>Format:</b> ${[...new Set(info.map(kindOf))].join(' + ')}.</li>`, `<li><b>Players:</b> ${who.join('; ')}.</li>`,
+      `<li><b>Stage:</b> ${info.every(c => c.f === 'team') ? 'round robin \u2014 every team plays every other team once' : 'group stage only (round robin)'}. No knockout round.</li>`,
+      `<li><b>Levels:</b> ${[...new Set(info.map(c => CAT_DEFS[c.k][1]))].join(' and ')}.</li>`);
+  }
   info.forEach(c => {
-    let t;
-    if (c.f === 'team') t = `${c.n} teams of ${(TEAM_TYPES[c.tt] || TEAM_TYPES['4']).n}. Every team plays every other team once (${c.n - 1} matches per player). Singles first, then doubles. Every match won = 1 point; the most points wins.`;
-    else if (c.f === 'americano') t = `${grp(c, 'players')}. Partners change every round; ${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches per player. The most games won ranks first.`;
-    else if (c.f === 'doubles') t = `${grp(c, 'pairs')}. Round robin: every pair plays every other pair once (${c.n - 1} matches).`;
-    else t = `${grp(c, 'players')}. Round robin: everyone plays everyone once (${c.n - 1} matches).`;
-    li.push(`<li><b>${c.title}:</b> ${t}</li>`);
+    const lg = CAT_DEFS[c.k][0], lvl = CAT_DEFS[c.k][1], rest = c.n % 2;
+    let kind, t;
+    if (c.f === 'team') {
+      const ty = c.tt || '4', pp = ty.charAt(0) === '2' ? (c.n - 1) + ' singles and ' + (c.n - 1) + ' doubles' : (c.n - 1) + ' matches';
+      kind = 'Team tournament'; t = `${c.n} teams of ${(TEAM_TYPES[ty] || TEAM_TYPES['4']).n} (${ty === '4' ? '2 men + 2 women' : ty === '3m' ? '2 men + 1 woman' : ty === '3w' ? '1 man + 2 women' : ty === '2m' ? '2 men' : '2 women'}). Round robin: every team plays every other team once, so each player plays ${pp}. Singles first, then doubles. Every match won = 1 point; the team with the most points wins.${c.n % 2 ? ' One team rests in each round.' : ''}`;
+    } else if (c.f === 'americano') {
+      kind = leagueTitle(lg) + ' Americano'; t = `${grp(c, 'players')}. Partners change every round; each player plays ${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches. The most games won ranks first.${c.n > 4 && c.n < 8 ? ' Players who are not on court rest that round.' : ''}`;
+    } else if (c.f === 'doubles') {
+      kind = lg === 'mixed' ? 'Mixed doubles' : leagueTitle(lg) + ' doubles'; t = `${grp(c, 'pairs')}. Round robin: every pair plays every other pair once, so each pair plays ${c.n - 1} matches.${rest ? ' One pair rests in each round.' : ''}`;
+    } else {
+      kind = leagueTitle(lg) + ' singles'; t = `${grp(c, 'players')}. Round robin: everyone plays everyone once, so each player plays ${c.n - 1} matches.${rest ? ' One player rests in each round.' : ''}`;
+    }
+    li.push(`<li><b>${kind} \u00b7 ${lvl}:</b> ${t}</li>`);
   });
-  const odd = info.filter(c => (c.f === 'singles' || c.f === 'doubles') && c.n % 2), d = odd.some(c => c.f === 'doubles'), sg = odd.some(c => c.f === 'singles');
-  if (odd.length) li.push(`<li>${d && sg ? 'One player or pair' : d ? 'One pair' : 'One player'} rests in each round; everyone rests once.</li>`);
-  if (info.some(c => c.f === 'americano' && c.n > 4 && c.n < 8)) li.push('<li>Americano: players who are not on court rest that round.</li>');
   if (info.some(c => c.f === 'singles' || c.f === 'doubles')) li.push('<li>1st place in each group wins.</li>');
   return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
 }
@@ -3105,12 +3133,22 @@ function matchRules() {
 }
 function positionRules() {
   const fs = new Set(rulesInfo().map(c => c.f)); if (!fs.size) fs.add('singles');
-  const li = [];
-  if (fs.has('singles') || fs.has('doubles')) li.push('<li><b>Groups:</b> most wins first. Two level: head\u2011to\u2011head. Three or more level: games difference (games won minus lost). POS shows H2H or GD when a tie\u2011break decided.</li>');
-  if (fs.has('americano')) li.push('<li><b>Americano:</b> most games won first, then games difference.</li>');
-  if (fs.has('team')) li.push('<li><b>Teams:</b> most match points (1 per match won) first, then games difference.</li>');
-  li.push('<li>If still level, the organizers decide.</li>');
-  return `<h4>How positions are decided</h4><ul>${li.join('')}</ul>`;
+  const u = fs.has('doubles') ? (fs.has('singles') ? 'players or pairs' : 'pairs') : 'players';
+  let h = '<h4>How positions are decided</h4>';
+  if (fs.has('singles') || fs.has('doubles')) h += `<p class="lead">In group tables, positions are decided in this order:</p>
+<ol>
+<li><b>Number of wins</b> (W\u2011L): more wins rank higher.</li>
+<li><b>Head\u2011to\u2011head:</b> if two ${u} are tied on wins, the winner of the match between them ranks higher.</li>
+<li><b>Games differential</b> (GW\u2011GL, games won minus games lost): if three or more ${u} are tied on wins, the best differential ranks higher. Head\u2011to\u2011head is not used in that case.</li>
+</ol>
+<ul>
+<li>The POS column shows <b>H2H</b> or <b>GD</b> under the number when a tie\u2011break decided the position.</li>
+<li>If ${u} are still level after the tie\u2011breaks, the organizers decide.</li>
+</ul>
+<div class="ex"><b>Example:</b> Player 2 and Player 3 both finish with 2 wins and 2 losses, so they are tied for 2nd. It is a two\u2011player tie, so head\u2011to\u2011head decides. If Player 2 beat Player 3, Player 2 takes 2nd and Player 3 takes 3rd, even if Player 3 has the better games differential (for example +5 against +4).<br><br>If Players 2, 3 and 4 all finish on 2 wins, it is a three\u2011player tie. Then only the games differential counts, so the player with the best GW\u2011GL takes 2nd.</div>`;
+  if (fs.has('americano')) h += '<p class="lead"><b>Americano:</b> the player with the most games won ranks first; if level, the best games difference.</p>';
+  if (fs.has('team')) h += '<p class="lead"><b>Team tournament:</b> the team with the most match points (1 per match won) ranks first; if level, the best games difference.</p>';
+  return h;
 }
 const BASIC_RULES = `<h4>Basic rules</h4>
 <ul>
@@ -3423,7 +3461,7 @@ function readDraft() {
     const on = $modal.querySelector('[data-f="on"][data-cat="' + k + '"]'); if (!on) return;
     if (on.checked) { d.cats[k] = d.cats[k] || catCfg({ format: formatsFor(k)[0] }); d.cats[k].off = false; } else if (d.cats[k]) d.cats[k].off = true;
     const c = d.cats[k], sel = f => $modal.querySelector('[data-f="' + f + '"][data-cat="' + k + '"]');
-    if (CAT_DEFS[k][0] === 'teams' && c) { const tt = sel('teamtype'); if (tt) { if (tt.value !== c.teamType) { c.teamType = tt.value; c.teams = []; } c.size = +sel('size').value; c.scoring = sel('scoring').value; c.groups = 1; c.format = 'team'; c.mix = !!(sel('mix') && sel('mix').checked); } return; }
+    if (CAT_DEFS[k][0] === 'teams' && c) { const tt = sel('teamtype'); if (tt) { if (tt.value !== c.teamType) { c.teamType = tt.value; c.teams = []; } c.size = +sel('size').value; if (!teamSizes(c.teamType).includes(c.size)) c.size = teamSizes(c.teamType)[0]; c.scoring = sel('scoring').value; c.groups = 1; c.format = 'team'; c.mix = false; } return; }
     if (!c || !sel('format')) return;
     const nf = sel('format').value;
     if (nf !== c.format) { if ((nf === 'doubles') !== (c.format === 'doubles')) c.players = []; c.format = nf; }
@@ -3451,10 +3489,10 @@ function setupBody(md) {
       let h = `<div class="sc"><label class="scr"><input type="checkbox" data-f="on" data-cat="${k}" ${on ? 'checked' : ''}><b>${catTitle(k)}</b></label>`;
       if (on) {
         ngroups += 1; queues.push(...catQueues(c, courts));
-        h += `<div class="sf"><label>Team size <select data-f="teamtype" data-cat="${k}">${Object.keys(TEAM_TYPES).map(t => opt(t, TEAM_TYPES[t].label, c.teamType)).join('')}</select></label>
-          <label>Teams <select data-f="size" data-cat="${k}">${sizesFor('team').map(n => opt(n, n, c.size)).join('')}</select></label>
+        h += `<div class="vs"><label>Team size <select data-f="teamtype" data-cat="${k}">${Object.keys(TEAM_TYPES).map(t => opt(t, TEAM_TYPES[t].label, c.teamType)).join('')}</select></label>
+          <label>Teams <select data-f="size" data-cat="${k}">${teamSizes(c.teamType).map(n => opt(n, n, c.size)).join('')}</select></label>
           <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (first to 4 games)', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
-          <span class="cnt">${c.teams.length} / ${c.size} teams</span></div><p class="hint">${TEAM_TYPES[c.teamType].rule(c.size)}</p><label class="scr"><input type="checkbox" data-f="mix" data-cat="${k}" ${c.mix ? 'checked' : ''}><span>Fill every court <small>the last singles may share a time slot with the first doubles</small></span></label>`;
+          <span class="cnt">${c.teams.length} / ${c.size} teams</span></div><p class="hint">${TEAM_TYPES[c.teamType].rule(c.size)}</p>`;
       }
       return h + '</div>';
     }
@@ -3462,7 +3500,7 @@ function setupBody(md) {
     let h = `<div class="sc"><label class="scr"><input type="checkbox" data-f="on" data-cat="${k}" ${on ? 'checked' : ''}><b>${catTitle(k)}</b></label>`;
     if (on) {
       const cap = c.groups * c.size, dbl = c.format === 'doubles'; ngroups += c.groups; queues.push(...catQueues(c, courts));
-      h += `<div class="sf"><label>Format <select data-f="format" data-cat="${k}">${formatsFor(k).map(f => opt(f, FORMATS[f], c.format)).join('')}</select></label>
+      h += `<div class="vs"><label>Format <select data-f="format" data-cat="${k}">${formatsFor(k).map(f => opt(f, FORMATS[f], c.format)).join('')}</select></label>
         <label>${dbl ? 'Pairs' : 'Players'} per group <select data-f="size" data-cat="${k}">${sizesFor(c.format).map(n => opt(n, n, c.size)).join('')}</select></label>
         <label>Groups <select data-f="groups" data-cat="${k}">${[1, 2, 3, 4].map(n => opt(n, n, c.groups)).join('')}</select></label>
         <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (' + scoringText(scoringFor(c)) + ')', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
@@ -3473,15 +3511,15 @@ function setupBody(md) {
   const rounds = packRounds(queues, courts).length, [sh, sm] = String(d.start).split(':').map(Number);
   const radio = (v, t, s) => `<label class="scr"><input type="radio" name="st" data-f="status" value="${v}" ${d.status === v ? 'checked' : ''}><span><b>${t}</b><br><small>${s}</small></span></label>`;
   return `<p class="dmeta">Organizer</p><h3 id="dt">${md.creating ? 'New tournament' : 'Tournament setup'}</h3>
-  <div class="sf"><label>Name <input type="text" data-f="name" value="${esc(d.name)}"></label></div>
+  <div class="dtrow"><b class="lbl">Tournament name</b><input type="text" data-f="name" class="full" value="${esc(d.name)}"></div>
   <div class="dtrow"><b class="lbl">Date</b>
     <div class="stepper"><button class="stp" data-act="mprev" aria-label="Previous month">\u2039</button><div class="stv"><b>${monthLong(d.month)}</b><small>${dateLong(cfgDate(d))}</small></div><button class="stp" data-act="mnext" aria-label="Next month">\u203a</button></div>
     ${d.date ? `<div class="sf">${dateSelects(d.date)}</div><button class="lnk" data-act="datefirst">Back to the first Saturday</button>` : '<button class="lnk" data-act="datecustom">Use a different date</button>'}</div>
   <div class="dtrow"><b class="lbl">Start time</b>
-    <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select>
-    <label>Courts <select data-f="courts">${[3, 4, 5, 6].map(v => opt(v, v, courts)).join('')}</select></label>
-    <label>Minutes per round <select data-f="roundMin">${[15, 20, 25, 30, 35, 40, 45, 50, 60].concat([+d.roundMin]).filter((v, k, a) => a.indexOf(v) === k).sort((a, b) => a - b).map(v => opt(v, v, d.roundMin)).join('')}</select></label></div></div>
-  <div class="sf"><label style="flex:1">Note for players (optional) <input type="text" data-f="info" maxlength="160" style="width:100%" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></label></div>
+    <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select></div></div>
+  <div class="dtrow"><b class="lbl">Courts</b><select data-f="courts" class="full">${[3, 4, 5, 6].map(v => opt(v, v + ' courts', courts)).join('')}</select></div>
+  <div class="dtrow"><b class="lbl">Minutes per round</b><select data-f="roundMin" class="full">${[15, 20, 25, 30, 35, 40, 45, 50, 60].concat([+d.roundMin]).filter((v, k, a) => a.indexOf(v) === k).sort((a, b) => a - b).map(v => opt(v, v + ' minutes', d.roundMin)).join('')}</select></div>
+  <div class="dtrow"><b class="lbl">Note for players (optional)</b><input type="text" data-f="info" class="full" maxlength="160" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></div>
   <p class="hint">Choose the categories here. Add players afterwards from the Men, Women and Mixed tabs: tap an open spot.</p>
   ${blocks}
   <p class="sumr">${ngroups} group${ngroups === 1 ? '' : 's'} \u00b7 ${rounds} rounds \u00b7 ${courts} courts${rounds ? ' \u00b7 ends about ' + fmt12((sh || 0) * 60 + (sm || 0) + rounds * d.roundMin) : ''}</p>
@@ -3621,7 +3659,7 @@ function teamBlock(cat) {
   const ties = {};
   catMatches(cat.key).forEach(m => { const key = m.tr + '|' + m.tie.join('|'), t = ties[key] = ties[key] || { tr: m.tr, a: m.tie[0], b: m.tie[1], pa: 0, pb: 0, done: 0 }; const r = getResult(S.data, m); if (r) { t.done++; if (r[0] > r[1]) t.pa++; else t.pb++; } });
   let last = 0;
-  const tl = Object.values(ties).sort((x, y) => x.tr - y.tr).map(t => (t.tr !== last ? (last = t.tr, `<p class="gh2">Match-up ${t.tr} of ${cat.size - 1}</p>`) : '') +
+  const tl = Object.values(ties).sort((x, y) => x.tr - y.tr).map(t => (t.tr !== last ? (last = t.tr, `<p class="gh2">Match-up ${t.tr} of ${cat.size % 2 ? cat.size : cat.size - 1}</p>`) : '') +
     `<div class="tieres"><span>${esc(PLAYERS[t.a])}</span><b>${t.done ? t.pa + ' \u2013 ' + t.pb : 'vs'}</b><span>${esc(PLAYERS[t.b])}</span></div>`).join('');
   return `<section class="card"><div class="card-head"><h2 class="tag">${title}</h2>${status}</div><div class="scroll"><table class="hist"><thead><tr><th class="l">TEAM</th><th class="a2">SINGLES<br>W${dash}L</th><th class="a2">DOUBLES<br>W${dash}L</th><th class="a2">GAMES<br>W${dash}L</th><th>PTS</th><th class="pos">POS</th></tr></thead><tbody>${body}</tbody></table></div></section>
   <section class="card"><div class="card-head"><h2 class="tag">Team match-ups</h2><span class="pill"><i></i>${title}</span></div>${tl}</section>`;
