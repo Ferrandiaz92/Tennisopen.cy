@@ -229,7 +229,8 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
 .pm span:first-child{font-size:11px;opacity:.55}.pm b.w{color:#1f7a3d}.pm b.l{color:#b4432c}
 .bw{margin:10px 8px 0;font-size:12px;font-weight:600;line-height:1.5}
-</style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{"MA-chadunin-colella":[1,4],"MA-chadunin-rondina":[1,4],"MA-rondina-colella":[0,4],"MA-rondina-shishorin":[4,1],"MA-shishorin-chadunin":[4,2],"MA-shishorin-colella":[3,4],"MA-tuzze-chadunin":[1,4],"MA-tuzze-colella":[2,4],"MA-tuzze-rondina":[2,4],"MA-tuzze-shishorin":[0,4],"MB-kolesnyk-kouloundis":[0,4],"MB-kolesnyk-onoszko":[0,4],"MB-kozlov-kolesnyk":[4,1],"MB-kozlov-kouloundis":[2,4],"MB-kozlov-onoszko":[0,4],"MB-loginidi-kouloundis":[4,0],"MB-loginidi-kozlov":[4,3],"MB-loginidi-martinez":[1,4],"MB-loginidi-onoszko":[3,4],"MB-martinez-kolesnyk":[4,0],"MB-martinez-kouloundis":[4,3],"MB-martinez-onoszko":[4,1],"WA-azi-gaponova":[4,3],"WA-azi-guseva":[0,4],"WA-azi-shishorina":[0,4],"WA-bodrikova-gaponova":[4,1],"WA-bodrikova-guseva":[2,4],"WA-bodrikova-shishorina":[1,4],"WA-christodoulou-azi":[4,1],"WA-christodoulou-bodrikova":[3,4],"WA-christodoulou-guseva":[3,4],"WA-christodoulou-shishorina":[4,3],"WA-guseva-gaponova":[4,2],"WA-shishorina-gaponova":[4,1],"WB-gruzinova-andreeva":[0,4],"WB-gruzinova-lopatina":[4,0],"WB-gruzinova-reiman":[2,4],"WB-gruzinova-solyanik":[0,4],"WB-lopatina-andreeva":[4,2],"WB-lopatina-solyanik":[2,4],"WB-reiman-andreeva":[4,3],"WB-reiman-lopatina":[0,4],"WB-reiman-solyanik":[4,0],"WB-solyanik-andreeva":[4,2]},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
+.rest{margin:8px 4px 0;font-size:12px;font-weight:600;opacity:.85;text-align:center}
+</style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
 //
@@ -2540,12 +2541,7 @@ const PLAYERS = {
   andreeva: 'Anna Andreeva', solyanik: 'Daria Solyanik'
 };
 
-const CATS = [
-  { key: 'MA', league: 'men',   label: 'Category A', players: ['shishorin', 'colella', 'tuzze', 'rondina', 'chadunin'] },
-  { key: 'MB', league: 'men',   label: 'Category B', players: ['onoszko', 'loginidi', 'kozlov', 'martinez', 'kolesnyk', 'kouloundis'] },
-  { key: 'WA', league: 'women', label: 'Category A', players: ['shishorina', 'bodrikova', 'christodoulou', 'gaponova', 'azi', 'guseva'] },
-  { key: 'WB', league: 'women', label: 'Category B', players: ['lopatina', 'gruzinova', 'reiman', 'andreeva', 'solyanik'] }
-];
+const CATS = [];   // filled from SETUP below
 
 // ---- PLAYER REGISTRY: how to add players -------------------------------------------------------
 // Just type the player's NAME in the category list below (and in RAW if you like). Ids are automatic.
@@ -2554,7 +2550,7 @@ const CATS = [
 //  - New player: gets a permanent id automatically. In organizer mode the page warns about
 //    possible duplicates (similar names). Keep every past player in PLAYERS so history stays linked.
 const ALIASES = { colella: ['Adriano Colella'] };   // id -> other names for the same person
-const normName = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+const normName = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
 const NAME_INDEX = {}, NEW_PLAYERS = [], DUP_WARNINGS = [];
 Object.keys(PLAYERS).forEach(id => { NAME_INDEX[normName(PLAYERS[id])] = id; (ALIASES[id] || []).forEach(a => { NAME_INDEX[normName(a)] = id; }); });
 function editDist(a, b) {
@@ -2578,36 +2574,56 @@ function resolve(x) {
 }
 CATS.forEach(c => { c.players = c.players.map(resolve); });
 
-// ---- One block per tournament. For a NEW tournament: new id, date, format and a NEW resultsPath. ----
-const TOURNAMENT = {
-  id: '2026-10-03-singles',
+// ================= NEW TOURNAMENT SETUP: the only block to edit each month =================
+const SETUP = {
+  month: '2026-11',            // the tournament is always the FIRST SATURDAY of this month (Nov 2026 = Sat 7 Nov)
   name: 'Singles League',
-  date: '2026-10-03',
-  format: 'Singles \u00b7 round-robin groups \u00b7 first to 4 games \u00b7 Men & Women, Category A/B',
-  resultsPath: 'tennis/results'          // e.g. 'tennis/tournaments/2026-11-14-doubles/results' for the next one
+  start: '16:00',              // first match
+  roundMin: 25,                // minutes per round
+  // Which groups play: list 7 names in draw order (P1..P7) to include a group, or null to leave it out.
+  // A '' keeps that seat open for now (shows "Player N (TBD)"). Example:
+  //   MA: ['Andrey Kuznetsov', 'Federico Rondina', 'Luigi Tuzze', 'George Shishorin', 'Dmitry Chadunin', 'Name 6', 'Name 7'],
+  groups: {
+    MA: ['', '', '', '', '', '', ''],     // Men's Category A
+    MB: null,                             // Men's Category B
+    WA: null,                             // Women's Category A
+    WB: null                              // Women's Category B
+  },
+  // Rest order: the draw number of the player who rests in round 1, 2, ... 7 (each number once).
+  rest: [6, 4, 2, 1, 3, 5, 7]
+};
+const firstSaturday = ym => { const [y, m] = ym.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); return new Date(Date.UTC(y, m - 1, 1 + (6 - wd + 7) % 7)).toISOString().slice(0, 10); };
+const TDATE = firstSaturday(SETUP.month);
+const TOURNAMENT = {
+  id: TDATE + '-singles', name: SETUP.name, date: TDATE,
+  format: 'Singles \u00b7 round robin \u00b7 groups of 7 \u00b7 first to 4 games',
+  resultsPath: 'tennis/tournaments/' + TDATE + '-singles/results'     // every tournament gets its own results path
 };
 
-const ROUND_TIMES = ['4:00pm', '4:25pm', '4:50pm', '5:15pm', '5:40pm', '6:10pm', '6:35pm', '7:00pm',
-  '7:25pm', '7:50pm', '8:10pm', '8:35pm', '9:00pm', '9:25pm', '9:50pm'];
-
-// [round, court, category, player A, player B]
-const RAW = [
-  [1, 1, 'WA', 'shishorina', 'gaponova'], [1, 2, 'WB', 'reiman', 'solyanik'], [1, 3, 'MB', 'kozlov', 'kolesnyk'],
-  [2, 1, 'MA', 'tuzze', 'colella'], [2, 2, 'WA', 'christodoulou', 'azi'], [2, 3, 'MB', 'martinez', 'kouloundis'],
-  [3, 1, 'MB', 'loginidi', 'onoszko'], [3, 2, 'MA', 'shishorin', 'chadunin'], [3, 3, 'WA', 'bodrikova', 'guseva'],
-  [4, 1, 'WA', 'christodoulou', 'shishorina'], [4, 2, 'WB', 'gruzinova', 'solyanik'], [4, 3, 'WB', 'lopatina', 'andreeva'],
-  [5, 1, 'MB', 'loginidi', 'kozlov'], [5, 2, 'MA', 'rondina', 'colella'], [5, 3, 'MB', 'martinez', 'kolesnyk'],
-  [6, 1, 'WA', 'bodrikova', 'gaponova'], [6, 2, 'WA', 'azi', 'guseva'], [6, 3, 'WB', 'reiman', 'andreeva'],
-  [7, 1, 'MA', 'tuzze', 'chadunin'], [7, 2, 'MB', 'loginidi', 'kouloundis'], [7, 3, 'WB', 'lopatina', 'solyanik'],
-  [8, 1, 'MB', 'martinez', 'onoszko'], [8, 2, 'MA', 'rondina', 'shishorin'], [8, 3, 'WA', 'azi', 'shishorina'],
-  [9, 1, 'WA', 'christodoulou', 'bodrikova'], [9, 2, 'WB', 'reiman', 'lopatina'], [9, 3, 'WB', 'gruzinova', 'andreeva'],
-  [10, 1, 'MB', 'kozlov', 'onoszko'], [10, 2, 'MA', 'chadunin', 'colella'], [10, 3, 'MB', 'kolesnyk', 'kouloundis'],
-  [11, 1, 'WA', 'azi', 'gaponova'], [11, 2, 'WA', 'christodoulou', 'guseva'], [11, 3, 'WB', 'gruzinova', 'reiman'],
-  [12, 1, 'MA', 'tuzze', 'shishorin'], [12, 2, 'MB', 'loginidi', 'martinez'], [12, 3, 'MA', 'chadunin', 'rondina'],
-  [13, 1, 'MB', 'kolesnyk', 'onoszko'], [13, 2, 'WB', 'solyanik', 'andreeva'], [13, 3, 'MB', 'kozlov', 'kouloundis'],
-  [14, 1, 'WA', 'bodrikova', 'shishorina'], [14, 2, 'WB', 'gruzinova', 'lopatina'], [14, 3, 'WA', 'guseva', 'gaponova'],
-  [15, 1, 'MA', 'tuzze', 'rondina'], [15, 2, 'MA', 'shishorin', 'colella']
-];
+// ---- Schedule generator: 7 players, 3 courts, 7 rounds per group, one rest per player (no other breaks) ----
+const CAT_DEFS = { MA: ['men', 'Category A'], MB: ['men', 'Category B'], WA: ['women', 'Category A'], WB: ['women', 'Category B'] };
+const SETUP_ERRORS = [], RAW = [], RESTS = {};
+let REST = SETUP.rest.slice();
+if (REST.length !== 7 || REST.slice().sort().join() !== '1,2,3,4,5,6,7') { SETUP_ERRORS.push('Rest order must use each number 1\u20137 once; default order used.'); REST = [6, 4, 2, 1, 3, 5, 7]; }
+const seatId = (key, i) => { const id = 'seat' + key.toLowerCase() + (i + 1); if (!PLAYERS[id]) PLAYERS[id] = 'Player ' + (i + 1) + ' (TBD)'; return id; };
+let roundBase = 0;
+Object.keys(CAT_DEFS).forEach(key => {
+  const names = SETUP.groups[key]; if (!names) return;
+  const nm = (CAT_DEFS[key][0] === 'men' ? 'Men\u2019s ' : 'Women\u2019s ') + CAT_DEFS[key][1];
+  if (names.length !== 7) { SETUP_ERRORS.push(nm + ' needs exactly 7 players (has ' + names.length + ') \u2014 group skipped.'); return; }
+  const ids = names.map((n, i) => (n && n.trim()) ? resolve(n) : seatId(key, i));
+  if (new Set(ids).size !== 7) { SETUP_ERRORS.push(nm + ' lists the same player twice \u2014 group skipped.'); return; }
+  CATS.push({ key, league: CAT_DEFS[key][0], label: CAT_DEFS[key][1], players: ids });
+  REST.forEach((_, r) => {                       // round r: seat REST[r] rests, the other 6 pair up (circle method)
+    const at = k => ids[REST[((k % 7) + 7) % 7] - 1];
+    RESTS[roundBase + r + 1] = [{ pid: at(r), cat: key }];
+    [1, 2, 3].forEach(d => RAW.push([roundBase + r + 1, d, key, at(r + d), at(r - d)]));
+  });
+  roundBase += 7;                                // several groups play one after another on the same 3 courts
+});
+const fmt12 = m => { const h = Math.floor(m / 60) % 24; return (h % 12 || 12) + ':' + String(m % 60).padStart(2, '0') + (h < 12 ? 'am' : 'pm'); };
+const [START_H, START_M] = SETUP.start.split(':').map(Number);
+const ROUND_TIMES = Array.from({ length: roundBase }, (_, i) => fmt12(START_H * 60 + START_M + i * SETUP.roundMin));
 
 const MATCHES = RAW.map(([round, court, cat, a, b]) => { a = resolve(a); b = resolve(b); return { id: cat + '-' + a + '-' + b, round, court, cat, a, b }; });
 const CAT_BY_KEY = Object.fromEntries(CATS.map(c => [c.key, c]));
@@ -2728,6 +2744,9 @@ const remember = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dash = '\u2013';
+const dateLong = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 round robin results';
+const SCHED_SUB = '3 courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date);
 const matchById = id => MATCHES.find(m => m.id === id);
 const leagueOf = m => CAT_BY_KEY[m.cat].league;
 
@@ -2737,18 +2756,18 @@ const RACKET_SYMBOL = '<svg width="0" height="0" style="position:absolute" aria-
 
 function header() {
   const t = {
-    men: ['Tournament standings', "Men\u2019s", 'League', 'Category A & Category B \u2014 round robin results'],
-    women: ['Tournament standings', "Women\u2019s", 'League', 'Category A & Category B \u2014 round robin results'],
+    men: ['Tournament standings', "Men\u2019s", 'League', SUB_LINE],
+    women: ['Tournament standings', "Women\u2019s", 'League', SUB_LINE],
     history: ['Archive', 'Tournament', 'History', 'Past tournaments, final classifications & player records'],
-    sched: ['Tournament', 'Order of', 'Play', '3 courts \u00b7 15 rounds \u00b7 first match 4:00pm']
+    sched: ['Tournament', 'Order of', 'Play', SCHED_SUB]
   }[S.tab];
   return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
 }
 
 function playerNotes() {
-  const n = [...new Set(NEW_PLAYERS)], d = [...new Set(DUP_WARNINGS)];
-  if (!n.length && !d.length) return '';
-  return '<p class="bw">' + (n.length ? '<b>New players:</b> ' + esc(n.join(', ')) + '. ' : '') + (d.length ? '<b>Check for duplicates:</b> ' + esc(d.join('; ')) + '. If it is the same person, add the name to ALIASES.' : '') + '</p>';
+  const n = [...new Set(NEW_PLAYERS)], d = [...new Set(DUP_WARNINGS)], open = CATS.flatMap(c => c.players).filter(p => p.indexOf('seat') === 0).length;
+  if (!n.length && !d.length && !SETUP_ERRORS.length && !open) return '';
+  return '<p class="bw">' + (SETUP_ERRORS.length ? '<b>Setup:</b> ' + esc(SETUP_ERRORS.join(' ')) + ' ' : '') + (open ? '<b>' + open + ' open seat' + (open > 1 ? 's' : '') + ' (TBD).</b> ' : '') + (n.length ? '<b>New players:</b> ' + esc(n.join(', ')) + '. ' : '') + (d.length ? '<b>Check for duplicates:</b> ' + esc(d.join('; ')) + '. If it is the same person, add the name to ALIASES.' : '') + '</p>';
 }
 function syncBar() {
   const s = S.sync;
@@ -2781,7 +2800,7 @@ function mcell(x) {
 }
 
 function rowHtml(s) {
-  const cells = [0, 1, 2, 3].map(i => mcell(s.matches[i])).join('');
+  const cells = s.matches.map(mcell).join('');
   const wl = s.played ? `${s.w}${dash}${s.l}` : `<span class="dim">${dash}</span>`;
   const gm = s.played ? `<b>${s.gw}</b><i>/</i><b>${s.gl}</b>` : '<i>/</i>';
   const pos = s.pos ? `${s.pos}${s.tb ? `<small>${s.tb}</small>` : ''}` : dash;
@@ -2796,15 +2815,16 @@ function catCard(cat) {
     ? '<span class="pill final"><i></i>Final classification</span>'
     : `<span class="pill"><i></i>Live standings \u00b7 ${p.done} of ${p.total} matches played</span>`;
   return `<section class="card" aria-label="${cat.label}"><div class="card-head"><h2 class="tag">${cat.label}</h2>${status}</div>
-  <p class="swipe">Tap a score to see the opponent and match details.</p><div class="scroll" tabindex="0" role="region" aria-label="${cat.label} results table"><table><thead><tr><th class="l">PLAYER</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th class="a2">W${'\u2011'}L</th><th class="a2">GAMES<br>W${'\u2011'}L</th><th class="pos">POS</th></tr></thead>
+  <p class="swipe">Tap a score to see the opponent and match details.</p><div class="scroll" tabindex="0" role="region" aria-label="${cat.label} results table"><table><thead><tr><th class="l">PLAYER</th>${cat.players.slice(1).map((_, i) => `<th>M${i + 1}</th>`).join('')}<th class="a2">W${'\u2011'}L</th><th class="a2">GAMES<br>W${'\u2011'}L</th><th class="pos">POS</th></tr></thead>
   <tbody>${rows.map(rowHtml).join('')}</tbody></table></div></section>`;
 }
 
 function standings(league) {
   const cats = CATS.filter(c => c.league === league);
+  if (!cats.length) return `<section class="card"><p class="foot" style="color:var(--ink)">No ${league === 'men' ? 'men\u2019s' : 'women\u2019s'} groups in this tournament.</p></section>`;
   const tools = `<div class="tools"><div class="seg" role="group" aria-label="Sort players"><button data-act="sort" data-sort="pos" aria-pressed="${S.sort === 'pos'}">By position</button><button data-act="sort" data-sort="draw" aria-pressed="${S.sort === 'draw'}">Draw order</button></div></div>`;
-  const skip = cats.filter(c => c.players.length === 6).map(c => `<br><b>${c.label}: Round 5 is not played \u2014 P1 vs P6 \u00b7 P2 vs P5 \u00b7 P3 vs P4</b>`).join('');
-  const foot = `<p class="foot"><b>Each player plays 4 matches.</b> W${'\u2011'}L adds up wins and losses; Games W${'\u2011'}L adds up games won and lost.<br>Tie\u2011breaker (2 players): head\u2011to\u2011head winner ranks higher <span class="dot"></span> Tie\u2011breaker (3+ players): best games differential (GW${'\u2011'}GL) ranks higher<br>Tap any match for details.${skip}</p>`;
+  const skip = '<br><b>7 players per group: one player rests in every round (everyone rests once) \u2014 see Order of play.</b>';
+  const foot = `<p class="foot"><b>Each player plays ${Math.max(...cats.map(c => c.players.length)) - 1} matches.</b> W${'\u2011'}L adds up wins and losses; Games W${'\u2011'}L adds up games won and lost.<br>Tie\u2011breaker (2 players): head\u2011to\u2011head winner ranks higher <span class="dot"></span> Tie\u2011breaker (3+ players): best games differential (GW${'\u2011'}GL) ranks higher<br>Tap any match for details.${skip}</p>`;
   return tools + cats.map(catCard).join('') + foot;
 }
 
@@ -2834,9 +2854,10 @@ function schedule() {
   const rounds = ROUND_TIMES.map((time, i) => {
     let ms = MATCHES.filter(m => m.round === i + 1);
     if (S.filter) ms = ms.filter(m => m.a === S.filter || m.b === S.filter);
-    if (!ms.length) return '';
+    const rests = (RESTS[i + 1] || []).filter(x => !S.filter || x.pid === S.filter);
+    if (!ms.length && !rests.length) return '';
     const next = i === first ? '<span class="next">Up next</span>' : '';
-    return `<section class="round" aria-label="Round ${i + 1}"><div class="rt"><small>Round</small><strong>${i + 1}</strong><em>${time}</em>${next}</div><div class="courts">${ms.map(matchCard).join('')}</div></section>`;
+    return `<section class="round" aria-label="Round ${i + 1}"><div class="rt"><small>Round</small><strong>${i + 1}</strong><em>${time}</em>${next}</div><div class="courts">${ms.map(matchCard).join('')}</div>${rests.length ? `<p class="rest">Resting: ${rests.map(x => esc(PLAYERS[x.pid])).join(', ')}</p>` : ''}</section>`;
   }).join('');
   const filter = `<div class="filter"><label for="pf">Find my matches</label><select id="pf" data-act="filter"><option value="">All players</option>${playerOptions()}</select></div>`;
   const done = MATCHES.filter(m => getResult(S.data, m)).length;
@@ -2856,11 +2877,12 @@ const RULES_HTML = `
 <div class="rules">
 <h4>Tournament format</h4>
 <ul>
-<li>Singles tournament. Group stage, round robin.</li>
-<li>4 levels: 2 men\u2019s levels and 2 women\u2019s levels (Category A and Category B).</li>
-<li>5 or 6 players per group. Each player plays 4 matches against players in their group.</li>
+<li>Singles tournament, played on the first Saturday of the month. Group stage, round robin.</li>
+<li>Men\u2019s and women\u2019s groups, Category A and Category B. The standings show the groups playing that day.</li>
+<li>7 players per group. Each player plays 6 matches, one against every other player in the group.</li>
+<li>3 courts: every round has 3 matches and <b>one player rests</b>. Everyone rests exactly once, so there are no other breaks. P1\u2013P7 are the draw numbers shown next to each name.</li>
+<li>Rest order: ${REST.map((p, r) => 'R' + (r + 1) + ': P' + p).join(' \u00b7 ')}.</li>
 <li>1st place in each group is the winner.</li>
-<li><b>Groups of 6</b> (Men\u2019s Category B and Women\u2019s Category A): a full round robin would be 5 matches, so <b>Round 5 is not played</b> (P1 vs P6, P2 vs P5, P3 vs P4). This way everyone plays exactly 4 matches. P1\u2013P6 are the draw numbers shown next to each name.</li>
 </ul>
 <h4>Match format</h4>
 <ul>
