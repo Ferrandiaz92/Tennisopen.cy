@@ -269,6 +269,8 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .vs{display:grid;gap:12px;margin:8px 0}.vs label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700}
 .vs select{width:100%;border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;color:var(--ink);font:inherit;font-size:16px}.vs .cnt{margin:0;text-align:right}
 .tieres.wait span{opacity:.7;font-style:italic}.kw{color:var(--win);font-weight:800}.champ{margin:12px 8px 2px;font-weight:700;font-size:15px}
+.kopre{margin:14px 4px 2px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.05);font-size:13px}
+.kopre b{font-weight:800}.kr{display:grid;grid-template-columns:auto 1fr;gap:1px 12px;font-weight:600;padding:6px 0 4px;border-top:1px dashed var(--line);margin-top:6px}.kr span:first-child{color:var(--acc2);font-weight:800}.kr small{grid-column:2;opacity:.7;font-weight:600}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -3463,6 +3465,11 @@ function validScore(scoring, a, b) {
   return scoring === 'set' ? (hi === 6 && lo <= 4) || (hi === 7 && (lo === 5 || lo === 6)) : hi === 4 && lo >= 0 && lo <= 3;
 }
 const hasLeague = lg => (S.cfg && S.cfg.status === 'live') ? CATS.some(c => c.league === lg) : CAT_ORDER.some(k => CAT_DEFS[k][0] === lg && S.cfg && S.cfg.cats && S.cfg.cats[k] && !S.cfg.cats[k].off);
+function koPreview(k, c) {                                // what happens after the group stage, shown under the player list
+  if (c.format === 'team') return '';
+  if (!koAllowed(c) || c.ko === 'none' || (c.groups === 1 && c.ko === 'semis' && c.size < 4)) return '<p class="kopre"><b>Knockout round:</b> none \u2014 group stage only.</p>';
+  return '<div class="kopre"><b>Knockout round</b> after the group stage' + koMatches(k, c).map(m => `<div class="kr"><span>${esc(m.name)}</span><span>${esc(m.a.label)} vs ${esc(m.b.label)}</span><small>${scoringText(m.scoring)}</small></div>`).join('') + '</div>';
+}
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
   const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
@@ -3473,7 +3480,7 @@ function registrationView(league) {
       ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button>` : ''}</div>`
       : S.canEdit ? `<button class="seat open add" data-act="regadd" data-cat="${k}"><span>${(i % c.size) + 1}</span><span>+ ${dbl ? 'Add pair' : 'Add player'}</span></button>`
       : `<div class="seat open"><span>${(i % c.size) + 1}</span><span>${dbl ? 'Open spot for a pair' : 'Open spot'}</span></div>`)).join('');
-    return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${rows}</section>`;
+    return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${rows}${koPreview(k, c)}</section>`;
   }).join('');
   return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`);
 }
