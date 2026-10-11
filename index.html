@@ -3134,31 +3134,32 @@ function rulesInfo() {
 }
 function formatRules() {
   const info = rulesInfo();
-  if (!info.length) return '<h4>Tournament format</h4><ul><li><b>Round robin</b> in groups: everyone plays everyone once.</li><li>No knockout round: 1st place in each group wins.</li></ul>';
+  if (!info.length) return '<h4>Tournament format</h4><ul><li><b>Group stage:</b> round robin, everyone plays everyone once.</li><li><b>Knockout:</b> none \u2014 1st place in each group wins.</li></ul>';
   const tw = { '4': '2 men + 2 women', '3m': '2 men + 1 woman', '3w': '1 man + 2 women', '2m': '2 men', '2w': '2 women' };
-  const lgOf = c => CAT_DEFS[c.k][0], grp = info.some(c => c.f !== 'team'), tms = info.some(c => c.f === 'team');
+  const lgOf = c => CAT_DEFS[c.k][0];
   const kindOf = c => c.f === 'team' ? 'Team tournament' : c.f === 'americano' ? 'Americano' : c.f === 'doubles' ? (lgOf(c) === 'mixed' ? 'Mixed doubles' : 'Doubles') : 'Singles';
-  const lgs = [...new Set(info.filter(c => c.f !== 'team').map(lgOf))], who = [];
-  if (lgs.includes('men') && lgs.includes('women')) who.push('men and women'); else if (lgs.includes('men')) who.push('men'); else if (lgs.includes('women')) who.push('women');
-  if (lgs.includes('mixed')) who.push('mixed');
-  [...new Set(info.filter(c => c.f === 'team').map(c => c.tt || '4'))].forEach(ty => who.push('teams of ' + (TEAM_TYPES[ty] || TEAM_TYPES['4']).n + ' (' + tw[ty] + ')'));
-  const levels = [...new Set(info.map(c => CAT_DEFS[c.k][1]))].join(' and ');
-  const li = [`<li><b>${[...new Set(info.map(kindOf))].join(' + ')}</b> \u2014 ${who.join('; ')}. ${grp ? 'In groups by category' : 'Categories'}: ${levels}.</li>`];
-  const bySig = {}; info.forEach(c => { (bySig[[c.f, c.n, c.g, c.tt || ''].join('|')] = bySig[[c.f, c.n, c.g, c.tt || ''].join('|')] || []).push(c); });
+  const kinds = [...new Set(info.map(kindOf))];
+  const li = [`<li>${kinds.length === 1 ? '<b>' + kinds[0] + '</b> \u00b7 ' + info.map(c => c.title).join(' \u00b7 ') : info.map(c => c.title + ' <b>' + kindOf(c).toLowerCase() + '</b>').join(' \u00b7 ')}</li>`];
+  const bySig = {}; info.forEach(c => { const sg = [c.f, c.n, c.g, c.tt || ''].join('|'); (bySig[sg] = bySig[sg] || []).push(c); });
   const many = Object.keys(bySig).length > 1;
   Object.values(bySig).forEach(cs => {
-    const c = cs[0], u = c.f === 'doubles' ? 'pair' : 'player', odd = c.n % 2; let t;
-    if (c.f === 'team') t = `${c.n} teams of ${(TEAM_TYPES[c.tt || '4'] || TEAM_TYPES['4']).n}: every team plays every other team once (${(c.tt || '4').charAt(0) === '2' ? (c.n - 1) + ' singles + ' + (c.n - 1) + ' doubles' : (c.n - 1) + ' matches'} per player). Singles first, then doubles; every match won = 1 point.${odd ? ' One team rests each round.' : ''}`;
-    else if (c.f === 'americano') t = `${c.n} players per group; partners change every round (${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches each). Most games won ranks first.${c.n > 4 && c.n < 8 ? ' Players not on court rest.' : ''}`;
-    else t = `${c.n} ${u}s per group${c.g > 1 ? ', ' + c.g + ' groups per category' : ''}. Round robin: everyone plays everyone once (${c.n - 1} matches each).${odd ? ' One ' + u + ' rests each round.' : ''}`;
-    li.push(`<li>${many ? '<b>' + cs.map(x => x.title).join(', ') + ':</b> ' : ''}${t}</li>`);
+    const c = cs[0], pre = many ? '<b>' + cs.map(x => x.title).join(', ') + ':</b> ' : ''; let t;
+    if (c.f === 'team') { const ty = c.tt || '4'; t = `<b>Round robin:</b> ${c.n} teams of ${(TEAM_TYPES[ty] || TEAM_TYPES['4']).n} (${tw[ty]}); every team plays every other team once \u2014 ${ty.charAt(0) === '2' ? (c.n - 1) + ' singles + ' + (c.n - 1) + ' doubles' : (c.n - 1) + ' matches'} per player. Singles first, then doubles; every match won = 1 point.`; }
+    else if (c.f === 'americano') t = `<b>Group stage:</b> ${c.g > 1 ? c.g + ' groups of ' + c.n : c.n} players; partners change every round \u2014 ${({ 4: 3, 5: 4, 6: 4, 7: 4, 8: 7 })[c.n]} matches per player. Most games won ranks first.`;
+    else { const u = c.f === 'doubles' ? 'pairs' : 'players'; t = `<b>Group stage:</b> ${c.g > 1 ? c.g + ' groups of ' + c.n + ' ' + u : c.n + ' ' + u}, round robin \u2014 ${c.n - 1} matches per ${c.f === 'doubles' ? 'pair' : 'player'}.`; }
+    li.push(`<li>${pre}${t}</li>`);
   });
-  const koIn = info.filter(c => c.ko !== 'none'), koTxt = c => c.ko === 'final' ? (c.g === 2 ? 'the two group winners play the final' : '1st and 2nd play the final') : (c.g === 2 ? 'the top 2 of each group play semifinals (1st Group 1 vs 2nd Group 2, 1st Group 2 vs 2nd Group 1), then the final' : 'the top 4 play semifinals (1st vs 4th, 2nd vs 3rd), then the final');
-  if (koIn.length) {
-    const kt2 = c => koTxt(c) + (c.k3 ? '; a 3rd place match is also played' : ''), kb = {}; koIn.forEach(c => { (kb[kt2(c)] = kb[kt2(c)] || []).push(c.title); });
-    Object.keys(kb).forEach(t => li.push(`<li><b>Knockout${Object.keys(kb).length > 1 || koIn.length < info.filter(c => c.f !== 'team').length ? ' (' + kb[t].join(', ') + ')' : ''}:</b> after the group stage, ${t}.</li>`));
-    if (koIn.length < info.filter(c => c.f !== 'team').length || tms) li.push('<li>Other categories: no knockout, 1st place in each group wins' + (tms ? '; team tournament: the team with the most points' : '') + '.</li>');
-  } else li.push(`<li>No knockout round: ${grp && tms ? '1st place in each group wins; in the team tournament, the team with the most points.' : tms ? 'the team with the most points wins.' : '1st place in each group wins.'}</li>`);
+  const list = a => a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const koT = c => {
+    if (c.f === 'team') return 'none \u2014 the team with the most points wins';
+    if (c.ko === 'none') return 'none \u2014 1st place in each group wins';
+    const two = c.g === 2;
+    return c.ko === 'final' ? list([two ? 'final (1st vs 1st)' : 'final (1st vs 2nd)'].concat(c.k3 ? [two ? '3rd place match (2nd vs 2nd)' : '3rd place match (3rd vs 4th)'] : []))
+      : list([two ? 'semifinals (1st vs 2nd of the other group)' : 'semifinals (1st vs 4th, 2nd vs 3rd)'].concat(c.k3 ? ['3rd place match (semifinal losers)'] : [], ['final']));
+  };
+  const kb = {}; info.forEach(c => { (kb[koT(c)] = kb[koT(c)] || []).push(c.title); });
+  const kk = Object.keys(kb);
+  kk.forEach(t => li.push(`<li><b>Knockout${kk.length > 1 ? ' (' + kb[t].join(', ') + ')' : ''}:</b> ${t}.</li>`));
   return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
 }
 function matchRules() {
@@ -3394,7 +3395,7 @@ function applySetup() {
   buildTournament(S.cfg);
   S.cfgJson = JSON.stringify(S.cfg);
   RESULTS_URL = DB_URL + '/' + TOURNAMENT.resultsPath;
-  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 ' + statusLabel(S.cfg);
+  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 ' + (S.cfg.start || '') + ' \u00b7 ' + statusLabel(S.cfg);
   SCHED_SUB = COURTS + ' courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date);
   S.data = { results: {}, shareUrl: '' }; S.filter = '';
 }
@@ -3475,7 +3476,7 @@ function koPreview(k, c) {                                // what happens after 
 }
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
-  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
+  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))} \u00b7 ${esc(cfg.start || '')}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
   const cards = CAT_ORDER.filter(k => CAT_DEFS[k][0] === league && cats[k] && !cats[k].off).map(k => {
     if (CAT_DEFS[k][0] === 'teams') return teamCard(k, catCfg(cats[k]));
     const c = catCfg(cats[k]), cap = c.groups * c.size, names = c.players, left = cap - names.length, dbl = c.format === 'doubles';
