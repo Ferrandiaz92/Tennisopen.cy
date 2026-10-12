@@ -2657,7 +2657,7 @@ const fmt12 = m => { const h = Math.floor(m / 60) % 24; return (h % 12 || 12) + 
 const seatId = (key, i) => { const id = 'seat_' + key + '_' + (i + 1); if (!PLAYERS[id]) PLAYERS[id] = 'Player ' + (i + 1) + ' (TBD)'; return id; };
 const sideName = side => side.map(i => PLAYERS[i]).join(' / ');
 const RAW = [], RESTS = {}, MATCHES = [], ROUND_TIMES = [], CAT_BY_KEY = {}, SETUP_ERRORS = [], QUEUES = [], TEAM_MEMBERS = {}, KO_LIST = [], RESERVED = {}, ROUND_ENDS = [];
-let COURTS = 3, PREVIEW = false;
+let COURTS = 3, PREVIEW = false, LAYOUT = 'standard';
 const TOURNAMENT = { id: '', name: '', date: '', format: '', resultsPath: '' };
 // rest order for odd groups: middle round = P1, then P2/P3, P4/P5, ... outwards (7 players: P6 P4 P2 P1 P3 P5 P7)
 const restOrder = n => { const o = Array(n), mid = (n - 1) / 2; o[mid] = 1; for (let k = 1; k <= mid; k++) { o[mid - k] = 2 * k; o[mid + k] = 2 * k + 1; } return o; };
@@ -2758,6 +2758,7 @@ function packRounds(queues, cap) {                         // queues: [[{w, ps},
   }
   return slots;
 }
+const defaultLayout = cfg => { const l = new Set(CAT_ORDER.filter(k => cfg.cats && cfg.cats[k] && !cfg.cats[k].off).map(k => CAT_DEFS[k][0])); return l.has('men') && l.has('women') ? 'blocks' : 'standard'; };
 const catQueues = (c, cap) => {                            // widths only: used for the time estimate in the setup screen
   const rd = w => ({ w, ps: [] });
   if (c.format === 'team') {
@@ -2881,7 +2882,7 @@ function buildTournament(cfg) {
   [RESTS, CAT_BY_KEY, NEW_IDS, TEAM_MEMBERS, RESERVED].forEach(o => Object.keys(o).forEach(k => delete o[k]));
   const date = cfgDate(cfg);
   Object.assign(TOURNAMENT, { id: date + '-league', name: cfg.name || 'Singles League', date, format: 'Round robin', resultsPath: 'tennis/tournaments/' + date + '-league/results' });
-  PREVIEW = cfg.status !== 'live';                      // registration phase: the order of play is built as a preview (open seats show as TBD)
+  PREVIEW = cfg.status !== 'live'; LAYOUT = cfg.layout || defaultLayout(cfg);                      // registration phase: the order of play is built as a preview (open seats show as TBD)
   CAT_ORDER.forEach(ck => {
     const raw = (cfg.cats || {})[ck]; if (!raw || raw.off) return;
     const c = catCfg(raw), n = c.size;
@@ -2904,7 +2905,7 @@ function buildTournament(cfg) {
   });
   const [h, m] = String(cfg.start || '16:00').split(':').map(Number), step = Math.max(5, +cfg.roundMin || 25);
   let nslots, dur;
-  if (cfg.layout === 'blocks' && QUEUES.length) {          // one gender after the other
+  if (LAYOUT === 'blocks' && QUEUES.length) {          // one gender after the other
     const lg = cfg.first === 'men' ? 'men' : 'women', pri = [lg, lg === 'women' ? 'men' : 'women', 'mixed', 'teams'], base = k => k.replace(/\d+$/, '').slice(0, 2);
     const cats = CAT_ORDER.filter(ck => QUEUES.some(q => base(q.key) === ck)).sort((a, b) => pri.indexOf(CAT_DEFS[a][0]) - pri.indexOf(CAT_DEFS[b][0]));
     const blocks = cats.map(ck => {
@@ -3177,7 +3178,7 @@ function matchCard(m) {
 }
 
 function schedule() {
-  const blocks = !!(S.cfg && S.cfg.layout === 'blocks');
+  const blocks = LAYOUT === 'blocks';
   const first = ROUND_TIMES.findIndex((_, i) => MATCHES.some(m => m.round === i + 1 && !getResult(S.data, m)));
   const rounds = ROUND_TIMES.map((time, i) => {
     let ms = MATCHES.filter(m => m.round === i + 1);
@@ -3196,7 +3197,9 @@ function schedule() {
   }).join('');
   const filter = `<div class="filter"><label for="pf">Find my matches</label><select id="pf" data-act="filter"><option value="">All players</option>${playerOptions()}</select></div>`;
   const done = MATCHES.filter(m => getResult(S.data, m)).length;
-  return filter + (PREVIEW ? '' : `<p class="empty">${done} of ${MATCHES.length} matches played${first === -1 ? ' \u2014 the tournament is complete' : ''}</p>`) + rounds;
+  const both = ['men', 'women'].every(l => CATS.some(c => c.league === l));
+  const tip = !S.canEdit ? '' : (LAYOUT !== 'blocks' && both ? '<p class="foot" style="margin:10px 6px 0"><b>Organizer tip:</b> Edit setup \u2192 Order of play \u2192 \u201cOne gender after the other\u201d to play women first and let the men start on the free courts.</p>' : (LAYOUT === 'blocks' && COURTS < 4 ? '<p class="foot" style="margin:10px 6px 0"><b>Organizer tip:</b> Courts is set to ' + COURTS + '. To play two groups side by side, set Courts to 4 in Edit setup.</p>' : ''));
+  return filter + tip + (PREVIEW ? '' : `<p class="empty">${done} of ${MATCHES.length} matches played${first === -1 ? ' \u2014 the tournament is complete' : ''}</p>`) + rounds;
 }
 
 /* ---------- Page render ---------- */
@@ -3240,7 +3243,7 @@ function formatRules() {
   const kb = {}; info.forEach(c => { (kb[koT(c)] = kb[koT(c)] || []).push(c.title); });
   const kk = Object.keys(kb);
   kk.forEach(t => li.push(`<li><b>Knockout${kk.length > 1 ? ' (' + kb[t].join(', ') + ')' : ''}:</b> ${t}.</li>`));
-  if (S.cfg && S.cfg.layout === 'blocks' && new Set(info.map(c => lgOf(c))).size > 1) { const f = S.cfg.first === 'men' ? 'men' : 'women'; li.push(`<li><b>Order of play:</b> ${f} first, then ${f === 'women' ? 'men' : 'women'}. The second starts on the free courts while the first knockout is played.</li>`); }
+  if (LAYOUT === 'blocks' && new Set(info.map(c => lgOf(c))).size > 1) { const f = S.cfg.first === 'men' ? 'men' : 'women'; li.push(`<li><b>Order of play:</b> ${f} first, then ${f === 'women' ? 'men' : 'women'}. The second starts on the free courts while the first knockout is played.</li>`); }
   return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
 }
 function matchRules() {
@@ -3575,9 +3578,9 @@ function openSetup(creating) {
   let d;
   if (creating) {
     const ids = Object.keys(S.setups).sort(), cur = S.cfg || DEFAULT_CFG;
-    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, layout: cur.layout || 'standard', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: '', cats: {} };
+    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, layout: cur.layout || '', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: '', cats: {} };
   } else { d = JSON.parse(JSON.stringify(S.cfg || DEFAULT_CFG)); d.cats = d.cats || {}; CAT_ORDER.forEach(k => { if (d.cats[k]) d.cats[k] = catCfg(d.cats[k]); }); }
-  d.courts = d.courts || 3; d.layout = d.layout || 'standard'; d.first = d.first || 'women'; d.hold = +d.hold || 2; d.koMin = +d.koMin || 35;
+  d.courts = d.courts || 3; d.layout = d.layout || ''; d.first = d.first || 'women'; d.hold = +d.hold || 2; d.koMin = +d.koMin || 35;
   S.modal = { type: 'setup', draft: d, error: '', creating: !!creating, origId: creating ? '' : S.tid }; renderModal();
 }
 function readDraft() {
@@ -3587,7 +3590,7 @@ function readDraft() {
     if (q('sh') && q('sm')) d.start = q('sh').value + ':' + q('sm').value;
     if (q('roundMin')) d.roundMin = +q('roundMin').value || 25;
     if (q('courts')) d.courts = +q('courts').value || 3;
-    if (q('layout')) d.layout = q('layout').value; if (q('first')) d.first = q('first').value; if (q('hold')) d.hold = +q('hold').value || 2; if (q('koMin')) d.koMin = +q('koMin').value || 35;
+    if (q('first')) d.first = q('first').value; if (q('hold')) d.hold = +q('hold').value || 2; if (q('koMin')) d.koMin = +q('koMin').value || 35;
     if (q('dd') && q('dm') && q('dy')) { d.date = dateFrom(+q('dy').value, +q('dm').value, +q('dd').value); d.month = d.date.slice(0, 7); }
   }
   const st = $modal.querySelector('[data-f="status"]:checked'); if (st) d.status = st.value;
@@ -3605,6 +3608,7 @@ function readDraft() {
     if (!koAllowed(c)) c.ko = 'none'; else if (c.groups === 1 && c.size < 4 && c.ko === 'semis') c.ko = 'final';
     if (sel('ko3')) c.ko3 = sel('ko3').value === 'yes'; if (c.ko === 'none') c.ko3 = false;
   });
+  const lyEl = $modal.querySelector('[data-f="layout"]'); if (lyEl) d.layout = lyEl.value === defaultLayout(d) ? '' : lyEl.value;     // empty = automatic
 }
 const dateFrom = (y, m, day) => { const dim = new Date(Date.UTC(y, m, 0)).getUTCDate(); return y + '-' + String(m).padStart(2, '0') + '-' + String(Math.min(day, dim)).padStart(2, '0'); };
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -3618,7 +3622,7 @@ const monthLong = ym => { const [y, m] = ym.split('-').map(Number); return new D
 const hourOpts = st => { const h = String(st).split(':')[0].padStart(2, '0'); return Array.from({ length: 19 }, (_, i) => String(i + 5).padStart(2, '0')).concat([h]).filter((v, k, a) => a.indexOf(v) === k).sort().map(v => `<option value="${v}" ${v === h ? 'selected' : ''}>${v}</option>`).join(''); };
 const minOpts = st => { const m = String(st).split(':')[1] || '00'; return Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).concat([m]).filter((v, k, a) => a.indexOf(v) === k).sort().map(v => `<option value="${v}" ${v === m ? 'selected' : ''}>${v}</option>`).join(''); };
 function setupBody(md) {
-  const d = md.draft; let ngroups = 0; const queues = [], courts = d.courts || 3;
+  const d = md.draft, lay = d.layout || defaultLayout(d); let ngroups = 0; const queues = [], courts = d.courts || 3;
   const opt = (v, t, cur) => `<option value="${v}" ${String(v) === String(cur) ? 'selected' : ''}>${t}</option>`;
   const blocks = CAT_ORDER.map(k => {
     if (CAT_DEFS[k][0] === 'teams') {
@@ -3650,7 +3654,7 @@ function setupBody(md) {
     return h + '</div>';
   }).join('');
   const kc = CAT_ORDER.map(k => d.cats[k]).filter(c => c && !c.off && c.format !== 'team' && koAllowed(c) && c.ko !== 'none'), koSlots = Math.ceil(kc.filter(c => c.ko === 'semis').length * 2 / courts) + Math.ceil(kc.length / courts) + Math.ceil(kc.filter(c => c.ko3).length / courts);
-  const bl = d.layout === 'blocks' ? blockSlots(d.cats, courts, d.hold || 2, d.first) : null;
+  const bl = lay === 'blocks' ? blockSlots(d.cats, courts, d.hold || 2, d.first) : null;
   const rounds = bl ? bl.n : packRounds(queues, courts).length + koSlots, minutes = bl ? (bl.n - 1) * d.roundMin + (bl.koLast ? d.koMin : d.roundMin) : rounds * d.roundMin, [sh, sm] = String(d.start).split(':').map(Number);
   const radio = (v, t, s) => `<label class="scr"><input type="radio" name="st" data-f="status" value="${v}" ${d.status === v ? 'checked' : ''}><span><b>${t}</b><br><small>${s}</small></span></label>`;
   return `<p class="dmeta">Organizer</p><h3 id="dt">${md.creating ? 'New tournament' : 'Tournament setup'}</h3>
@@ -3662,8 +3666,8 @@ function setupBody(md) {
     <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select></div></div>
   <div class="dtrow"><b class="lbl">Courts</b><select data-f="courts" class="full">${[3, 4, 5, 6].map(v => opt(v, v + ' courts', courts)).join('')}</select></div>
   <div class="dtrow"><b class="lbl">Minutes per round</b><select data-f="roundMin" class="full">${[15, 20, 25, 30, 35, 40, 45, 50, 60].concat([+d.roundMin]).filter((v, k, a) => a.indexOf(v) === k).sort((a, b) => a - b).map(v => opt(v, v + ' minutes', d.roundMin)).join('')}</select></div>
-  <div class="dtrow"><b class="lbl">Order of play</b><select data-f="layout" class="full">${opt('standard', 'Standard \u2014 all groups side by side', d.layout)}${opt('blocks', 'One gender after the other \u2014 the second starts on free courts', d.layout)}</select></div>
-  ${d.layout === 'blocks' ? `<div class="dtrow"><b class="lbl">Plays first</b><select data-f="first" class="full">${opt('women', 'Women', d.first)}${opt('men', 'Men', d.first)}</select></div>
+  <div class="dtrow"><b class="lbl">Order of play</b><select data-f="layout" class="full">${opt('standard', 'Standard \u2014 all groups side by side', lay)}${opt('blocks', 'One gender after the other \u2014 the second starts on free courts', lay)}</select></div>
+  ${lay === 'blocks' ? `<div class="dtrow"><b class="lbl">Plays first</b><select data-f="first" class="full">${opt('women', 'Women', d.first)}${opt('men', 'Men', d.first)}</select></div>
   <div class="dtrow"><b class="lbl">Courts held for the first knockout</b><select data-f="hold" class="full">${opt(1, '1 round', d.hold)}${opt(2, '2 rounds (extra time / warm-up)', d.hold)}</select></div>
   <div class="dtrow"><b class="lbl">Last round, with the final (minutes)</b><select data-f="koMin" class="full">${[25, 30, 35, 40, 45, 60].map(v => opt(v, v + ' minutes', d.koMin)).join('')}</select></div>` : ''}
   <div class="dtrow"><b class="lbl">Note for players (optional)</b><input type="text" data-f="info" class="full" maxlength="160" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></div>
@@ -3698,7 +3702,7 @@ async function saveSetup() {
   if (newId !== oldId && S.setups[newId]) errs.push('There is already a tournament on ' + dateLong(newId) + ' \u2014 choose another date.');
   if (errs.length) { md.error = errs.join(' '); renderModal(); return; }
   if (oldId && newId !== oldId && S.cfg && S.cfg.status === 'live' && Object.keys(S.data.results).length && !confirm('This tournament has scores. Changing its date starts a new, empty results sheet. Archive it first if you have not. Continue?')) return;
-  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, layout: d.layout || 'standard', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats };
+  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats };
   S.busy = true; renderModal();
   try {
     await ensureMigrated();
