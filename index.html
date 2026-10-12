@@ -2657,7 +2657,7 @@ const fmt12 = m => { const h = Math.floor(m / 60) % 24; return (h % 12 || 12) + 
 const seatId = (key, i) => { const id = 'seat_' + key + '_' + (i + 1); if (!PLAYERS[id]) PLAYERS[id] = 'Player ' + (i + 1) + ' (TBD)'; return id; };
 const sideName = side => side.map(i => PLAYERS[i]).join(' / ');
 const RAW = [], RESTS = {}, MATCHES = [], ROUND_TIMES = [], CAT_BY_KEY = {}, SETUP_ERRORS = [], QUEUES = [], TEAM_MEMBERS = {}, KO_LIST = [], RESERVED = {}, ROUND_ENDS = [];
-let COURTS = 3;
+let COURTS = 3, PREVIEW = false;
 const TOURNAMENT = { id: '', name: '', date: '', format: '', resultsPath: '' };
 // rest order for odd groups: middle round = P1, then P2/P3, P4/P5, ... outwards (7 players: P6 P4 P2 P1 P3 P5 P7)
 const restOrder = n => { const o = Array(n), mid = (n - 1) / 2; o[mid] = 1; for (let k = 1; k <= mid; k++) { o[mid - k] = 2 * k; o[mid + k] = 2 * k + 1; } return o; };
@@ -2843,10 +2843,10 @@ const blockSlots = (cats, cap, hold, first) => {           // size estimate for 
 
 function buildTeams(ck, c) {
   const n = c.size, T = TEAM_TYPES[c.teamType] || TEAM_TYPES['4'], title = catTitle(ck);
-  if (!teamSizes(c.teamType).includes(n)) { SETUP_ERRORS.push(title + ': teams of ' + T.n + ' need ' + teamSizes(c.teamType).join(', ') + ' teams \u2014 skipped.'); return 0; }
-  if (c.teams.length !== n || c.teams.some(t => (t.p || []).filter(Boolean).length !== T.n)) { SETUP_ERRORS.push(title + ' needs ' + n + ' complete teams of ' + T.n + ' players \u2014 skipped.'); return 0; }
+  if (!teamSizes(c.teamType).includes(n)) { !PREVIEW && SETUP_ERRORS.push(title + ': teams of ' + T.n + ' need ' + teamSizes(c.teamType).join(', ') + ' teams \u2014 skipped.'); return 0; }
+  if (c.teams.length !== n || c.teams.some(t => (t.p || []).filter(Boolean).length !== T.n)) { !PREVIEW && SETUP_ERRORS.push(title + ' needs ' + n + ' complete teams of ' + T.n + ' players \u2014 skipped.'); return 0; }
   const members = c.teams.map(t => t.p.map(x => resolve(x))), all = members.flat();
-  if (new Set(all).size !== all.length) { SETUP_ERRORS.push(title + ': a player is in two teams \u2014 skipped.'); return 0; }
+  if (new Set(all).size !== all.length) { !PREVIEW && SETUP_ERRORS.push(title + ': a player is in two teams \u2014 skipped.'); return 0; }
   const ids = c.teams.map((t, i) => { const id = 'tm_' + ck.toLowerCase() + (i + 1); PLAYERS[id] = t.name || 'Team ' + (i + 1); return id; });
   const idx = Object.fromEntries(ids.map((id, i) => [id, i]));
   CATS.push({ key: ck, league: 'teams', label: CAT_DEFS[ck][1], players: ids, teams: c.teams.map((t, i) => ({ id: ids[i], name: PLAYERS[ids[i]], members: members[i] })), format: 'team', teamType: c.teamType, size: n, scoring: scoringFor(c), rests: n % 2 === 1, perPlayer: 0 });
@@ -2881,13 +2881,13 @@ function buildTournament(cfg) {
   [RESTS, CAT_BY_KEY, NEW_IDS, TEAM_MEMBERS, RESERVED].forEach(o => Object.keys(o).forEach(k => delete o[k]));
   const date = cfgDate(cfg);
   Object.assign(TOURNAMENT, { id: date + '-league', name: cfg.name || 'Singles League', date, format: 'Round robin', resultsPath: 'tennis/tournaments/' + date + '-league/results' });
-  if (cfg.status !== 'live') return;                    // registration phase: no schedule yet
+  PREVIEW = cfg.status !== 'live';                      // registration phase: the order of play is built as a preview (open seats show as TBD)
   CAT_ORDER.forEach(ck => {
     const raw = (cfg.cats || {})[ck]; if (!raw || raw.off) return;
     const c = catCfg(raw), n = c.size;
     if (c.format === 'team') { buildTeams(ck, c); return; }
     if (!formatsFor(ck).includes(c.format) || !sizesFor(c.format).includes(n)) { SETUP_ERRORS.push(catTitle(ck) + ': unsupported format or group size \u2014 skipped.'); return; }
-    if (c.players.length !== c.groups * n) SETUP_ERRORS.push(catTitle(ck) + ' has ' + c.players.length + ' of ' + c.groups * n + ' places filled \u2014 open seats show as TBD.');
+    if (!PREVIEW && c.players.length !== c.groups * n) SETUP_ERRORS.push(catTitle(ck) + ' has ' + c.players.length + ' of ' + c.groups * n + ' places filled \u2014 open seats show as TBD.');
     for (let g = 0; g < c.groups; g++) {
       const key = ck + (c.groups > 1 ? g + 1 : ''), part = c.players.slice(g * n, (g + 1) * n);
       const ids = Array.from({ length: n }, (_, i) => !part[i] ? seatId(key, i) : c.format === 'doubles' ? teamId(part[i]) : resolve(part[i]));
@@ -3196,7 +3196,7 @@ function schedule() {
   }).join('');
   const filter = `<div class="filter"><label for="pf">Find my matches</label><select id="pf" data-act="filter"><option value="">All players</option>${playerOptions()}</select></div>`;
   const done = MATCHES.filter(m => getResult(S.data, m)).length;
-  return filter + `<p class="empty">${done} of ${MATCHES.length} matches played${first === -1 ? ' \u2014 the tournament is complete' : ''}</p>` + rounds;
+  return filter + (PREVIEW ? '' : `<p class="empty">${done} of ${MATCHES.length} matches played${first === -1 ? ' \u2014 the tournament is complete' : ''}</p>`) + rounds;
 }
 
 /* ---------- Page render ---------- */
@@ -3287,6 +3287,7 @@ const BASIC_RULES = `<h4>Basic rules</h4>
 function rulesHtml() { return `<p class="dmeta">${esc(TOURNAMENT.name)}</p><h3 id="dt">Rules</h3><div class="rules">${formatRules()}${matchRules()}${BASIC_RULES}${positionRules()}</div><div class="acts"><button class="btn pri" data-act="close">Got it</button></div>`; }
 
 function openMatch(id) {
+  if (PREVIEW) { toast('Scores can be entered once the draw is published'); return; }
   const m = matchById(id); if (m && m.ko && (!m.A.length || !m.B.length)) { toast('Waiting for the earlier results'); return; }
   S.modal = { type: 'match', id, error: '' }; renderModal();
 }
@@ -3536,6 +3537,7 @@ function otherBanner() {                                   // pointer to the oth
 function bodyHtml() {
   if (S.tab === 'history') return historyView();
   const live = S.cfg && S.cfg.status === 'live';
+  if (!live && S.tab === 'sched' && MATCHES.length) return '<p class="foot" style="margin:14px 6px 0"><b>Preview</b> \u2014 the draw is not published yet. Names fill in as players register; open seats show as \u201cPlayer N (TBD)\u201d and the order may still change.</p>' + schedule();
   if (!live) return S.tab === 'sched' ? '<section class="card"><p class="foot" style="color:var(--ink)">The draw has not been published yet. Check the Men, Women and Mixed tabs to see who has registered and which spots are still open.</p></section>' : registrationView(S.tab === 'women' ? 'women' : S.tab === 'mixed' ? 'mixed' : S.tab === 'teams' ? 'teams' : 'men');
   if (!CATS.length) return '<section class="card"><p class="foot" style="color:var(--ink)">No groups could be built from the setup.</p></section>';
   return S.tab === 'sched' ? schedule() : standings(S.tab);
