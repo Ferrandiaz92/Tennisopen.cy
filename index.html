@@ -3051,7 +3051,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', setups: {}, tid: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', setups: {}, tid: '', cal: '', season: null, seasonJson: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -3084,7 +3084,7 @@ function header() {
     mixed: ['Tournament standings', 'Mixed', 'League', SUB_LINE],
     teams: ['Tournament standings', 'Team', 'Cup', SUB_LINE],
     players: ['Registration', 'Players', 'List', 'Who is playing and which spots are still open'],
-    history: ['Archive', 'Tournament', 'History', 'Past tournaments, final classifications & player records'],
+    history: ['Season', 'Tournament', 'Calendar', 'Upcoming tournaments and past results'],
     sched: ['Tournament', 'Order of', 'Play', SCHED_SUB]
   }[S.tab];
   return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
@@ -3103,7 +3103,7 @@ function syncBar() {
 }
 
 function nav() {
-  const tabs = [['men', 'Men'], ['women', 'Women'], ...(hasLeague('mixed') ? [['mixed', 'Mixed']] : []), ...(hasLeague('teams') ? [['teams', 'Teams']] : []), ['sched', 'Order of play'], ['history', 'History']];
+  const tabs = [['men', 'Men'], ['women', 'Women'], ...(hasLeague('mixed') ? [['mixed', 'Mixed']] : []), ...(hasLeague('teams') ? [['teams', 'Teams']] : []), ['sched', 'Order of play'], ['history', 'Calendar']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
@@ -3306,6 +3306,8 @@ function renderModal() {
     body = rulesHtml();
   } else if (md.type === 'setup') {
     body = setupBody(md);
+  } else if (md.type === 'season') {
+    body = seasonBody(md);
   } else if (md.type === 'pick') {
     body = pickBody(md);
   } else if (md.type === 'tpick') {
@@ -3345,10 +3347,10 @@ function renderModal() {
       <div class="acts">${url ? '<button class="btn pri" data-act="copy">Copy link</button>' : ''}${S.canEdit && !STANDALONE ? `<button class="btn" data-act="saveurl" ${S.busy ? 'disabled' : ''}>Save link</button>` : ''}<button class="btn txt" data-act="close">Close</button></div>`;
   }
   const keep = md.type === 'setup' && $modal.querySelector('.dbody') ? $modal.querySelector('.dbody').scrollTop : 0;
-  $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'rules' || md.type === 'setup' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt"><button class="x" data-act="close" aria-label="Close">\u00d7</button><div class="dbody">${body}</div></div></div>`;
+  $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'rules' || md.type === 'setup' || md.type === 'season' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt"><button class="x" data-act="close" aria-label="Close">\u00d7</button><div class="dbody">${body}</div></div></div>`;
   if (md.type === 'setup') { $modal.querySelector('.dbody').scrollTop = keep; if (md.focus) { const x = $modal.querySelector(md.focus); if (x) x.focus({ preventScroll: true }); md.focus = null; } return; }
   if (md.type === 'tpick') { const fx = md.step === 0 ? $modal.querySelector('#tn') : null; if (fx) fx.focus(); return; }
-  if (md.type === 'pick') return;
+  if (md.type === 'pick' || md.type === 'season') return;
   if (md.type === 'rules') { const d = $modal.querySelector('.dlg'); d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); $modal.querySelector('.dbody').scrollTop = 0; return; }
   const first = $modal.querySelector('input:not([readonly])') || $modal.querySelector('button');
   if (first) first.focus();
@@ -3506,6 +3508,7 @@ async function refreshCfg() {
 }
 async function loadSetup() {
   try { registerPlayers(await fetchJson('/tennis/players')); registerGenders(await fetchJson('/tennis/genders')); } catch (e) { /* offline: built-in names only */ }
+  try { S.season = await fetchJson('/tennis/season'); S.seasonJson = JSON.stringify(S.season); } catch (e) { /* default season plan */ }
   let prefer = ''; try { prefer = new URLSearchParams(location.search).get('t') || sessionStorage.getItem('lt-tid') || ''; } catch (e) { /* ignore */ }
   try { await loadSetups(); } catch (e) { /* offline */ }
   S.tid = chooseTid(prefer); S.cfg = S.setups[S.tid] || DEFAULT_CFG;
@@ -3514,7 +3517,9 @@ async function pollSetup() {
   if (document.hidden || S.modal) return;
   try {
     const before = S.setupsJson; await loadSetups();
-    if (S.setupsJson === before) return;
+    let seasonChanged = false;
+    try { const se = await fetchJson('/tennis/season'), j = JSON.stringify(se); if (j !== S.seasonJson) { S.season = se; S.seasonJson = j; seasonChanged = true; } } catch (e) { /* keep */ }
+    if (S.setupsJson === before) { if (seasonChanged) render(); return; }
     if (!S.setups[S.tid]) S.tid = chooseTid('');
     const cfg = S.setups[S.tid] || DEFAULT_CFG;
     if (JSON.stringify(cfg) !== S.cfgJson) { S.cfg = cfg; applySetup(); render(); pollResults(); } else render();
@@ -3938,6 +3943,94 @@ function koWinnerRows(ev) {                                // champion + runner-
     return `<span class="hr"><small class="k">${t}</small><strong>${esc(nm(fr[0] > fr[1] ? fin.A : fin.B))}</strong><small class="r">Runner-up: ${esc(nm(fr[0] > fr[1] ? fin.B : fin.A))}${tr && (thr.A || []).length ? ' \u00b7 3rd place: ' + esc(nm(tr[0] > tr[1] ? thr.A : thr.B)) : ''}</small></span>`;
   }).join('');
 }
+/* ---------- Calendar: upcoming tournaments + past results ---------- */
+function calSeg(mode) {
+  return `<div class="tools"><div class="seg" role="group" aria-label="Calendar view"><button data-act="calview" data-v="upcoming" aria-pressed="${mode === 'upcoming'}">Upcoming</button><button data-act="calview" data-v="past" aria-pressed="${mode === 'past'}">Past</button></div></div>`;
+}
+const upcomingIds = () => Object.keys(S.setups).sort().filter(id => id >= todayISO());
+function calRows(cfg) {
+  return CAT_ORDER.filter(k => cfg.cats && cfg.cats[k] && !cfg.cats[k].off).map(k => {
+    const c = catCfg(cfg.cats[k]), team = c.format === 'team', cap = team ? c.size : c.groups * c.size, n = team ? c.teams.length : c.players.length;
+    return `<span class="hr"><small class="k">${catTitle(k)}</small><strong>${FORMATS[c.format].split(' (')[0]} \u00b7 ${cfg.status === 'live' ? 'draw published' : n + ' of ' + cap + ' registered'}</strong></span>`;
+  }).join('');
+}
+function calCard(id, past) {
+  const cfg = S.setups[id], live = cfg.status === 'live';
+  const go = past ? 'Open the results \u203a' : live ? (id === todayISO() ? 'Open the order of play \u203a' : 'Draw published \u2014 see the order of play \u203a') : 'See who is registered \u203a';
+  return `<button class="hl" data-act="calopen" data-id="${id}"><b>${esc(cfg.name || 'Tournament')}</b><em>${shortDate(id)}</em><span>${dateLong(id)} \u00b7 ${esc(cfg.start || '')} \u00b7 ${past ? 'Results' : statusLabel(cfg)}</span>${calRows(cfg) ? `<span class="hw">${calRows(cfg)}</span>` : ''}<span class="tap">${go}</span></button>`;
+}
+function notArchivedView() {                                // finished tournaments that are still open (not archived yet)
+  const t = todayISO(), ids = Object.keys(S.setups).sort().reverse().filter(id => id < t && S.setups[id].status === 'live' && !Object.keys(S.hist || {}).some(k => k.indexOf(id) === 0));
+  return ids.length ? '<p class="gh2" style="margin:18px 6px 0">Recent \u00b7 not archived yet</p>' + ids.map(id => calCard(id, true)).join('') : '';
+}
+function openTournament(id) {
+  selectTid(id);
+  S.tab = S.cfg.status === 'live' ? 'sched' : (['men', 'women', 'mixed', 'teams'].find(l => hasLeague(l)) || 'men');
+  render(); window.scrollTo(0, 0);
+}
+function historyView() {
+  const mode = S.hsel ? 'past' : (S.cal || (upcomingIds().length || seasonHas() ? 'upcoming' : 'past'));
+  return calSeg(mode) + (mode === 'upcoming' ? upcomingView() : notArchivedView() + pastView());
+}
+
+/* ---------- Season plan (months, event names and a short intro; no dates) ---------- */
+const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const SEASON_DEFAULT = [
+  ['01', 'Legends Cup', 'Pick the name of your favourite legend and play as them.', 'Singles \u00b7 Men & Women'],
+  ['02', 'Love All Cup', 'Mixed doubles with a partner, a friend or a colleague.', 'Mixed doubles \u00b7 2 categories'],
+  ['03', 'Teams Cup', 'Build a team of 4 (2 men + 2 women), choose a name and colours.', 'Teams of 4 \u00b7 singles and doubles'],
+  ['04', 'Americano Cup', 'A new partner every round: play with everyone, win with anyone.', 'Doubles \u00b7 Men & Women'],
+  ['05', 'Roland Garros Cup', 'Clay-court spirit: orange and red colours.', 'Singles \u00b7 Men & Women'],
+  ['06', 'Wimbledon Whites Cup', 'All-white dress code, traditional style.', 'Singles \u00b7 Men & Women'],
+  ['10', 'Dynamic Duo Cup', 'Grab your partner, invent a team name and a handshake.', 'Teams of 2 (2 men or 2 women) \u00b7 singles and doubles'],
+  ['11', 'Family Cup', 'Couples, friends or colleagues play doubles together.', 'Doubles \u00b7 Men\u2019s, Women\u2019s and Mixed pairs'],
+  ['12', 'Champions Cup', 'The season finale for our best players.', 'Singles \u00b7 2 groups, semifinals and final']
+];
+const defaultSeason = () => ({ year: new Date().getMonth() >= 8 ? new Date().getFullYear() + 1 : new Date().getFullYear(), events: Object.fromEntries(SEASON_DEFAULT.map(([m, name, intro, format]) => [m, { name, intro, format }])) });
+const currentSeason = () => S.season ? { year: S.season.year || '', events: S.season.events || {} } : defaultSeason();
+const seasonHas = () => Object.values(currentSeason().events).some(e => e && e.name);
+function seasonCards() {
+  const se = currentSeason(), ms = Object.keys(se.events).filter(m => se.events[m] && se.events[m].name).sort();
+  if (!ms.length) return '';
+  let out = `<p class="gh2" style="margin:18px 6px 0">Season ${esc(se.year)}</p>`;
+  ms.forEach((m, i) => {
+    if (i && ms[i - 1] <= '06' && m >= '10') out += '<p class="foot" style="margin:14px 6px 0">Summer break \u00b7 July to September</p>';
+    const e = se.events[m];
+    out += `<div class="hl"><b>${esc(e.name)}</b><em>${MONTH_LONG[+m - 1] || ''}</em>${e.intro ? `<span>${esc(e.intro)}</span>` : ''}${e.format ? `<span class="hw"><span class="hr"><small class="k">Format</small><strong>${esc(e.format)}</strong></span></span>` : ''}</div>`;
+  });
+  return out;
+}
+function upcomingCards() { const ids = upcomingIds(); return ids.length ? '<p class="gh2" style="margin:18px 6px 0">Next tournaments</p>' + ids.map(id => calCard(id, false)).join('') : ''; }
+function upcomingView() {
+  const edit = S.canEdit ? '<div class="tools"><button class="ghost" data-act="seasonedit">Edit season plan</button></div>' : '';
+  const body = upcomingCards() + seasonCards();
+  return edit + (body || `<section class="card"><p class="foot" style="color:var(--ink)">No upcoming tournaments yet.${S.canEdit ? ' Tap \u201c+ New tournament\u201d above, or \u201cEdit season plan\u201d to add the season.' : ''}</p></section>`);
+}
+function openSeason() { S.modal = { type: 'season', draft: JSON.parse(JSON.stringify(currentSeason())), error: '' }; renderModal(); }
+function seasonBody(md) {
+  const d = md.draft, inp = (k, f, ph, max) => `<input class="full" type="text" maxlength="${max}" placeholder="${ph}" data-sm="${k}" data-sf="${f}" value="${esc(((d.events[k] || {})[f]) || '')}">`;
+  return `<p class="dmeta">Organizer</p><h3 id="dt">Season plan</h3><p class="hint">One event per month, shown without dates. Leave the name empty to skip a month.</p>
+  <div class="dtrow"><b class="lbl">Season year</b><input class="full" type="text" inputmode="numeric" maxlength="9" data-sy value="${esc(d.year)}"></div>
+  ${MONTH_LONG.map((mn, i) => { const k = String(i + 1).padStart(2, '0'); return `<div class="sc"><b>${mn}</b><div class="dtrow"><b class="lbl">Event name</b>${inp(k, 'name', 'e.g. Legends Cup', 40)}</div><div class="dtrow"><b class="lbl">Short intro</b>${inp(k, 'intro', 'e.g. Pick your favourite legend', 120)}</div><div class="dtrow"><b class="lbl">Format</b>${inp(k, 'format', 'e.g. Singles \\u00b7 Men & Women', 80)}</div></div>`; }).join('')}
+  <p class="err" role="alert">${esc(md.error)}</p>
+  <div class="acts"><button class="btn pri" data-act="saveseason" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button><button class="btn" data-act="seasondef">Use the suggested plan</button></div>`;
+}
+function readSeason() {
+  const d = S.modal.draft, y = $modal.querySelector('[data-sy]'); if (y) d.year = y.value.trim();
+  $modal.querySelectorAll('[data-sm]').forEach(el => { (d.events[el.dataset.sm] = d.events[el.dataset.sm] || {})[el.dataset.sf] = el.value.trim(); });
+}
+async function saveSeason() {
+  readSeason(); const md = S.modal, events = {};
+  Object.keys(md.draft.events).forEach(k => { const e = md.draft.events[k]; if (e && e.name) events[k] = { name: e.name, intro: e.intro || '', format: e.format || '' }; });
+  S.busy = true; renderModal();
+  try {
+    const res = await fetch(DB_URL + '/tennis/season.json', { method: 'PUT', body: JSON.stringify({ year: md.draft.year, events, saved: true }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.season = (await fetchJson('/tennis/season').catch(() => null)) || { year: md.draft.year, events, saved: true }; S.seasonJson = JSON.stringify(S.season);
+    S.busy = false; S.modal = null; renderModal(); render(); toast('Season plan saved');
+  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules for tennis/season.'; renderModal(); }
+}
+
 /* ---------- Tournament history (archive + player records) ---------- */
 function snapshot() {
   const st = S.data; updateKnockouts(st);
@@ -3980,7 +4073,7 @@ const catFull = c => (leagueTitle(c.league) + ' ' + c.label).trim();
 const evName = (ev, pid) => (ev.players && ev.players[pid]) || pid;
 const nameHtml = n => { const p = String(n).split(' '); return `<span class="fn">${esc(p[0])}</span> <span class="ln">${esc(p.slice(1).join(' '))}</span>`; };
 
-function historyView() {
+function pastView() {
   const seg = `<div class="tools"><div class="seg" role="group" aria-label="History view"><button data-act="hview" data-v="events" aria-pressed="${S.hview === 'events'}">Tournaments</button><button data-act="hview" data-v="players" aria-pressed="${S.hview === 'players'}">Records</button></div></div>`;
   if (S.hist === null) return seg + '<p class="foot">Loading history\u2026</p>';
   const evs = Object.values(S.hist).filter(e => e && e.cats).sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -4072,9 +4165,14 @@ document.addEventListener('click', ev => {
   else if (act === 'datefirst') { readDraft(); S.modal.draft.date = ''; renderModal(); }
   else if (act === 'savesetup') saveSetup();
   else if (act === 'resetsetup') resetSetup();
-  else if (act === 'hsel') { S.hsel = el.dataset.id; render(); window.scrollTo(0, 0); }
+  else if (act === 'hsel') { S.cal = 'past'; S.hsel = el.dataset.id; render(); window.scrollTo(0, 0); }
   else if (act === 'hback') { S.hsel = null; render(); }
-  else if (act === 'hview') { S.hview = el.dataset.v; S.hsel = null; render(); }
+  else if (act === 'seasonedit') openSeason();
+  else if (act === 'saveseason') saveSeason();
+  else if (act === 'seasondef') { readSeason(); S.modal.draft = defaultSeason(); renderModal(); }
+  else if (act === 'calview') { S.cal = el.dataset.v; S.hsel = null; render(); }
+  else if (act === 'calopen') openTournament(el.dataset.id);
+  else if (act === 'hview') { S.cal = 'past'; S.hview = el.dataset.v; S.hsel = null; render(); }
   else if (act === 'exitorg') exitOrganizer();
   else if (act === 'selecturl') el.select();
   else if (act === 'copy') {
