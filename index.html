@@ -276,6 +276,11 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .mfree,.mres{border:2px dashed var(--line);border-radius:14px;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted);text-align:center}
 .mres{border-color:var(--acc2);color:var(--acc2)}.mres b{font-weight:800}
 @media (max-width:760px){.courts{grid-template-columns:1fr}.mfree{display:none}}
+.hmatches{margin:12px 4px 4px}.hmatches summary{cursor:pointer;font-weight:800;font-size:14px;padding:6px 2px}
+.acts2{display:flex;gap:2px;align-items:center}.rm.swp{font-size:17px}
+.foot a{color:var(--acc);font-weight:700;text-decoration:underline}
+.lk{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--row)}.lk .lbl{grid-column:1/-1;font-size:12px;font-weight:700}
+.lkurl{word-break:break-all;font-size:13px;font-weight:600;color:var(--ink)}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -3051,7 +3056,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', setups: {}, tid: '', cal: '', season: null, seasonJson: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', setups: {}, tid: '', cal: '', season: null, seasonJson: '', club: null, clubJson: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -3106,8 +3111,8 @@ function nav() {
   const tabs = [['men', 'Men'], ['women', 'Women'], ...(hasLeague('mixed') ? [['mixed', 'Mixed']] : []), ...(hasLeague('teams') ? [['teams', 'Teams']] : []), ['sched', 'Order of play'], ['history', 'Calendar']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
-    <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share \u00b7 QR code</button></div></div>
-    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="newtour">+ New tournament</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
+    <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share links</button></div></div>
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="clubedit">Club info</button><button data-act="newtour">+ New tournament</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
     ${syncBar()}`;
 }
 
@@ -3160,7 +3165,7 @@ function standings(league) {
 function playerOptions() {
   const groups = [['men', "Men\u2019s league"], ['women', "Women\u2019s league"], ['mixed', 'Mixed league'], ['teams', 'Team players']];
   return groups.map(([lg, name]) => `<optgroup label="${name}">${CATS.filter(c => c.league === lg).flatMap(c =>
-    (c.format === 'team' ? c.teams.flatMap(t => t.members) : c.players).map(p => `<option value="${p}" ${S.filter === p ? 'selected' : ''}>${esc(PLAYERS[p])} (${c.label.replace('Category ', 'Cat ')})</option>`)).join('')}</optgroup>`).join('');
+    (c.format === 'team' ? c.teams.flatMap(t => t.members) : c.players).filter(p => p.indexOf('seat') !== 0).map(p => `<option value="${p}" ${S.filter === p ? 'selected' : ''}>${esc(PLAYERS[p])} (${c.label.replace('Category ', 'Cat ')})</option>`)).join('')}</optgroup>`).join('');
 }
 
 function matchCard(m) {
@@ -3306,6 +3311,10 @@ function renderModal() {
     body = rulesHtml();
   } else if (md.type === 'setup') {
     body = setupBody(md);
+  } else if (md.type === 'swap') {
+    body = swapBody(md);
+  } else if (md.type === 'club') {
+    body = clubBody(md);
   } else if (md.type === 'season') {
     body = seasonBody(md);
   } else if (md.type === 'pick') {
@@ -3336,21 +3345,13 @@ function renderModal() {
     }
     body = `<p class="dmeta">${meta}</p><h3 id="dt">${title}</h3>${rows}<p class="err" role="alert">${esc(md.error)}</p><div class="acts">${acts}</div>`;
   } else {
-    const url = S.data.shareUrl || (location.protocol.startsWith('http') ? location.origin + location.pathname : '');
-    let qr = '';
-    if (url) { try { const q = qrcode(0, 'M'); q.addData(url); q.make(); qr = `<div class="qr">${q.createSvgTag({ cellSize: 6, margin: 2, scalable: true, alt: 'QR code linking to the tournament results' })}</div>`; } catch (e) { qr = ''; } }
-    body = `<p class="dmeta">Share with players</p><h3 id="dt">Scan to follow the results</h3>
-      ${qr || '<p class="hint">No link has been added yet.</p>'}
-      ${url && (!S.canEdit || STANDALONE) ? `<input class="url" readonly value="${esc(url)}" aria-label="Tournament link" data-act="selecturl">` : ''}
-      ${S.canEdit && !STANDALONE ? `<p class="hint">${url ? 'Change the link' : 'Paste the public link to this page'} to update the QR code.</p><input class="url" id="newurl" type="url" placeholder="https://\u2026" value="${esc(url)}" aria-label="Public link">` : ''}
-      <p class="err" role="alert">${esc(md.error)}</p>
-      <div class="acts">${url ? '<button class="btn pri" data-act="copy">Copy link</button>' : ''}${S.canEdit && !STANDALONE ? `<button class="btn" data-act="saveurl" ${S.busy ? 'disabled' : ''}>Save link</button>` : ''}<button class="btn txt" data-act="close">Close</button></div>`;
+    body = shareBody();
   }
   const keep = md.type === 'setup' && $modal.querySelector('.dbody') ? $modal.querySelector('.dbody').scrollTop : 0;
   $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'rules' || md.type === 'setup' || md.type === 'season' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt"><button class="x" data-act="close" aria-label="Close">\u00d7</button><div class="dbody">${body}</div></div></div>`;
   if (md.type === 'setup') { $modal.querySelector('.dbody').scrollTop = keep; if (md.focus) { const x = $modal.querySelector(md.focus); if (x) x.focus({ preventScroll: true }); md.focus = null; } return; }
   if (md.type === 'tpick') { const fx = md.step === 0 ? $modal.querySelector('#tn') : null; if (fx) fx.focus(); return; }
-  if (md.type === 'pick' || md.type === 'season') return;
+  if (md.type === 'pick' || md.type === 'season' || md.type === 'swap' || md.type === 'club') return;
   if (md.type === 'rules') { const d = $modal.querySelector('.dlg'); d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); $modal.querySelector('.dbody').scrollTop = 0; return; }
   const first = $modal.querySelector('input:not([readonly])') || $modal.querySelector('button');
   if (first) first.focus();
@@ -3509,6 +3510,7 @@ async function refreshCfg() {
 async function loadSetup() {
   try { registerPlayers(await fetchJson('/tennis/players')); registerGenders(await fetchJson('/tennis/genders')); } catch (e) { /* offline: built-in names only */ }
   try { S.season = await fetchJson('/tennis/season'); S.seasonJson = JSON.stringify(S.season); } catch (e) { /* default season plan */ }
+  try { S.club = await fetchJson('/tennis/club'); S.clubJson = JSON.stringify(S.club); } catch (e) { /* default club info */ }
   let prefer = ''; try { prefer = new URLSearchParams(location.search).get('t') || sessionStorage.getItem('lt-tid') || ''; } catch (e) { /* ignore */ }
   try { await loadSetups(); } catch (e) { /* offline */ }
   S.tid = chooseTid(prefer); S.cfg = S.setups[S.tid] || DEFAULT_CFG;
@@ -3519,6 +3521,7 @@ async function pollSetup() {
     const before = S.setupsJson; await loadSetups();
     let seasonChanged = false;
     try { const se = await fetchJson('/tennis/season'), j = JSON.stringify(se); if (j !== S.seasonJson) { S.season = se; S.seasonJson = j; seasonChanged = true; } } catch (e) { /* keep */ }
+    try { const cl = await fetchJson('/tennis/club'), j = JSON.stringify(cl); if (j !== S.clubJson) { S.club = cl; S.clubJson = j; seasonChanged = true; } } catch (e) { /* keep */ }
     if (S.setupsJson === before) { if (seasonChanged) render(); return; }
     if (!S.setups[S.tid]) S.tid = chooseTid('');
     const cfg = S.setups[S.tid] || DEFAULT_CFG;
@@ -3567,12 +3570,12 @@ function koPreview(k, c) {                                // what happens after 
 }
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
-  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))} \u00b7 ${esc(cfg.start || '')}</b><br>Registration open \u2014 the draw is not published yet.${cfg.info ? '<br>' + esc(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
+  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))} \u00b7 ${esc(cfg.start || '')}</b><br>Registration open \u2014 the draw is not published yet.${regContact()}${cfg.info ? '<br>' + linkify(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
   const cards = CAT_ORDER.filter(k => CAT_DEFS[k][0] === league && cats[k] && !cats[k].off).map(k => {
     if (CAT_DEFS[k][0] === 'teams') return teamCard(k, catCfg(cats[k]));
     const c = catCfg(cats[k]), cap = c.groups * c.size, names = c.players, left = cap - names.length, dbl = c.format === 'doubles';
     const rows = Array.from({ length: cap }, (_, i) => (c.groups > 1 && i % c.size === 0 ? `<p class="gh2">Group ${i / c.size + 1}</p>` : '') + (names[i]
-      ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button>` : ''}</div>`
+      ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<span class="acts2">${names.length > 1 ? `<button class="rm swp" data-act="regswap" data-cat="${k}" data-i="${i}" aria-label="Swap ${esc(names[i])} with another player">\u21c4</button>` : ''}<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button></span>` : ''}</div>`
       : S.canEdit ? `<button class="seat open add" data-act="regadd" data-cat="${k}"><span>${(i % c.size) + 1}</span><span>+ ${dbl ? 'Add pair' : 'Add player'}</span></button>`
       : `<div class="seat open"><span>${(i % c.size) + 1}</span><span>${dbl ? 'Open spot for a pair' : 'Open spot'}</span></div>`)).join('');
     return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${rows}${koPreview(k, c)}</section>`;
@@ -3583,7 +3586,7 @@ function openSetup(creating) {
   let d;
   if (creating) {
     const ids = Object.keys(S.setups).sort(), cur = S.cfg || DEFAULT_CFG;
-    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, layout: cur.layout || '', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: '', cats: {} };
+    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, layout: cur.layout || '', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: cur.info || '', cats: {} };
   } else { d = JSON.parse(JSON.stringify(S.cfg || DEFAULT_CFG)); d.cats = d.cats || {}; CAT_ORDER.forEach(k => { if (d.cats[k]) d.cats[k] = catCfg(d.cats[k]); }); }
   d.courts = d.courts || 3; d.layout = d.layout || ''; d.first = d.first || 'women'; d.hold = +d.hold || 2; d.koMin = +d.koMin || 35;
   S.modal = { type: 'setup', draft: d, error: '', creating: !!creating, origId: creating ? '' : S.tid }; renderModal();
@@ -3675,7 +3678,7 @@ function setupBody(md) {
   ${lay === 'blocks' ? `<div class="dtrow"><b class="lbl">Plays first</b><select data-f="first" class="full">${opt('women', 'Women', d.first)}${opt('men', 'Men', d.first)}</select></div>
   <div class="dtrow"><b class="lbl">Courts held for the first knockout</b><select data-f="hold" class="full">${opt(1, '1 round', d.hold)}${opt(2, '2 rounds (extra time / warm-up)', d.hold)}</select></div>
   <div class="dtrow"><b class="lbl">Last round, with the final (minutes)</b><select data-f="koMin" class="full">${[25, 30, 35, 40, 45, 60].map(v => opt(v, v + ' minutes', d.koMin)).join('')}</select></div>` : ''}
-  <div class="dtrow"><b class="lbl">Note for players (optional)</b><input type="text" data-f="info" class="full" maxlength="160" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></div>
+  <div class="dtrow"><b class="lbl">Note for players (optional)</b><input type="text" data-f="info" class="full" maxlength="300" placeholder="e.g. Message the organizer to join" value="${esc(d.info || '')}"></div>
   <p class="hint">Choose the categories here. Add players afterwards from the Men, Women and Mixed tabs: tap an open spot.</p>
   ${blocks}
   <p class="sumr">${ngroups} group${ngroups === 1 ? '' : 's'} \u00b7 ${rounds} rounds \u00b7 ${courts} courts${rounds ? ' \u00b7 ends about ' + fmt12((sh || 0) * 60 + (sm || 0) + minutes) : ''}</p>
@@ -4031,6 +4034,51 @@ async function saveSeason() {
   } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules for tennis/season.'; renderModal(); }
 }
 
+/* ---------- Club info (organizer contact, fee, links), swapping players between groups ---------- */
+const CLUB_DEFAULT = { organizer: 'Ferran D\u00edaz', fee: '65\u20ac', telegram: 'https://t.me/+a9bFoVZKe7UxMGU0', site: 'https://tennislimassol.live/' };
+const club = () => ({ ...CLUB_DEFAULT, ...(S.club || {}) });
+const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+function regContact() {
+  const c = club();
+  return (c.organizer || c.fee ? '<br>To register, contact the organizer' + (c.organizer ? ': <b>' + esc(c.organizer) + '</b>' : '') + (c.fee ? ' \u00b7 Tournament fee: <b>' + esc(c.fee) + '</b>' : '') : '') + (c.telegram ? '<br><a href="' + esc(c.telegram) + '" target="_blank" rel="noopener">Join our Telegram group</a>' : '');
+}
+function shareBody() {
+  const c = club(), site = c.site || S.data.shareUrl || (location.protocol.startsWith('http') ? location.origin + location.pathname : '');
+  let qr = ''; if (site) { try { const q = qrcode(0, 'M'); q.addData(site); q.make(); qr = `<div class="qr">${q.createSvgTag({ cellSize: 6, margin: 2, scalable: true, alt: 'QR code linking to the tournament page' })}</div>`; } catch (e) { qr = ''; } }
+  const row = (label, url) => `<div class="lk"><b class="lbl">${label}</b><a class="lkurl" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a><button class="btn" data-act="copytext" data-t="${esc(url)}">Copy</button></div>`;
+  return `<p class="dmeta">Share with players</p><h3 id="dt">Share links</h3>${qr || ''}${site ? row('Website', site) : ''}${c.telegram ? row('Telegram group', c.telegram) : ''}${site || c.telegram ? '' : '<p class="hint">No links have been added yet. Organizer: use Club info.</p>'}<div class="acts"><button class="btn txt" data-act="close">Close</button></div>`;
+}
+function openClub() { S.modal = { type: 'club', draft: { ...club() }, error: '' }; renderModal(); }
+function clubBody(md) {
+  const d = md.draft, inp = (f, label, ph, max) => `<div class="dtrow"><b class="lbl">${label}</b><input class="full" type="text" maxlength="${max}" placeholder="${ph}" data-cf="${f}" value="${esc(d[f] || '')}"></div>`;
+  return `<p class="dmeta">Organizer</p><h3 id="dt">Club info</h3><p class="hint">Shown to players while registration is open, and in Share links. Leave a field empty to hide it.</p>
+  ${inp('organizer', 'Organizer to contact', 'e.g. Ferran D\u00edaz', 60)}${inp('fee', 'Tournament fee', 'e.g. 65\u20ac', 30)}${inp('telegram', 'Telegram group link', 'https://t.me/\u2026', 200)}${inp('site', 'Website link', 'https://\u2026', 200)}
+  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="saveclub" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button></div>`;
+}
+async function saveClub() {
+  const md = S.modal, d = md.draft; $modal.querySelectorAll('[data-cf]').forEach(el => { d[el.dataset.cf] = el.value.trim(); });
+  S.busy = true; renderModal();
+  try {
+    const res = await fetch(DB_URL + '/tennis/club.json', { method: 'PUT', body: JSON.stringify({ organizer: d.organizer || '', fee: d.fee || '', telegram: d.telegram || '', site: d.site || '' }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.club = (await fetchJson('/tennis/club').catch(() => null)) || d; S.clubJson = JSON.stringify(S.club);
+    S.busy = false; S.modal = null; renderModal(); render(); toast('Club info saved');
+  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules for tennis/club.'; renderModal(); }
+}
+function openSwap(k, i) { S.modal = { type: 'swap', cat: k, i, error: '' }; renderModal(); }
+function swapBody(md) {
+  const c = catCfg(((S.cfg || {}).cats || {})[md.cat] || {}), me = c.players[md.i] || '';
+  const rows = c.players.map((p, j) => j === md.i ? '' : `<button class="prow" data-act="swapto" data-j="${j}">${esc(p)}<small class="hp">${c.groups > 1 ? 'Group ' + (Math.floor(j / c.size) + 1) + ' \u00b7 ' : ''}seat ${(j % c.size) + 1}</small></button>`).join('');
+  return `<p class="dmeta">${catTitle(md.cat)}${c.groups > 1 ? ' \u00b7 now in Group ' + (Math.floor(md.i / c.size) + 1) : ''}</p><h3 id="dt">Swap ${esc(me)} with\u2026</h3><div id="plist">${rows || '<p class="hint">Nobody else is registered yet.</p>'}</div><p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn txt" data-act="close">Cancel</button></div>`;
+}
+async function swapDo(j) {
+  const md = S.modal, c = catCfg(((S.cfg || {}).cats || {})[md.cat] || {}), arr = c.players.slice();
+  if (!arr[j] || !arr[md.i]) return;
+  [arr[md.i], arr[j]] = [arr[j], arr[md.i]]; S.busy = true;
+  try { await savePlayers(md.cat, arr); await refreshCfg(); S.busy = false; S.modal = null; renderModal(); render(); toast('Players swapped'); }
+  catch (e) { S.busy = false; md.error = 'Could not save. Check your connection.'; renderModal(); }
+}
+
 /* ---------- Tournament history (archive + player records) ---------- */
 function snapshot() {
   const st = S.data; updateKnockouts(st);
@@ -4089,11 +4137,31 @@ function pastView() {
     return `<button class="hl" data-act="hsel" data-id="${esc(ev.id)}"><b>${esc(ev.name)}</b><em>${fmtDate(ev.date)}</em><span>${esc(ev.format || '')}</span><span class="hw">${rows}</span><span class="tap">Tap for full results</span></button>`;
   }).join('');
 }
+function evMatches(ev, c) {                                // every match of one category, rebuilt from the archive (old archives only have the scores)
+  const list = ev.matches ? ev.matches.filter(m => m.cat === c.key) : Object.keys(ev.results || {}).filter(id => id.indexOf(c.key + '-') === 0).map(id => { const p = id.split('-'); return { id, A: [p[1]], B: [p[2]] }; });
+  const rd = ev.rounds || {};
+  return list.map(m => ({ id: m.id, round: rd[m.id] || m.round || 99, A: m.A || [], B: m.B || [], r: ev.results && ev.results[m.id] || null })).sort((x, y) => x.round - y.round);
+}
+const lnOf = n => String(n).indexOf(' / ') > 0 ? String(n).replace(/ \/ /g, '/') : String(n).split(' ').slice(-1)[0];
 function eventView(ev) {
   const head = `<div class="tools"><button class="ghost" data-act="hback">\u2190 All tournaments</button></div><p class="foot"><b>${esc(ev.name)} \u00b7 ${fmtDate(ev.date)}</b><br>${esc(ev.format || '')}</p>`;
   return head + koHistory(ev) + ev.cats.map(c => {
-    const rows = (c.standings || []).map(s => `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname">${nameHtml(evName(ev, s.pid))}</span></td><td class="wl">${s.w}${dash}${s.l}</td><td class="gm"><b>${s.gw}</b><i>/</i><b>${s.gl}</b></td><td class="pos">${s.pos || dash}</td></tr>`).join('');
-    return `<section class="card"><div class="card-head"><h2 class="tag">${catFull(c)}</h2><span class="pill ${c.complete ? 'final' : ''}"><i></i>${c.complete ? 'Final classification' : 'Incomplete when archived'}</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th><th class="a2">W-L</th><th class="a2">GAMES<br>W-L</th><th class="pos">POS</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+    const ms = evMatches(ev, c), grid = c.format !== 'team' && ms.length;
+    const mine = pid => ms.filter(m => m.A.indexOf(pid) >= 0 || m.B.indexOf(pid) >= 0).map(m => {
+      const isA = m.A.indexOf(pid) >= 0, own = isA ? m.A : m.B, oth = isA ? m.B : m.A;
+      return { mine: m.r ? (isA ? m.r[0] : m.r[1]) : null, theirs: m.r ? (isA ? m.r[1] : m.r[0]) : null, opp: oth.map(i => evName(ev, i)), partner: own.length > 1 ? evName(ev, own.find(x => x !== pid)) : '' };
+    });
+    const cols = grid ? Math.max(...(c.standings || []).map(s => mine(s.pid).length)) : 0;
+    const cell = x => { if (!x) return '<td class="m"></td>'; const who = x.partner ? 'w/ ' + lnOf(x.partner) : x.opp.map(lnOf).join('/');
+      if (x.mine === null) return `<td class="m"><div class="mc pend"><b>${dash}</b><span>${esc(x.partner ? who : 'vs ' + who)}</span></div></td>`;
+      const won = x.mine > x.theirs; return `<td class="m"><div class="mc ${won ? 'win' : 'loss'}"><b>${x.mine}${dash}${x.theirs}</b><span>${won ? 'W' : 'L'} \u00b7 ${esc(who)}</span></div></td>`; };
+    const rows = (c.standings || []).map(s => { const mm = mine(s.pid); return `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname">${nameHtml(evName(ev, s.pid))}</span></td>${grid ? Array.from({ length: cols }, (_, i) => cell(mm[i])).join('') : ''}<td class="wl">${s.w}${dash}${s.l}</td><td class="gm"><b>${s.gw}</b><i>/</i><b>${s.gl}</b></td><td class="pos">${s.pos || dash}</td></tr>`; }).join('');
+    const heads = grid ? Array.from({ length: cols }, (_, i) => `<th>M${i + 1}</th>`).join('') : '';
+    const nm = sd => sd.map(i => evName(ev, i)).join(' / ');
+    let last = -1;
+    const list = ms.filter(m => m.r).map(m => (m.round !== last && m.round < 99 ? (last = m.round, `<p class="gh2">Round ${m.round}</p>`) : '') +
+      `<div class="tieres"><span class="${m.r[0] > m.r[1] ? 'kw' : ''}">${esc(nm(m.A))}</span><b>${m.r[0]} \u2013 ${m.r[1]}</b><span class="${m.r[1] > m.r[0] ? 'kw' : ''}">${esc(nm(m.B))}</span></div>`).join('');
+    return `<section class="card"><div class="card-head"><h2 class="tag">${catFull(c)}</h2><span class="pill ${c.complete ? 'final' : ''}"><i></i>${c.complete ? 'Final classification' : 'Incomplete when archived'}</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th>${heads}<th class="a2">W-L</th><th class="a2">GAMES<br>W-L</th><th class="pos">POS</th></tr></thead><tbody>${rows}</tbody></table></div>${list ? `<details class="hmatches"><summary>All match results (${ms.filter(m => m.r).length})</summary>${list}</details>` : ''}</section>`;
   }).join('');
 }
 function playersView(evs) {
@@ -4175,6 +4243,11 @@ document.addEventListener('click', ev => {
   else if (act === 'hview') { S.cal = 'past'; S.hview = el.dataset.v; S.hsel = null; render(); }
   else if (act === 'exitorg') exitOrganizer();
   else if (act === 'selecturl') el.select();
+  else if (act === 'copytext') { const v = el.dataset.t; try { navigator.clipboard.writeText(v).then(() => toast('Link copied'), () => toast('Press Ctrl+C to copy')); } catch (e) { toast('Press Ctrl+C to copy'); } }
+  else if (act === 'regswap') openSwap(el.dataset.cat, +el.dataset.i);
+  else if (act === 'swapto') swapDo(+el.dataset.j);
+  else if (act === 'clubedit') openClub();
+  else if (act === 'saveclub') saveClub();
   else if (act === 'copy') {
     const done = () => toast('Link copied');
     try { navigator.clipboard.writeText(S.data.shareUrl || location.origin + location.pathname).then(done, () => { const i = $modal.querySelector('input.url'); if (i) { i.select(); } toast('Press Ctrl+C to copy'); }); }
