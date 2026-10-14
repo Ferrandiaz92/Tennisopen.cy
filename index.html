@@ -3162,10 +3162,12 @@ function standings(league) {
 }
 
 /* ---------- Order of play ---------- */
-function playerOptions() {
-  const groups = [['men', "Men\u2019s league"], ['women', "Women\u2019s league"], ['mixed', 'Mixed league'], ['teams', 'Team players']];
-  return groups.map(([lg, name]) => `<optgroup label="${name}">${CATS.filter(c => c.league === lg).flatMap(c =>
-    (c.format === 'team' ? c.teams.flatMap(t => t.members) : c.players).filter(p => p.indexOf('seat') !== 0).map(p => `<option value="${p}" ${S.filter === p ? 'selected' : ''}>${esc(PLAYERS[p])} (${c.label.replace('Category ', 'Cat ')})</option>`)).join('')}</optgroup>`).join('');
+function playerOptions() {                                 // one block per category, names only (same structure as the past-results filter)
+  const bases = []; CATS.forEach(c => { const b = c.key.replace(/\d+$/, ''); if (!bases.includes(b)) bases.push(b); });
+  return CAT_ORDER.filter(b => bases.includes(b)).map(b => {
+    const names = CATS.filter(c => c.key.replace(/\d+$/, '') === b).flatMap(c => c.format === 'team' ? c.teams.flatMap(t => t.members) : c.players).filter(p => p.indexOf('seat') !== 0);
+    return names.length ? `<optgroup label="${esc(catTitle(b))}">${names.map(p => `<option value="${p}" ${S.filter === p ? 'selected' : ''}>${esc(PLAYERS[p])}</option>`).join('')}</optgroup>` : '';
+  }).join('');
 }
 
 function matchCard(m) {
@@ -3483,8 +3485,8 @@ function applySetup() {
   buildTournament(S.cfg);
   S.cfgJson = JSON.stringify(S.cfg);
   RESULTS_URL = DB_URL + '/' + TOURNAMENT.resultsPath;
-  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 ' + (S.cfg.start || '') + ' \u00b7 ' + statusLabel(S.cfg);
-  SCHED_SUB = COURTS + ' courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date);
+  SUB_LINE = dateLong(TOURNAMENT.date) + ' \u00b7 ' + (S.cfg.start || '') + (S.cfg.location ? ' \u00b7 ' + S.cfg.location : '') + ' \u00b7 ' + statusLabel(S.cfg);
+  SCHED_SUB = COURTS + ' courts \u00b7 ' + ROUND_TIMES.length + ' rounds \u00b7 first match ' + (ROUND_TIMES[0] || '') + ' \u00b7 ' + dateLong(TOURNAMENT.date) + (S.cfg.location ? ' \u00b7 ' + S.cfg.location : '');
   S.data = { results: {}, shareUrl: '' }; S.filter = '';
 }
 async function loadSetups() {                              // every tournament (past, today, upcoming), keyed by its date
@@ -3570,7 +3572,7 @@ function koPreview(k, c) {                                // what happens after 
 }
 function registrationView(league) {
   const cfg = S.cfg || DEFAULT_CFG, cats = cfg.cats || {};
-  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))} \u00b7 ${esc(cfg.start || '')}</b><br>Registration open \u2014 the draw is not published yet.${regContact()}${cfg.info ? '<br>' + linkify(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
+  const head = `<p class="foot"><b>${esc(cfg.name || 'Tournament')} \u00b7 ${dateLong(cfgDate(cfg))} \u00b7 ${esc(cfg.start || '')}${cfg.location ? ' \u00b7 ' + esc(cfg.location) : ''}</b><br>Registration open \u2014 the draw is not published yet.${regContact()}${cfg.info ? '<br>' + linkify(cfg.info) : ''}${S.canEdit ? '<br><b>Tap an open spot to add a ' + (league === 'teams' ? 'team' : 'player') + '.</b>' : ''}</p>`;
   const cards = CAT_ORDER.filter(k => CAT_DEFS[k][0] === league && cats[k] && !cats[k].off).map(k => {
     if (CAT_DEFS[k][0] === 'teams') return teamCard(k, catCfg(cats[k]));
     const c = catCfg(cats[k]), cap = c.groups * c.size, names = c.players, left = cap - names.length, dbl = c.format === 'doubles';
@@ -3586,9 +3588,9 @@ function openSetup(creating) {
   let d;
   if (creating) {
     const ids = Object.keys(S.setups).sort(), cur = S.cfg || DEFAULT_CFG;
-    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, layout: cur.layout || '', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: cur.info || '', cats: {} };
+    d = { month: ids.length ? monthShift(ids[ids.length - 1].slice(0, 7), 1) : defaultMonth(), date: '', name: cur.name || 'Singles League', start: cur.start || '16:00', roundMin: cur.roundMin || 25, courts: cur.courts || 3, location: cur.location || '', layout: cur.layout || '', first: cur.first || 'women', hold: cur.hold || 2, koMin: cur.koMin || 35, status: 'registration', info: cur.info || '', cats: {} };
   } else { d = JSON.parse(JSON.stringify(S.cfg || DEFAULT_CFG)); d.cats = d.cats || {}; CAT_ORDER.forEach(k => { if (d.cats[k]) d.cats[k] = catCfg(d.cats[k]); }); }
-  d.courts = d.courts || 3; d.layout = d.layout || ''; d.first = d.first || 'women'; d.hold = +d.hold || 2; d.koMin = +d.koMin || 35;
+  d.courts = d.courts || 3; d.location = d.location || ''; d.layout = d.layout || ''; d.first = d.first || 'women'; d.hold = +d.hold || 2; d.koMin = +d.koMin || 35;
   S.modal = { type: 'setup', draft: d, error: '', creating: !!creating, origId: creating ? '' : S.tid }; renderModal();
 }
 function readDraft() {
@@ -3598,6 +3600,7 @@ function readDraft() {
     if (q('sh') && q('sm')) d.start = q('sh').value + ':' + q('sm').value;
     if (q('roundMin')) d.roundMin = +q('roundMin').value || 25;
     if (q('courts')) d.courts = +q('courts').value || 3;
+    if (q('location')) d.location = q('location').value.trim();
     if (q('first')) d.first = q('first').value; if (q('hold')) d.hold = +q('hold').value || 2; if (q('koMin')) d.koMin = +q('koMin').value || 35;
     if (q('dd') && q('dm') && q('dy')) { d.date = dateFrom(+q('dy').value, +q('dm').value, +q('dd').value); d.month = d.date.slice(0, 7); }
   }
@@ -3672,6 +3675,7 @@ function setupBody(md) {
     ${d.date ? `<div class="sf">${dateSelects(d.date)}</div><button class="lnk" data-act="datefirst">Back to the first Saturday</button>` : '<button class="lnk" data-act="datecustom">Use a different date</button>'}</div>
   <div class="dtrow"><b class="lbl">Start time</b>
     <div class="sf"><select data-f="sh" aria-label="Hour">${hourOpts(d.start)}</select><b>:</b><select data-f="sm" aria-label="Minutes">${minOpts(d.start)}</select></div></div>
+  <div class="dtrow"><b class="lbl">Location</b><input type="text" data-f="location" class="full" maxlength="60" placeholder="e.g. Tennis Club Limassol" value="${esc(d.location || '')}"></div>
   <div class="dtrow"><b class="lbl">Courts</b><select data-f="courts" class="full">${[3, 4, 5, 6].map(v => opt(v, v + ' courts', courts)).join('')}</select></div>
   <div class="dtrow"><b class="lbl">Minutes per round</b><select data-f="roundMin" class="full">${[15, 20, 25, 30, 35, 40, 45, 50, 60].concat([+d.roundMin]).filter((v, k, a) => a.indexOf(v) === k).sort((a, b) => a - b).map(v => opt(v, v + ' minutes', d.roundMin)).join('')}</select></div>
   <div class="dtrow"><b class="lbl">Order of play</b><select data-f="layout" class="full">${opt('standard', 'Standard \u2014 all groups side by side', lay)}${opt('blocks', 'One gender after the other \u2014 the second starts on free courts', lay)}</select></div>
@@ -3710,7 +3714,7 @@ async function saveSetup() {
   if (newId !== oldId && S.setups[newId]) errs.push('There is already a tournament on ' + dateLong(newId) + ' \u2014 choose another date.');
   if (errs.length) { md.error = errs.join(' '); renderModal(); return; }
   if (oldId && newId !== oldId && S.cfg && S.cfg.status === 'live' && Object.keys(S.data.results).length && !confirm('This tournament has scores. Changing its date starts a new, empty results sheet. Archive it first if you have not. Continue?')) return;
-  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats };
+  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, location: d.location || '', layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats };
   S.busy = true; renderModal();
   try {
     await ensureMigrated();
@@ -3960,7 +3964,7 @@ function calRows(cfg) {
 function calCard(id, past) {
   const cfg = S.setups[id], live = cfg.status === 'live';
   const go = past ? 'Open the results \u203a' : live ? (id === todayISO() ? 'Open the order of play \u203a' : 'Draw published \u2014 see the order of play \u203a') : 'See who is registered \u203a';
-  return `<button class="hl" data-act="calopen" data-id="${id}"><b>${esc(cfg.name || 'Tournament')}</b><em>${shortDate(id)}</em><span>${dateLong(id)} \u00b7 ${esc(cfg.start || '')} \u00b7 ${past ? 'Results' : statusLabel(cfg)}</span>${calRows(cfg) ? `<span class="hw">${calRows(cfg)}</span>` : ''}<span class="tap">${go}</span></button>`;
+  return `<button class="hl" data-act="calopen" data-id="${id}"><b>${esc(cfg.name || 'Tournament')}</b><em>${shortDate(id)}</em><span>${dateLong(id)} \u00b7 ${esc(cfg.start || '')}${cfg.location ? ' \u00b7 ' + esc(cfg.location) : ''} \u00b7 ${past ? 'Results' : statusLabel(cfg)}</span>${calRows(cfg) ? `<span class="hw">${calRows(cfg)}</span>` : ''}<span class="tap">${go}</span></button>`;
 }
 function notArchivedView() {                                // finished tournaments that are still open (not archived yet)
   const t = todayISO(), ids = Object.keys(S.setups).sort().reverse().filter(id => id < t && S.setups[id].status === 'live' && !Object.keys(S.hist || {}).some(k => k.indexOf(id) === 0));
