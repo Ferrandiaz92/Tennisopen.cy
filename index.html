@@ -2653,7 +2653,7 @@ const sizesFor = f => f === 'americano' ? [4, 5, 6, 7, 8] : [3, 4, 5, 6, 7];
 const teamSizes = t => t === '4' ? [6, 8] : String(t).charAt(0) === '3' ? [4, 5, 6, 7, 8] : [3, 4, 5, 6, 7, 8];
 const roundsFor = (f, n) => f === 'americano' ? ({ 4: 3, 5: 5, 6: 6, 7: 7, 8: 7 })[n] : (n % 2 ? n : n - 1);
 const scoringFor = c => c.scoring === 'to4' || c.scoring === 'set' ? c.scoring : (c.format === 'team' || (+c.size || 7) >= 6 ? 'to4' : 'set');
-const scoringText = s => s === 'set' ? 'full set' : 'first to 4 games';
+const scoringText = s => s === 'set' ? 'full set' : 'first to win 4 games';
 const catNames = c => { const p = c && c.players; return (Array.isArray(p) ? p : Object.values(p || {})).filter(Boolean); };
 const catCfg = c => ({ format: c.format || 'singles', size: +c.size || (c.format === 'team' ? 6 : 7), groups: Math.max(1, Math.min(4, +c.groups || 1)), scoring: c.scoring || 'auto', players: catNames(c), off: !!c.off, teamType: c.teamType || '4', mix: false, ko: ['final', 'semis'].includes(c.ko) ? c.ko : 'none', ko3: !!c.ko3, koSemi: ['to4', 'set'].includes(c.koSemi) ? c.koSemi : 'auto', koFinal: ['to4', 'set'].includes(c.koFinal) ? c.koFinal : 'auto',
   teams: (Array.isArray(c.teams) ? c.teams : Object.values(c.teams || {})).map(t => ({ name: t.name || '', p: (Array.isArray(t.p) ? t.p : Object.values(t.p || {})).filter(Boolean) })) });
@@ -3261,8 +3261,8 @@ function matchRules() {
   const tag = sc => scs.length > 1 ? ' (' + info.filter(c => c.sc === sc).map(c => c.title).join(', ') + ')' : '';
   const li = scs.map(sc => sc === 'set'
     ? `<li><b>Full set</b>${tag(sc)}: first to 6 games with a 2\u2011game lead (6\u20130 to 6\u20134, or 7\u20135). At 6\u20136 a tie\u2011break decides: 7\u20136.</li>`
-    : `<li><b>First to 4 games</b>${tag(sc)} wins: 4\u20130, 4\u20131, 4\u20132 or 4\u20133. No tie\u2011breaks.</li>`);
-  const kos = info.filter(c => c.ko !== 'none'), kt = x => x === 'set' ? 'full set' : 'first to 4 games';
+    : `<li><b>First to win 4 games</b>${tag(sc)}: the first player to win 4 games wins the match (4\u20130, 4\u20131, 4\u20132 or 4\u20133). No tie\u2011breaks.</li>`);
+  const kos = info.filter(c => c.ko !== 'none'), kt = x => x === 'set' ? 'full set' : 'first to win 4 games';
   if (kos.length) { const sem = [...new Set(kos.filter(c => c.ko === 'semis').map(c => kt(c.ks)))], fin = [...new Set(kos.map(c => kt(c.kf)))]; li.push(`<li><b>Knockout:</b> ${sem.length ? 'semifinals ' + sem.join(' / ') + '; ' : ''}final ${fin.join(' / ')}${kos.some(c => c.k3) ? '; 3rd place match: same as ' + (sem.length ? 'the semifinals' : 'the group stage') : ''}.</li>`); }
   li.push('<li><b>Golden point</b> at 40\u201340: no advantage. The next point wins the game and the receiver chooses the side.</li>', '<li>Report your final score to the organizer right after the match.</li>');
   return `<h4>Match format</h4><ul>${li.join('')}</ul>`;
@@ -3338,7 +3338,7 @@ function renderModal() {
     if (S.canEdit) {
       rows = `<div class="dl-row"><label for="sa">${esc(sideName(m.A))}</label><input id="sa" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[0] : ''}" aria-label="Games won by ${esc(sideName(m.A))}"></div>
               <div class="dl-row"><label for="sb">${esc(sideName(m.B))}</label><input id="sb" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[1] : ''}" aria-label="Games won by ${esc(sideName(m.B))}"></div>
-              <p class="hint">Enter the games won by each player. ${(m.scoring || cat.scoring) === 'set' ? 'Full set: 6\u20130 to 6\u20134, 7\u20135 or 7\u20136.' : 'First to 4 games wins (4\u20130, 4\u20131, 4\u20132, 4\u20133).'}</p>`;
+              <p class="hint">Enter the games won by each player. ${(m.scoring || cat.scoring) === 'set' ? 'Full set: 6\u20130 to 6\u20134, 7\u20135 or 7\u20136.' : 'The first to win 4 games wins the match (4\u20130, 4\u20131, 4\u20132 or 4\u20133).'}</p>`;
       acts = `<button class="btn pri" data-act="save" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save score'}</button>
               ${r ? '<button class="btn dng" data-act="clear">Clear score</button>' : ''}<button class="btn txt" data-act="close">Cancel</button>`;
     } else {
@@ -3434,7 +3434,7 @@ function saveScore() {
   const na = Number(a), nb = Number(b);
   const hi = Math.max(na, nb), lo = Math.min(na, nb);
   const sc = m.scoring || CAT_BY_KEY[m.cat].scoring;
-  if (!validScore(sc, na, nb)) return fail(sc === 'set' ? 'Full set: valid scores are 6\u20130 to 6\u20134, 7\u20135 or 7\u20136.' : 'The match is first to 4 games. Valid scores: 4\u20130, 4\u20131, 4\u20132 or 4\u20133.');
+  if (!validScore(sc, na, nb)) return fail(sc === 'set' ? 'Full set: valid scores are 6\u20130 to 6\u20134, 7\u20135 or 7\u20136.' : 'The match is first to win 4 games. Valid scores: 4\u20130, 4\u20131, 4\u20132 or 4\u20133.');
   persist({ ...S.data, results: { ...S.data.results, [m.id]: [na, nb] } }, m.id);
 }
 
@@ -3646,7 +3646,7 @@ function setupBody(md) {
         ngroups += 1; queues.push(...catQueues(c, courts));
         h += `<div class="vs"><label>Team size <select data-f="teamtype" data-cat="${k}">${Object.keys(TEAM_TYPES).map(t => opt(t, TEAM_TYPES[t].label, c.teamType)).join('')}</select></label>
           <label>Teams <select data-f="size" data-cat="${k}">${teamSizes(c.teamType).map(n => opt(n, n, c.size)).join('')}</select></label>
-          <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (first to 4 games)', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
+          <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (first to win 4 games)', c.scoring)}${opt('to4', 'First to win 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
           <span class="cnt">${c.teams.length} / ${c.size} teams</span></div><p class="hint">${TEAM_TYPES[c.teamType].rule(c.size)}</p>`;
       }
       return h + '</div>';
@@ -3658,10 +3658,10 @@ function setupBody(md) {
       h += `<div class="vs"><label>Format <select data-f="format" data-cat="${k}">${formatsFor(k).map(f => opt(f, FORMATS[f], c.format)).join('')}</select></label>
         <label>${dbl ? 'Pairs' : 'Players'} per group <select data-f="size" data-cat="${k}">${sizesFor(c.format).map(n => opt(n, n, c.size)).join('')}</select></label>
         <label>Groups <select data-f="groups" data-cat="${k}">${[1, 2, 3, 4].map(n => opt(n, n, c.groups)).join('')}</select></label>
-        <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (' + scoringText(scoringFor(c)) + ')', c.scoring)}${opt('to4', 'First to 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
+        <label>Match <select data-f="scoring" data-cat="${k}">${opt('auto', 'Auto (' + scoringText(scoringFor(c)) + ')', c.scoring)}${opt('to4', 'First to win 4 games', c.scoring)}${opt('set', 'Full set', c.scoring)}</select></label>
         ${koAllowed(c) ? `<label>Knockout round <select data-f="ko" data-cat="${k}">${opt('none', 'None \u2014 group stage only', c.ko)}${opt('final', c.groups === 2 ? 'Final: the two group winners' : 'Final: 1st vs 2nd', c.ko)}${c.groups === 2 || c.size >= 4 ? opt('semis', c.groups === 2 ? 'Semifinals + final: top 2 of each group' : 'Semifinals + final: top 4', c.ko) : ''}</select></label>` : ''}
-        ${koAllowed(c) && c.ko === 'semis' ? `<label>Semifinal match <select data-f="koSemi" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koSemi)}${opt('to4', 'First to 4 games', c.koSemi)}${opt('set', 'Full set', c.koSemi)}</select></label>` : ''}
-        ${koAllowed(c) && c.ko !== 'none' ? `<label>Final match <select data-f="koFinal" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koFinal)}${opt('to4', 'First to 4 games', c.koFinal)}${opt('set', 'Full set', c.koFinal)}</select></label>` : ''}
+        ${koAllowed(c) && c.ko === 'semis' ? `<label>Semifinal match <select data-f="koSemi" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koSemi)}${opt('to4', 'First to win 4 games', c.koSemi)}${opt('set', 'Full set', c.koSemi)}</select></label>` : ''}
+        ${koAllowed(c) && c.ko !== 'none' ? `<label>Final match <select data-f="koFinal" data-cat="${k}">${opt('auto', 'Same as group stage (' + scoringText(scoringFor(c)) + ')', c.koFinal)}${opt('to4', 'First to win 4 games', c.koFinal)}${opt('set', 'Full set', c.koFinal)}</select></label>` : ''}
         ${koAllowed(c) && c.ko !== 'none' && (c.groups === 2 || c.ko === 'semis' || c.size >= 4) ? `<label>3rd place match <select data-f="ko3" data-cat="${k}">${opt('no', 'No', c.ko3 ? 'yes' : 'no')}${opt('yes', c.ko === 'semis' ? 'Yes \u2014 losers of the semifinals' : c.groups === 2 ? 'Yes \u2014 2nd Group 1 vs 2nd Group 2' : 'Yes \u2014 3rd vs 4th', c.ko3 ? 'yes' : 'no')}</select></label>` : ''}
         <span class="cnt">${c.players.length} / ${cap} ${dbl ? 'pairs' : 'players'}</span></div>`;
     }
