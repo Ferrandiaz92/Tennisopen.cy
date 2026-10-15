@@ -281,6 +281,12 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .foot a{color:var(--acc);font-weight:700;text-decoration:underline}
 .lk{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--row)}.lk .lbl{grid-column:1/-1;font-size:12px;font-weight:700}
 .lkurl{word-break:break-all;font-size:13px;font-weight:600;color:var(--ink)}
+/* order of play: columns may shrink so the 4th court never overflows the card */
+.round{grid-template-columns:118px minmax(0,1fr)}
+.courts{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}
+.mt{min-width:0}.mt-top{flex-wrap:wrap;row-gap:4px}.mt-top>span:first-child{white-space:nowrap}
+.chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){.round{grid-template-columns:minmax(0,1fr)}.courts{grid-template-columns:1fr}}
 </style></head><body><div id="page"></div><div id="modal"></div><div id="toast" aria-live="polite"></div><script type="application/json" id="state">{"results":{},"shareUrl":""}</script><script id="qrlib">//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
