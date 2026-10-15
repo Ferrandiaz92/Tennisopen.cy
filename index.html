@@ -2641,7 +2641,8 @@ const defaultMonth = () => { const t = new Date(), y = t.getUTCFullYear(), m = t
   const first = new Date(Date.UTC(y, m, 1 + (6 - new Date(Date.UTC(y, m, 1)).getUTCDay() + 7) % 7)).toISOString().slice(0, 10);
   return t.toISOString().slice(0, 10) > first ? (m === 11 ? (y + 1) + '-01' : y + '-' + p(m + 2)) : y + '-' + p(m + 1); };
 const DEFAULT_CFG = { month: defaultMonth(), name: 'Singles League', start: '16:00', roundMin: 25, status: 'registration', info: '', cats: {} };
-const CAT_DEFS = { MA: ['men', 'Category A'], MB: ['men', 'Category B'], WA: ['women', 'Category A'], WB: ['women', 'Category B'], XA: ['mixed', 'Category A'], XB: ['mixed', 'Category B'], TA: ['teams', 'Category A'], TB: ['teams', 'Category B'] };
+const CAT_DEFS = { MA: ['men', 'Advanced'], MB: ['men', 'Intermediate'], WA: ['women', 'Advanced'], WB: ['women', 'Intermediate'], XA: ['mixed', 'Advanced'], XB: ['mixed', 'Intermediate'], TA: ['teams', 'Advanced'], TB: ['teams', 'Intermediate'] };
+const lvl = t => String(t).replace('Category A', 'Advanced').replace('Category B', 'Intermediate');            // old archives stored "Category A/B"
 const CAT_ORDER = Object.keys(CAT_DEFS);
 const leagueWord = lg => ({ men: 'Men', women: 'Women', mixed: 'Mixed', teams: 'Teams' })[lg];
 const leagueTitle = lg => ({ men: 'Men\u2019s', women: 'Women\u2019s', mixed: 'Mixed', teams: 'Teams' })[lg];
@@ -3180,7 +3181,7 @@ function matchCard(m) {
   };
   const aria = `Court ${m.court}, ${sideText(m, 0)} versus ${sideText(m, 1)}` + (r ? `, ${r[0]} to ${r[1]}` : '');
   return `<button class="mt" data-act="match" data-id="${esc(m.id)}" aria-label="${esc(aria)}">
-    <div class="mt-top"><span>Court ${m.court}</span><span class="chip ${lg}">${m.ko ? esc(m.ko.name) + ' \u00b7 ' + leagueWord(lg) + ' ' + cat.label.replace('Category ', 'Cat ').replace(' \u00b7 Knockout', '') : cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 Cat ' + cat.label.replace('Category ', '') : leagueWord(lg) + ' \u00b7 ' + cat.label.replace('Category ', 'Cat ')}</span></div>${cat.format === 'team' ? `<div class="tieln">${esc(PLAYERS[m.tie[0]])} vs ${esc(PLAYERS[m.tie[1]])}</div>` : ''}
+    <div class="mt-top"><span>Court ${m.court}</span><span class="chip ${lg}">${m.ko ? esc(m.ko.name) + ' \u00b7 ' + leagueWord(lg) + ' ' + lvl(cat.label).replace(' \u00b7 Knockout', '') : cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 ' + lvl(cat.label) : leagueWord(lg) + ' \u00b7 ' + lvl(cat.label)}</span></div>${cat.format === 'team' ? `<div class="tieln">${esc(PLAYERS[m.tie[0]])} vs ${esc(PLAYERS[m.tie[1]])}</div>` : ''}
     ${line(sideText(m, 0), r && r[0], r && r[1])}<span class="vs">VS</span>${line(sideText(m, 1), r && r[1], r && r[0])}</button>`;
 }
 
@@ -3250,6 +3251,8 @@ function formatRules() {
   const kb = {}; info.forEach(c => { (kb[koT(c)] = kb[koT(c)] || []).push(c.title); });
   const kk = Object.keys(kb);
   kk.forEach(t => li.push(`<li><b>Knockout${kk.length > 1 ? ' (' + kb[t].join(', ') + ')' : ''}:</b> ${t}.</li>`));
+  const lvLines = ['men', 'women', 'mixed'].filter(l => info.some(c => c.f !== 'team' && lgOf(c) === l)).map(l => leagueWord(l) + (l === 'mixed' ? ' (pair average)' : '') + ': Advanced ' + levelRange(l, true) + ', Intermediate ' + levelRange(l, false));
+  if (lvLines.length && !lvLines.some(x => x.indexOf(' ,') >= 0 || x.indexOf('Advanced ,') >= 0)) li.push('<li><b>Levels' + (club().scale && club().scale !== 'level' ? ' (' + esc(club().scale) + ')' : '') + ':</b> ' + lvLines.join(' \u00b7 ') + '. The organizer can move a player to the other level.</li>');
   if (LAYOUT === 'blocks' && new Set(info.map(c => lgOf(c))).size > 1) { const f = S.cfg.first === 'men' ? 'men' : 'women'; li.push(`<li><b>Order of play:</b> ${f} first, then ${f === 'women' ? 'men' : 'women'}. The second starts on the free courts while the first knockout is played.</li>`); }
   return `<h4>Tournament format</h4><ul>${li.join('')}</ul>`;
 }
@@ -3580,7 +3583,7 @@ function registrationView(league) {
       ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<span class="acts2">${names.length > 1 ? `<button class="rm swp" data-act="regswap" data-cat="${k}" data-i="${i}" aria-label="Swap ${esc(names[i])} with another player">\u21c4</button>` : ''}<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button></span>` : ''}</div>`
       : S.canEdit ? `<button class="seat open add" data-act="regadd" data-cat="${k}"><span>${(i % c.size) + 1}</span><span>+ ${dbl ? 'Add pair' : 'Add player'}</span></button>`
       : `<div class="seat open"><span>${(i % c.size) + 1}</span><span>${dbl ? 'Open spot for a pair' : 'Open spot'}</span></div>`)).join('');
-    return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${rows}${koPreview(k, c)}</section>`;
+    return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${levelLine(k)}${rows}${koPreview(k, c)}</section>`;
   }).join('');
   return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`);
 }
@@ -4039,9 +4042,19 @@ async function saveSeason() {
 }
 
 /* ---------- Club info (organizer contact, fee, links), swapping players between groups ---------- */
-const CLUB_DEFAULT = { organizer: 'Ferran D\u00edaz', fee: '65\u20ac', telegram: 'https://t.me/+a9bFoVZKe7UxMGU0', site: 'https://tennislimassol.live/' };
+const CLUB_DEFAULT = { organizer: 'Ferran D\u00edaz', fee: '65\u20ac', telegram: 'https://t.me/+a9bFoVZKe7UxMGU0', site: 'https://tennislimassol.live/', scale: 'level', adv_m: '3.0', adv_w: '2.5', int_m: '2.0', int_w: '2.0' };
 const club = () => ({ ...CLUB_DEFAULT, ...(S.club || {}) });
 const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+function levelRange(lg, isAdv) {                            // Advanced: from the threshold up; Intermediate: from its threshold to just under Advanced
+  const cl = club(), k = lg === 'men' ? 'm' : 'w', a = parseFloat(cl['adv_' + k]), i = parseFloat(cl['int_' + k]);
+  if (isNaN(a) || isNaN(i)) return '';
+  return isAdv ? a.toFixed(1) + ' and above' : i.toFixed(1) + ' to ' + (a - 0.1).toFixed(1);
+}
+function levelLine(k) {
+  const lg = CAT_DEFS[k][0]; if (lg === 'teams') return '';
+  const r = levelRange(lg, CAT_DEFS[k][1] === 'Advanced'); if (!r) return '';
+  return '<p class="fmt">' + (lg === 'mixed' ? 'Pair average ' : '') + esc(club().scale || 'level') + ' ' + r + ' \u00b7 Not sure? Ask the organizer</p>';
+}
 function regContact() {
   const c = club();
   return (c.organizer || c.fee ? '<br>To register, contact the organizer' + (c.organizer ? ': <b>' + esc(c.organizer) + '</b>' : '') + (c.fee ? ' \u00b7 Tournament fee: <b>' + esc(c.fee) + '</b>' : '') : '') + (c.telegram ? '<br><a href="' + esc(c.telegram) + '" target="_blank" rel="noopener">Join our Telegram group</a>' : '');
@@ -4057,13 +4070,15 @@ function clubBody(md) {
   const d = md.draft, inp = (f, label, ph, max) => `<div class="dtrow"><b class="lbl">${label}</b><input class="full" type="text" maxlength="${max}" placeholder="${ph}" data-cf="${f}" value="${esc(d[f] || '')}"></div>`;
   return `<p class="dmeta">Organizer</p><h3 id="dt">Club info</h3><p class="hint">Shown to players while registration is open, and in Share links. Leave a field empty to hide it.</p>
   ${inp('organizer', 'Organizer to contact', 'e.g. Ferran D\u00edaz', 60)}${inp('fee', 'Tournament fee', 'e.g. 65\u20ac', 30)}${inp('telegram', 'Telegram group link', 'https://t.me/\u2026', 200)}${inp('site', 'Website link', 'https://\u2026', 200)}
+  <p class="hint" style="margin-top:14px">Levels shown next to Advanced and Intermediate. Intermediate runs from its number up to just below Advanced.</p>
+  ${inp('scale', 'Rating name', 'e.g. Playtomic level', 30)}${inp('adv_m', 'Advanced from \u2014 men', '3.0', 5)}${inp('adv_w', 'Advanced from \u2014 women', '2.5', 5)}${inp('int_m', 'Intermediate from \u2014 men', '2.0', 5)}${inp('int_w', 'Intermediate from \u2014 women', '2.0', 5)}
   <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="saveclub" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save'}</button><button class="btn txt" data-act="close">Cancel</button></div>`;
 }
 async function saveClub() {
   const md = S.modal, d = md.draft; $modal.querySelectorAll('[data-cf]').forEach(el => { d[el.dataset.cf] = el.value.trim(); });
   S.busy = true; renderModal();
   try {
-    const res = await fetch(DB_URL + '/tennis/club.json', { method: 'PUT', body: JSON.stringify({ organizer: d.organizer || '', fee: d.fee || '', telegram: d.telegram || '', site: d.site || '' }) });
+    const res = await fetch(DB_URL + '/tennis/club.json', { method: 'PUT', body: JSON.stringify(Object.fromEntries(Object.keys(CLUB_DEFAULT).map(k => [k, d[k] === undefined ? '' : d[k]]))) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     S.club = (await fetchJson('/tennis/club').catch(() => null)) || d; S.clubJson = JSON.stringify(S.club);
     S.busy = false; S.modal = null; renderModal(); render(); toast('Club info saved');
@@ -4120,8 +4135,8 @@ async function loadHistory() {
   if (S.tab === 'history' && !S.modal) render();
 }
 const fmtDate = iso => { const p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : esc(iso || ''); };
-const catShort = c => c.league === 'teams' ? 'Teams ' + String(c.label).replace('Category ', '') : leagueWord(c.league) + ' ' + String(c.label).replace('Category ', '');
-const catFull = c => (leagueTitle(c.league) + ' ' + c.label).trim();
+const catShort = c => c.league === 'teams' ? 'Teams ' + lvl(c.label) : leagueWord(c.league) + ' ' + lvl(c.label);
+const catFull = c => (leagueTitle(c.league) + ' ' + lvl(c.label)).trim();
 const evName = (ev, pid) => (ev.players && ev.players[pid]) || pid;
 const nameHtml = n => { const p = String(n).split(' '); return `<span class="fn">${esc(p[0])}</span> <span class="ln">${esc(p.slice(1).join(' '))}</span>`; };
 
