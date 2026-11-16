@@ -235,6 +235,10 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .rk-seg{margin:12px 0 6px;display:flex;justify-content:center}
 .rk{margin-top:6px}.rkr{display:grid;grid-template-columns:22px minmax(0,1fr) 46px 54px 46px 50px;gap:4px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;font-weight:600}.rkr .pn{text-align:left;font-weight:700}.rkr .n{color:var(--muted);font-size:11px}.rkr .pn small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:1px}.rkr .tt{color:var(--head);font-weight:800}.rkr .wl{color:var(--acc2);font-weight:700;white-space:nowrap}.rks{white-space:nowrap;border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:4px 2px;border-radius:8px;width:100%}.rks[aria-pressed="true"]{background:var(--head);color:#fff}
 .rkh{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:2px solid var(--line)}
+.al{display:block;font-size:10.5px;font-weight:600;line-height:1.25;color:var(--acc2);letter-spacing:0;text-transform:none;margin-top:1px}
+.prow .al{color:var(--muted);font-weight:600}
+.lgl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 12px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px}.lgl span{font-size:11px;font-weight:700;color:var(--win)}.lgl.taken{opacity:.55}.lgl.taken b{text-decoration:line-through}.lgl.taken span{color:var(--muted)}
+.rm.lgd{color:var(--acc2)}
 .pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
 .pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
 .pm.k{grid-template-columns:84px 1fr auto;box-shadow:inset 3px 0 0 var(--acc2)}.pm.k span:first-child{font-size:11px;font-weight:800;opacity:1;color:var(--acc2);text-transform:uppercase;letter-spacing:.03em}
@@ -3131,8 +3135,59 @@ function nav() {
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="ranking">Ranking</button><button class="ghost" data-act="share">Share links</button></div></div>
-    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="clubedit">Club info</button><button data-act="newtour">+ New tournament</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
+    ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="clubedit">Club info</button><button data-act="newtour">+ New tournament</button><button data-act="legtoggle">Legends: ' + (legendsOn() ? 'on' : 'off') + '</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
     ${syncBar()}`;
+}
+
+
+/* ---------- Legends cup: every player can play as a tennis legend; the real name stays on top, the legend shows underneath ---------- */
+const LEGENDS_RAW = { M: "Rafael Nadal|ESP;Roger Federer|SUI;Björn Borg|SWE;Boris Becker|GER;Pete Sampras|USA;Andre Agassi|USA;John McEnroe|USA;Guillermo Vilas|ARG;Gustavo Kuerten|BRA;Marat Safin|RUS;Yevgeny Kafelnikov|RUS;Andrei Medvedev|UKR;Stefan Edberg|SWE;Stan Wawrinka|SUI;Juan Martín del Potro|ARG;Jo-Wilfried Tsonga|FRA;Carlos Moyá|ESP;Richard Gasquet|FRA;Goran Ivanišević|CRO;Andy Murray|GBR;Nikolay Davydenko|RUS;Marcos Baghdatis|CYP;David Nalbandian|ARG;Andy Roddick|USA;Lleyton Hewitt|AUS;Tommy Haas|GER;Mikhail Youzhny|RUS;Radek Štěpánek|CZE;Ivo Karlović|CRO;Alberto Berasategui|ESP;Fabio Fognini|ITA;Nicola Pietrangeli|ITA", W: "Steffi Graf|GER;Serena Williams|USA;Venus Williams|USA;Maria Sharapova|RUS;Svetlana Kuznetsova|RUS;Garbiñe Muguruza|ESP;Martina Hingis|SUI;Gabriela Sabatini|ARG;Monica Seles|SRB/USA;Ana Ivanović|SRB;Martina Navratilova|USA;Angelique Kerber|GER;Billie Jean King|USA;Elena Dementieva|RUS;Anastasia Myskina|RUS;Simona Halep|ROU;Justine Henin|BEL;Anna Kournikova|RUS;Dinara Safina|RUS;Vera Zvonareva|RUS;Francesca Schiavone|ITA;Flavia Pennetta|ITA;Arantxa Sánchez Vicario|ESP;Victoria Azarenka|BLR;Kateryna Bondarenko|UKR;Natalia Medvedeva|UKR;Ashleigh Barty|AUS;Caroline Wozniacki|DEN" };
+const LEGENDS = [], LEG_BY_ID = {};
+Object.keys(LEGENDS_RAW).forEach(g => LEGENDS_RAW[g].split(';').forEach((x, i) => { const p = x.split('|'), L = { id: g + String(i + 1).padStart(2, '0'), n: p[0], c: p[1], g }; LEGENDS.push(L); LEG_BY_ID[L.id] = L; }));
+const legendsOn = () => { const c = S.cfg || {}; return c.legendsOn !== undefined ? !!c.legendsOn : /legend/i.test(c.name || ''); };
+const legendName = L => L.n + ' (' + L.c + ')';
+const legendFor = pid => { if (!legendsOn() || !PLAYERS[pid]) return null; const id = ((S.cfg || {}).legends || {})[normName(PLAYERS[pid])]; return id ? LEG_BY_ID[id] || null : null; };
+const aliasSub = ids => { const a = (ids || []).map(legendFor).filter(Boolean).map(legendName); return a.length ? `<small class="al">${esc(a.join(' / '))}</small>` : ''; };
+function legendTaken() {                                   // legend id -> real name of the registered player who has it
+  const cfg = S.cfg || {}, L = cfg.legends || {}, out = {};
+  CAT_ORDER.forEach(k => { const c = cfg.cats && cfg.cats[k]; if (!c || c.off || CAT_DEFS[k][0] === 'teams') return; catCfg(c).players.forEach(n => { const id = L[normName(n)]; if (id) out[id] = n; }); });
+  return out;
+}
+const legendPool = lg => LEGENDS.filter(L => lg === 'men' ? L.g === 'M' : lg === 'women' ? L.g === 'W' : true);
+function legendsCard(league) {
+  if (!legendsOn() || (league !== 'men' && league !== 'women')) return '';
+  const pool = legendPool(league), taken = legendTaken(), free = pool.filter(L => !taken[L.id]).length;
+  const rows = pool.map(L => `<div class="lgl ${taken[L.id] ? 'taken' : ''}"><b>${esc(legendName(L))}</b><span>${taken[L.id] ? esc(taken[L.id]) : 'Available'}</span></div>`).join('');
+  return `<section class="card"><div class="card-head"><h2 class="tag">Legends</h2><span class="pill"><i></i>${free} of ${pool.length} available</span></div><p class="fmt">Choose the tennis legend you want to play as and tell the organizer. Your real name always stays on the draw, with your legend underneath.</p>${rows}</section>`;
+}
+function openLegend(k, i) {
+  const c = catCfg(((S.cfg || {}).cats || {})[k] || {}), name = c.players[i]; if (!name) return;
+  S.modal = { type: 'legend', cat: k, name, q: '', error: '' }; renderModal();
+}
+function legendList(md) {
+  const toks = normName(md.q || '').split(' ').filter(Boolean), taken = legendTaken(), mine = ((S.cfg || {}).legends || {})[normName(md.name)];
+  const hit = legendPool(CAT_DEFS[md.cat][0]).filter(L => { const n = normName(L.n + ' ' + L.c); return toks.every(t => n.includes(t)); });
+  return hit.map(L => taken[L.id] && L.id !== mine ? `<button class="prow" disabled style="opacity:.45">${esc(legendName(L))}<small class="al">Taken by ${esc(taken[L.id])}</small></button>` : `<button class="prow ${L.id === mine ? 'new' : ''}" data-act="legpick" data-id="${L.id}">${esc(legendName(L))}${L.id === mine ? '<small class="al">Current legend</small>' : ''}</button>`).join('') || '<p class="hint">No legend matches.</p>';
+}
+function legendBody(md) {
+  const mine = ((S.cfg || {}).legends || {})[normName(md.name)];
+  return `<p class="dmeta">${catTitle(md.cat)}</p><h3 id="dt">Legend for ${esc(md.name)}</h3>
+  <input id="lq" class="sq" type="search" placeholder="Search legends…" autocomplete="off" value="${esc(md.q)}">
+  <div id="llist" style="margin-top:10px">${legendList(md)}</div><p class="err" role="alert">${esc(md.error)}</p>
+  <div class="acts">${mine ? '<button class="btn dng" data-act="legpick" data-id="">Remove legend</button>' : ''}<button class="btn txt" data-act="close">${mine ? 'Cancel' : 'Skip'}</button></div>`;
+}
+async function legendSet(id) {
+  const md = S.modal, key = encodeURIComponent(normName(md.name)); S.busy = true;
+  try {
+    await ensureMigrated();
+    const res = await fetch(DB_URL + '/tennis/setups/' + S.tid + '/legends/' + key + '.json', id ? { method: 'PUT', body: JSON.stringify(id) } : { method: 'DELETE' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    await refreshCfg(); S.busy = false; S.modal = null; renderModal(); render(); toast(id ? 'Legend saved' : 'Legend removed');
+  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules.'; renderModal(); }
+}
+async function legendsToggle() {
+  try { await ensureMigrated(); const res = await fetch(DB_URL + '/tennis/setups/' + S.tid + '/legendsOn.json', { method: 'PUT', body: JSON.stringify(!legendsOn()) }); if (!res.ok) throw new Error('HTTP ' + res.status); await refreshCfg(); render(); toast(legendsOn() ? 'Legends mode is on' : 'Legends mode is off'); }
+  catch (e) { toast('Could not change it. Check your connection.'); }
 }
 
 function mcell(x) {
@@ -3154,7 +3209,7 @@ function rowHtml(s) {
   const wl = s.played ? `${s.w}${dash}${s.l}` : `<span class="dim">${dash}</span>`;
   const gm = s.played ? `<b>${s.gw}</b><i>/</i><b>${s.gl}</b>` : '<i>/</i>';
   const pos = s.pos ? `${s.pos}${s.tb ? `<small>${s.tb}</small>` : ''}` : dash;
-  return `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname"><span class="fn">${esc(PLAYERS[s.pid].split(" ")[0])}</span> <span class="ln">${esc(PLAYERS[s.pid].split(" ").slice(1).join(" "))}</span></span></td>${cells}<td class="wl">${wl}</td><td class="gm">${gm}</td><td class="pos">${pos}</td></tr>`;
+  return `<tr><td class="pl"><span class="num">${s.draw}</span><span class="pname"><span class="fn">${esc(PLAYERS[s.pid].split(" ")[0])}</span> <span class="ln">${esc(PLAYERS[s.pid].split(" ").slice(1).join(" "))}</span>${aliasSub([s.pid])}</span></td>${cells}<td class="wl">${wl}</td><td class="gm">${gm}</td><td class="pos">${pos}</td></tr>`;
 }
 
 function catCard(cat) {
@@ -3193,14 +3248,14 @@ function matchCard(m) {
   const r = getResult(S.data, m);
   const cat = CAT_BY_KEY[m.cat];
   const lg = cat.league;
-  const line = (pid, own, other) => {
+  const line = (pid, own, other, ids) => {
     const cls = r ? (own > other ? 'w' : 'l') : '';
-    return `<div class="pl2 ${cls}"><span>${esc(typeof pid === 'string' ? pid : sideName(pid))}</span><span class="sc">${r ? own : ''}</span></div>`;
+    return `<div class="pl2 ${cls}"><span>${esc(typeof pid === 'string' ? pid : sideName(pid))}${aliasSub(ids)}</span><span class="sc">${r ? own : ''}</span></div>`;
   };
   const aria = `Court ${m.court}, ${sideText(m, 0)} versus ${sideText(m, 1)}` + (r ? `, ${r[0]} to ${r[1]}` : '');
   return `<button class="mt" data-act="match" data-id="${esc(m.id)}" aria-label="${esc(aria)}">
     <div class="mt-top"><span>Court ${m.court}</span><span class="chip ${lg}">${m.ko ? esc(m.ko.name) + ' \u00b7 ' + leagueWord(lg) + ' ' + lvl(cat.label).replace(' \u00b7 Knockout', '') : cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 ' + lvl(cat.label) : leagueWord(lg) + ' \u00b7 ' + lvl(cat.label)}</span></div>${cat.format === 'team' ? `<div class="tieln">${esc(PLAYERS[m.tie[0]])} vs ${esc(PLAYERS[m.tie[1]])}</div>` : ''}
-    ${line(sideText(m, 0), r && r[0], r && r[1])}<span class="vs">VS</span>${line(sideText(m, 1), r && r[1], r && r[0])}</button>`;
+    ${line(sideText(m, 0), r && r[0], r && r[1], m.A)}<span class="vs">VS</span>${line(sideText(m, 1), r && r[1], r && r[0], m.B)}</button>`;
 }
 
 function schedule() {
@@ -3351,6 +3406,8 @@ function renderModal() {
     body = rulesHtml();
   } else if (md.type === 'ranking') {
     body = rankingBody(md);
+  } else if (md.type === 'legend') {
+    body = legendBody(md);
   } else if (md.type === 'setup') {
     body = setupBody(md);
   } else if (md.type === 'swap') {
@@ -3373,16 +3430,16 @@ function renderModal() {
     const title = m.ko ? m.ko.name + ' \u00b7 ' + leagueTitle(cat.league) + ' ' + cat.label.replace(' \u00b7 Knockout', '') : cat.format === 'team' ? (m.kind === 'S' ? 'Singles' : 'Doubles') + ' \u00b7 ' + PLAYERS[m.tie[0]] + ' vs ' + PLAYERS[m.tie[1]] : `${leagueTitle(cat.league)} ${cat.label}`;
     let rows, acts;
     if (S.canEdit) {
-      rows = `<div class="dl-row"><label for="sa">${esc(sideName(m.A))}</label><input id="sa" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[0] : ''}" aria-label="Games won by ${esc(sideName(m.A))}"></div>
-              <div class="dl-row"><label for="sb">${esc(sideName(m.B))}</label><input id="sb" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[1] : ''}" aria-label="Games won by ${esc(sideName(m.B))}"></div>
+      rows = `<div class="dl-row"><label for="sa">${esc(sideName(m.A))}${aliasSub(m.A)}</label><input id="sa" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[0] : ''}" aria-label="Games won by ${esc(sideName(m.A))}"></div>
+              <div class="dl-row"><label for="sb">${esc(sideName(m.B))}${aliasSub(m.B)}</label><input id="sb" type="number" inputmode="numeric" min="0" max="${(m.scoring || cat.scoring) === 'set' ? 7 : 4}" value="${r ? r[1] : ''}" aria-label="Games won by ${esc(sideName(m.B))}"></div>
               <p class="hint">Enter the games won by each player. ${(m.scoring || cat.scoring) === 'set' ? 'Full set: 6\u20130 to 6\u20134, 7\u20135 or 7\u20136.' : 'The first to win 4 games wins the match (4\u20130, 4\u20131, 4\u20132 or 4\u20133).'}</p>`;
       acts = `<button class="btn pri" data-act="save" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving\u2026' : 'Save score'}</button>
               ${r ? '<button class="btn dng" data-act="clear">Clear score</button>' : ''}<button class="btn txt" data-act="close">Cancel</button>`;
     } else {
       const wA = r && r[0] > r[1], wB = r && r[1] > r[0];
-      rows = r ? `<div class="dl-row ${wA ? 'w' : ''}"><span class="nm">${esc(sideName(m.A))}</span><span class="big">${r[0]}</span></div>
-                  <div class="dl-row ${wB ? 'w' : ''}"><span class="nm">${esc(sideName(m.B))}</span><span class="big">${r[1]}</span></div>`
-        : `<div class="dl-row"><span class="nm">${esc(sideName(m.A))}</span><span class="dim">vs</span></div><div class="dl-row"><span class="nm">${esc(sideName(m.B))}</span><span class="dim"></span></div><p class="hint">Not played yet.</p>`;
+      rows = r ? `<div class="dl-row ${wA ? 'w' : ''}"><span class="nm">${esc(sideName(m.A))}${aliasSub(m.A)}</span><span class="big">${r[0]}</span></div>
+                  <div class="dl-row ${wB ? 'w' : ''}"><span class="nm">${esc(sideName(m.B))}${aliasSub(m.B)}</span><span class="big">${r[1]}</span></div>`
+        : `<div class="dl-row"><span class="nm">${esc(sideName(m.A))}${aliasSub(m.A)}</span><span class="dim">vs</span></div><div class="dl-row"><span class="nm">${esc(sideName(m.B))}${aliasSub(m.B)}</span><span class="dim"></span></div><p class="hint">Not played yet.</p>`;
       acts = '<button class="btn" data-act="close">Close</button>';
     }
     body = `<p class="dmeta">${meta}</p><h3 id="dt">${title}</h3>${rows}<p class="err" role="alert">${esc(md.error)}</p><div class="acts">${acts}</div>`;
@@ -3393,7 +3450,7 @@ function renderModal() {
   $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'rules' || md.type === 'setup' || md.type === 'season' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt"><button class="x" data-act="close" aria-label="Close">\u00d7</button><div class="dbody">${body}</div></div></div>`;
   if (md.type === 'setup') { $modal.querySelector('.dbody').scrollTop = keep; if (md.focus) { const x = $modal.querySelector(md.focus); if (x) x.focus({ preventScroll: true }); md.focus = null; } return; }
   if (md.type === 'tpick') { const fx = md.step === 0 ? $modal.querySelector('#tn') : null; if (fx) fx.focus(); return; }
-  if (md.type === 'pick' || md.type === 'season' || md.type === 'swap' || md.type === 'club') return;
+  if (md.type === 'pick' || md.type === 'legend' || md.type === 'season' || md.type === 'swap' || md.type === 'club') return;
   if (md.type === 'rules') { const d = $modal.querySelector('.dlg'); d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); $modal.querySelector('.dbody').scrollTop = 0; return; }
   const first = $modal.querySelector('input:not([readonly])') || $modal.querySelector('button');
   if (first) first.focus();
@@ -3617,12 +3674,12 @@ function registrationView(league) {
     if (CAT_DEFS[k][0] === 'teams') return teamCard(k, catCfg(cats[k]));
     const c = catCfg(cats[k]), cap = c.groups * c.size, names = c.players, left = cap - names.length, dbl = c.format === 'doubles';
     const rows = Array.from({ length: cap }, (_, i) => (c.groups > 1 && i % c.size === 0 ? `<p class="gh2">Group ${i / c.size + 1}</p>` : '') + (names[i]
-      ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}</span>${S.canEdit ? `<span class="acts2">${names.length > 1 ? `<button class="rm swp" data-act="regswap" data-cat="${k}" data-i="${i}" aria-label="Swap ${esc(names[i])} with another player">\u21c4</button>` : ''}<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button></span>` : ''}</div>`
+      ? `<div class="seat"><span>${(i % c.size) + 1}</span><span>${esc(names[i])}${dbl ? '' : aliasSub([lookupName(names[i])])}</span>${S.canEdit ? `<span class="acts2">${legendsOn() && !dbl ? `<button class="rm lgd" data-act="reglegend" data-cat="${k}" data-i="${i}" aria-label="Choose legend for ${esc(names[i])}">\u2605</button>` : ''}${names.length > 1 ? `<button class="rm swp" data-act="regswap" data-cat="${k}" data-i="${i}" aria-label="Swap ${esc(names[i])} with another player">\u21c4</button>` : ''}<button class="rm" data-act="regdel" data-cat="${k}" data-i="${i}" aria-label="Remove ${esc(names[i])}">\u00d7</button></span>` : ''}</div>`
       : S.canEdit ? `<button class="seat open add" data-act="regadd" data-cat="${k}"><span>${(i % c.size) + 1}</span><span>+ ${dbl ? 'Add pair' : 'Add player'}</span></button>`
       : `<div class="seat open"><span>${(i % c.size) + 1}</span><span>${dbl ? 'Open spot for a pair' : 'Open spot'}</span></div>`)).join('');
     return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${levelLine(k)}${rows}${koPreview(k, c)}</section>`;
   }).join('');
-  return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`);
+  return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`) + legendsCard(league);
 }
 function openSetup(creating) {
   let d;
@@ -3754,7 +3811,7 @@ async function saveSetup() {
   if (newId !== oldId && S.setups[newId]) errs.push('There is already a tournament on ' + dateLong(newId) + ' \u2014 choose another date.');
   if (errs.length) { md.error = errs.join(' '); renderModal(); return; }
   if (oldId && newId !== oldId && S.cfg && S.cfg.status === 'live' && Object.keys(S.data.results).length && !confirm('This tournament has scores. Changing its date starts a new, empty results sheet. Archive it first if you have not. Continue?')) return;
-  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, location: d.location || '', layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats };
+  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, location: d.location || '', layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats, legends: md.creating ? undefined : (S.cfg || {}).legends, legendsOn: md.creating ? undefined : (S.cfg || {}).legendsOn };
   S.busy = true; renderModal();
   try {
     await ensureMigrated();
@@ -3817,23 +3874,25 @@ async function commitEntry(k, names) {
   const md = S.modal; S.busy = true;
   const ids = names.map((n, i) => ensurePlayer(n, slotGender(k, i + 1)));
   const newIds = { ...NEW_IDS }, newG = { ...NEW_GENDERS }, c = catCfg(((S.cfg || {}).cats || {})[k] || {});
-  c.players.push(ids.map(i => PLAYERS[i]).join(' / '));
+  c.players.push(ids.map(i => PLAYERS[i]).join(' / ')); const li = c.players.length - 1;
   try {
     await savePlayers(k, c.players);
     if (Object.keys(newIds).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(newIds) });
     if (Object.keys(newG).length) { await fetch(DB_URL + '/tennis/genders.json', { method: 'PATCH', body: JSON.stringify(newG) }); Object.keys(newG).forEach(i => { delete NEW_GENDERS[i]; }); }
     await refreshCfg();
     S.busy = false; S.modal = null; renderModal(); render(); toast('Added to the list');
+    if (legendsOn() && names.length === 1) openLegend(k, li);
   } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection and the Firebase rules.'; renderModal(); }
 }
 async function removeEntry(k, i) {
   const c = catCfg(((S.cfg || {}).cats || {})[k] || {}), name = c.players[i];
   if (!name || !confirm('Remove ' + name + ' from ' + catTitle(k) + '?')) return;
   c.players.splice(i, 1);
-  try { await savePlayers(k, c.players); await refreshCfg(); render(); toast('Removed'); }
+  try { await savePlayers(k, c.players); try { await fetch(DB_URL + '/tennis/setups/' + S.tid + '/legends/' + encodeURIComponent(normName(name)) + '.json', { method: 'DELETE' }); } catch (e) { /* no legend */ } await refreshCfg(); render(); toast('Removed'); }
   catch (e) { toast('Could not remove. Check your connection.'); }
 }
 document.addEventListener('input', ev => {
+  if (ev.target.id === 'lq' && S.modal && S.modal.type === 'legend') { S.modal.q = ev.target.value; const el = $modal.querySelector('#llist'); if (el) el.innerHTML = legendList(S.modal); }
   if (ev.target.id === 'pq' && S.modal && (S.modal.type === 'pick' || S.modal.type === 'tpick')) { S.modal.q = ev.target.value; const el = $modal.querySelector('#plist'); if (el) el.innerHTML = (S.modal.type === 'tpick' ? tpickList : pickList)(S.modal); }
 });
 document.addEventListener('change', ev => {
@@ -3955,8 +4014,8 @@ function normCfg(c) {                                      // older setups store
 
 /* ---------- Knockout views ---------- */
 const sideText = (m, i) => { const sd = i ? m.B : m.A; return sd.length ? sideName(sd) : (m.phShow ? m.phShow[i] : ''); };
-function koRowHtml(name, a, b, r, ready) {
-  return `<p class="gh2">${esc(name)}</p><div class="tieres ${ready ? '' : 'wait'}"><span class="${r && r[0] > r[1] ? 'kw' : ''}">${esc(a)}</span><b>${r ? r[0] + ' \u2013 ' + r[1] : 'vs'}</b><span class="${r && r[1] > r[0] ? 'kw' : ''}">${esc(b)}</span></div>`;
+function koRowHtml(name, a, b, r, ready, aIds, bIds) {
+  return `<p class="gh2">${esc(name)}</p><div class="tieres ${ready ? '' : 'wait'}"><span class="${r && r[0] > r[1] ? 'kw' : ''}">${esc(a)}${aliasSub(aIds)}</span><b>${r ? r[0] + ' \u2013 ' + r[1] : 'vs'}</b><span class="${r && r[1] > r[0] ? 'kw' : ''}">${esc(b)}${aliasSub(bIds)}</span></div>`;
 }
 const koWinner = (m, r, nm) => r && (m.A || []).length ? nm((r[0] > r[1] ? m.A : m.B) || []) : '';
 const koSummary = (ms, res, nm) => {                       // champion and 3rd place lines
@@ -3968,7 +4027,7 @@ function koCards(league) {
   const keys = [...new Set(MATCHES.filter(m => m.ko && CAT_BY_KEY[m.cat].league === league).map(m => m.cat))];
   return keys.map(k => {
     const ms = MATCHES.filter(m => m.cat === k), cat = CAT_BY_KEY[k];
-    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(cat.league)} ${cat.label.replace(' \u00b7 Knockout', '')}</span></div>${ms.map(m => koRowHtml(m.ko.name, sideText(m, 0), sideText(m, 1), getResult(S.data, m), m.A.length && m.B.length)).join('')}${koSummary(ms, m => getResult(S.data, m), sideName)}</section>`;
+    return `<section class="card"><div class="card-head"><h2 class="tag">Knockout</h2><span class="pill"><i></i>${leagueTitle(cat.league)} ${cat.label.replace(' \u00b7 Knockout', '')}</span></div>${ms.map(m => koRowHtml(m.ko.name, sideText(m, 0), sideText(m, 1), getResult(S.data, m), m.A.length && m.B.length, m.A, m.B)).join('')}${koSummary(ms, m => getResult(S.data, m), sideName)}</section>`;
   }).join('');
 }
 function koHistory(ev) {
@@ -4146,6 +4205,7 @@ function snapshot() {
       key: c.key, league: c.league, label: c.label, format: c.format, scoring: c.scoring, teams: c.teams ? c.teams.map(t => ({ id: t.id, name: t.name, members: t.members })) : null, complete: categoryProgress(st, c).complete,
       standings: rankCategory(st, c).map(s => ({ pid: s.pid, draw: s.draw, pos: s.pos, w: s.w, l: s.l, gw: s.gw, gl: s.gl }))
     })),
+    legends: Object.fromEntries(Object.keys(PLAYERS).map(id => [id, legendFor(id)]).filter(x => x[1]).map(x => [x[0], legendName(x[1])])),
     results: st.results,
     rounds: Object.fromEntries(MATCHES.map(m => [m.id, m.round])),
     matches: MATCHES.map(m => ({ id: m.id, round: m.round, cat: m.cat, A: m.A, B: m.B })),
@@ -4247,7 +4307,7 @@ function buildRecords(evs) {
       p.w += (s.w || 0) + ko.filter(m => m.mine > m.theirs).length; p.l += (s.l || 0) + ko.filter(m => m.mine <= m.theirs).length; p.events++;
       const place = hasKo ? (fin === 'Champion' ? 1 : fin === 'Runner-up' ? 2 : fin === '3rd place' ? 3 : 0) : (c.complete && s.pos >= 1 && s.pos <= 3 ? s.pos : 0);   // best-finish tally for the ranking
       if (place) p.pod[place - 1]++; if (place === 1) p.titles++;
-      p.entries.push({ ev, c, pos: s.pos, w: s.w, l: s.l, ms, ko, fin });
+      p.entries.push({ ev, c, pos: s.pos, w: s.w, l: s.l, ms, ko, fin, as: ev.legends && ev.legends[s.pid] || '' });
     }));
   });
   const all = Object.values(P); all.forEach(p => { p.g = p.gk || p.gi || ''; });
@@ -4264,7 +4324,7 @@ function playersView(evs) {
   const bar = seg + `<div class="filter"><label for="hp">Find a player</label><select id="hp" data-act="hfilter">${opts}</select></div>`;
   const row = m => `<div class="pm"><span>${m.round === 99 ? '' : 'R' + m.round}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' · ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`;
   const krow = m => `<div class="pm k"><span>${esc(m.label)}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' · ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`;
-  const entry = e => `<div class="ph">${fmtDate(e.ev.date)} · ${esc(e.ev.name)}</div><div class="pe"><b>${catShort(e.c)}</b>${e.pos ? '<i>Group #' + e.pos + '</i>' : ''}<i>${e.w}${dash}${e.l}</i>${e.fin ? `<em class="${e.fin === 'Champion' ? 'gold' : ''}">${e.fin}</em>` : ''}</div>` +
+  const entry = e => `<div class="ph">${fmtDate(e.ev.date)} · ${esc(e.ev.name)}</div><div class="pe"><b>${catShort(e.c)}</b>${e.pos ? '<i>Group #' + e.pos + '</i>' : ''}<i>${e.w}${dash}${e.l}</i>${e.as ? '<i>as ' + esc(e.as) + '</i>' : ''}${e.fin ? `<em class="${e.fin === 'Champion' ? 'gold' : ''}">${e.fin}</em>` : ''}</div>` +
     (e.ms.length ? `<div class="pgh">Group stage</div>${e.ms.map(row).join('')}` : '') + (e.ko.length ? `<div class="pgh">Knockout</div>${e.ko.map(krow).join('')}` : '');
   const block = p => `<details class="pp" ${sel ? 'open' : ''}><summary><span class="pname">${esc(p.name)}</span><span class="chev" aria-hidden="true">\u203a</span></summary>${p.entries.map(entry).join('')}</details>`;
   return bar + order.map(g => {
@@ -4298,6 +4358,9 @@ document.addEventListener('click', ev => {
   else if (act === 'newtour') openSetup(true);
   else if (act === 'seltid') selectTid(el.dataset.id);
   else if (act === 'regadd') openPick(el.dataset.cat);
+  else if (act === 'reglegend') openLegend(el.dataset.cat, +el.dataset.i);
+  else if (act === 'legpick') legendSet(el.dataset.id);
+  else if (act === 'legtoggle') legendsToggle();
   else if (act === 'regdel') removeEntry(el.dataset.cat, +el.dataset.i);
   else if (act === 'pickp') pickAdvance(el.dataset.n);
   else if (act === 'picknew') pickNew(el.dataset.n);
