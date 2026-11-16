@@ -233,7 +233,8 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
 .dlg .seg{background:rgba(16,40,61,.12)}.dlg .seg button{color:var(--ink)}.dlg .seg button[aria-pressed="true"]{background:var(--head);color:#fff}
 .rk-seg{margin:12px 0 6px;display:flex;justify-content:center}
-.rk{margin-top:6px}.rkr{display:grid;grid-template-columns:24px minmax(0,1fr) 54px 60px 48px;gap:4px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;font-weight:600}.rkr .pn{text-align:left;font-weight:700}.rkr .n{color:var(--muted);font-size:11px}.rkr .wl{color:var(--acc2);font-weight:700;white-space:nowrap}.rkh{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:2px solid var(--line)}
+.rk{margin-top:6px}.rkr{display:grid;grid-template-columns:24px minmax(0,1fr) 54px 60px 48px;gap:4px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;font-weight:600}.rkr .pn{text-align:left;font-weight:700}.rkr .n{color:var(--muted);font-size:11px}.rkr .wl{color:var(--acc2);font-weight:700;white-space:nowrap}.rks{border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:4px 2px;border-radius:8px;width:100%}.rks[aria-pressed="true"]{background:var(--head);color:#fff}
+.rkh{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:2px solid var(--line)}
 .pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
 .pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
 .pm.k{grid-template-columns:84px 1fr auto;box-shadow:inset 3px 0 0 var(--acc2)}.pm.k span:first-child{font-size:11px;font-weight:800;opacity:1;color:var(--acc2);text-transform:uppercase;letter-spacing:.03em}
@@ -3329,10 +3330,13 @@ function rankingBody(md) {
   const { all } = buildRecords(evs), has = g => all.some(p => p.g === g);
   const gs = [['m', 'Men'], ['f', 'Women'], ...(has('') ? [['', 'Other']] : [])];
   if (!gs.some(x => x[0] === md.g)) md.g = 'm';
-  const list = all.filter(p => p.g === md.g).sort((a, b) => b.events - a.events || (b.w + b.l) - (a.w + a.l) || b.w - a.w || a.l - b.l || a.name.localeCompare(b.name));
+  const sk = md.s || 'events', m = p => p.w + p.l;
+  const by = { events: (a, b) => b.events - a.events || m(b) - m(a) || b.w - a.w || a.l - b.l, matches: (a, b) => m(b) - m(a) || b.w - a.w || b.events - a.events, wl: (a, b) => b.w - a.w || a.l - b.l || b.events - a.events }[sk];
+  const list = all.filter(p => p.g === md.g).sort((a, b) => by(a, b) || a.name.localeCompare(b.name));
+  const th = (k, t) => `<button class="rks" data-act="rksort" data-s="${k}" aria-pressed="${sk === k}">${t}${sk === k ? ' \u25be' : ''}</button>`;
   const seg = `<div class="tools rk-seg"><div class="seg" role="group" aria-label="Gender">${gs.map(([v, t]) => `<button data-act="rkg" data-v="${v}" aria-pressed="${md.g === v}">${t}</button>`).join('')}</div></div>`;
   const rows = list.map((p, i) => `<div class="rkr"><span class="n">${i + 1}</span><span class="pn">${esc(p.name)}</span><span>${p.events}</span><span>${p.w + p.l}</span><span class="wl">${p.w}${dash}${p.l}</span></div>`).join('');
-  return head + seg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>Tourn.</span><span>Matches</span><span>W${dash}L</span></div>${rows}</div><p class="hint">Sorted by tournaments played, then matches, then wins. Group and knockout matches count.</p>`;
+  return head + seg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>${th('events', 'Tourn.')}</span><span>${th('matches', 'Matches')}</span><span>${th('wl', 'W' + dash + 'L')}</span></div>${rows}</div><p class="hint">Tap Tourn., Matches or W\u2013L to change the order. W\u2013L ranks by wins, then fewest losses. Group and knockout matches count.</p>`;
 }
 function openRanking() { S.modal = { type: 'ranking', g: 'm', error: '' }; renderModal(); if (S.hist === null) loadHistory(); }
 function openRules() { S.modal = { type: 'rules', error: '' }; renderModal(); }
@@ -4281,6 +4285,7 @@ document.addEventListener('click', ev => {
   else if (act === 'share') openShare();
   else if (act === 'rules') openRules();
   else if (act === 'ranking') openRanking();
+  else if (act === 'rksort') { S.modal.s = el.dataset.s; renderModal(); }
   else if (act === 'rkg') { S.modal.g = el.dataset.v; renderModal(); }
   else if (act === 'close') closeModal();
   else if (act === 'save') saveScore();
