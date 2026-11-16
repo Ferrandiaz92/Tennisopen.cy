@@ -3379,11 +3379,15 @@ function openMatch(id) {
   const m = matchById(id); if (m && m.ko && (!m.A.length || !m.B.length)) { toast('Waiting for the earlier results'); return; }
   S.modal = { type: 'match', id, error: '' }; renderModal();
 }
+const inSeason = (se, d) => { const y = String(se.year).match(/\d{4}/g) || [], t = String(d || ''); return y.length > 1 ? t >= y[0] + '-07-01' && t <= y[1] + '-06-30' : t.slice(0, 4) === y[0]; };
 function rankingBody(md) {
-  const evs = S.hist === null ? null : Object.values(S.hist).filter(e => e && e.cats);
+  const se = currentSeason(), all0 = S.hist === null ? null : Object.values(S.hist).filter(e => e && e.cats);
   const head = '<p class="dmeta">Players who joined at least one tournament</p><h3 id="dt">Ranking</h3>';
-  if (!evs) return head + '<p class="hint">Loading…</p>';
-  if (!evs.length) return head + '<p class="hint">No archived tournaments yet.</p>';
+  if (!all0) return head + '<p class="hint">Loading\u2026</p>';
+  if (!all0.length) return head + '<p class="hint">No archived tournaments yet.</p>';
+  const fseg = `<div class="tools rk-seg"><div class="seg" role="group" aria-label="Period">${[['all', 'All history'], ['season', 'Season ' + esc(se.year)]].map(([v, t]) => `<button data-act="rkf" data-v="${v}" aria-pressed="${(md.f || 'all') === v}">${t}</button>`).join('')}</div></div>`;
+  const evs = (md.f || 'all') === 'season' ? all0.filter(e => inSeason(se, e.date)) : all0;
+  if (!evs.length) return head + fseg + `<p class="hint">No archived tournaments in Season ${esc(se.year)} yet.</p>`;
   const { all } = buildRecords(evs), has = g => all.some(p => p.g === g);
   const gs = [['m', 'Men'], ['f', 'Women'], ...(has('') ? [['', 'Other']] : [])];
   if (!gs.some(x => x[0] === md.g)) md.g = 'm';
@@ -3393,7 +3397,7 @@ function rankingBody(md) {
   const th = (k, t) => `<button class="rks" data-act="rksort" data-s="${k}" aria-pressed="${sk === k}">${t}${sk === k ? ' \u25be' : ''}</button>`;
   const seg = `<div class="tools rk-seg"><div class="seg" role="group" aria-label="Gender">${gs.map(([v, t]) => `<button data-act="rkg" data-v="${v}" aria-pressed="${md.g === v}">${t}</button>`).join('')}</div></div>`;
   const rows = list.map((p, i) => `<div class="rkr"><span class="n">${i + 1}</span><span class="pn">${esc(p.name)}${p.pod.some(Boolean) ? `<small>${[['Winner', 0], ['2nd', 1], ['3rd', 2]].filter(x => p.pod[x[1]]).map(x => x[0] + (p.pod[x[1]] > 1 ? ' \u00d7' + p.pod[x[1]] : '')).join(' \u00b7 ')}</small>` : ''}</span><span>${p.events}</span><span>${p.w + p.l}</span><span class="wl">${p.w}${dash}${p.l}</span><span class="tt">${p.titles || dash}</span></div>`).join('');
-  return head + seg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>${th('events', 'Tourn.')}</span><span>${th('matches', 'Matches')}</span><span>${th('wl', 'W' + dash + 'L')}</span><span>${th('titles', 'Titles')}</span></div>${rows}</div><p class="hint">Tap a column to change the order. W\u2013L is matches won\u2013lost (not games) and ranks by win percentage. Titles ranks by wins of a tournament, then 2nd and 3rd places. Group and knockout matches count.</p>`;
+  return head + fseg + seg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>${th('events', 'Tourn.')}</span><span>${th('matches', 'Matches')}</span><span>${th('wl', 'W' + dash + 'L')}</span><span>${th('titles', 'Titles')}</span></div>${rows}</div><p class="hint">Tap a column to change the order. W\u2013L is matches won\u2013lost (not games) and ranks by win percentage. Titles ranks by wins of a tournament, then 2nd and 3rd places. Group and knockout matches count.</p>`;
 }
 function openRanking() { S.modal = { type: 'ranking', g: 'm', error: '' }; renderModal(); if (S.hist === null) loadHistory(); }
 function openRules() { S.modal = { type: 'rules', error: '' }; renderModal(); }
@@ -4104,9 +4108,9 @@ function seasonCards() {
   ms.forEach((m, i) => {
     if (i && ms[i - 1] <= '06' && m >= '10') out += '<p class="foot" style="margin:14px 6px 0">Summer break \u00b7 July to September</p>';
     const e = se.events[m], iso = seasonMonth(se, m), made = Object.keys(S.setups).filter(id => id.slice(0, 7) === iso).sort()[0];
-    if (made && made >= todayISO()) return;                // already listed above under Next tournaments
     const inner = `<b>${esc(e.name)}</b><em>${made ? shortDate(made) : MONTH_LONG[+m - 1] || ''}</em>${made ? `<span>${dateLong(made)} \u00b7 ${esc(S.setups[made].start || '')} \u00b7 ${statusLabel(S.setups[made])}</span>` : e.intro ? `<span>${esc(e.intro)}</span>` : ''}${e.format ? `<span class="hw"><span class="hr"><small class="k">Format</small><strong>${esc(e.format)}</strong></span></span>` : ''}`;
-    if (made) out += `<button class="hl" data-act="calopen" data-id="${made}">${inner}<span class="tap">${S.setups[made].status === 'live' ? 'Open the order of play' : 'See who is registered'} \u203a</span></button>`;
+    if (made && made >= todayISO()) out += `<button class="hl" data-act="calopen" data-id="${made}"><b>${esc(e.name)}</b><em>${shortDate(made)}</em><span>${statusLabel(S.setups[made])} \u00b7 see the details above under Next tournaments</span><span class="tap">${S.setups[made].status === 'live' ? 'Open the order of play' : 'See who is registered'} \u203a</span></button>`;
+    else if (made) out += `<button class="hl" data-act="calopen" data-id="${made}">${inner}<span class="tap">${S.setups[made].status === 'live' ? 'Open the order of play' : 'See who is registered'} \u203a</span></button>`;
     else if (S.canEdit) out += `<button class="hl" data-act="seasonopen" data-m="${m}">${inner}<span class="tap">Open registration \u203a</span></button>`;
     else out += `<div class="hl">${inner}</div>`;
   });
@@ -4363,6 +4367,7 @@ document.addEventListener('click', ev => {
   else if (act === 'share') openShare();
   else if (act === 'rules') openRules();
   else if (act === 'ranking') openRanking();
+  else if (act === 'rkf') { S.modal.f = el.dataset.v; renderModal(); }
   else if (act === 'rksort') { S.modal.s = el.dataset.s; renderModal(); }
   else if (act === 'rkg') { S.modal.g = el.dataset.v; renderModal(); }
   else if (act === 'close') closeModal();
