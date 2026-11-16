@@ -239,6 +239,7 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .prow .al{color:var(--muted);font-weight:600}
 .lgl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 12px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px}.lgl span{font-size:11px;font-weight:700;color:var(--win)}.lgl.taken{opacity:.55}.lgl.taken b{text-decoration:line-through}.lgl.taken span{color:var(--muted)}
 .hl .so{display:block;margin-top:10px;font-size:12px;font-weight:700}.hl button.so{width:auto;padding:8px 16px}.hl span.so{color:var(--win)}
+.lgg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 8px}.lgg .lgl{margin-bottom:0}
 .rm.lgd{color:var(--acc2)}
 .pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
 .pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
@@ -3159,7 +3160,7 @@ function legendsCard(league) {
   if (!legendsOn() || (league !== 'men' && league !== 'women')) return '';
   const pool = legendPool(league), taken = legendTaken(), free = pool.filter(L => !taken[L.id]).length;
   const rows = pool.map(L => `<div class="lgl ${taken[L.id] ? 'taken' : ''}"><b>${esc(legendName(L))}</b><span>${taken[L.id] ? esc(taken[L.id]) : 'Available'}</span></div>`).join('');
-  return `<section class="card"><div class="card-head"><h2 class="tag">Legends</h2><span class="pill"><i></i>${free} of ${pool.length} available</span></div><p class="fmt">Choose the tennis legend you want to play as and tell the organizer. Your real name always stays on the draw, with your legend underneath.</p>${rows}</section>`;
+  return `<section class="card legs"><div class="card-head"><h2 class="tag">Choose your legend</h2><span class="pill"><i></i>${free} of ${pool.length} available</span></div><p class="fmt"><b>How it works:</b> pick the tennis legend you want to represent in the tournament, then <b>tell the organizer</b>. Greyed-out legends are already taken. Your real name always stays on the draw, with your legend underneath.</p><div class="lgg">${rows}</div></section>`;
 }
 function openLegend(k, i) {
   const c = catCfg(((S.cfg || {}).cats || {})[k] || {}), name = c.players[i]; if (!name) return;
@@ -3680,7 +3681,7 @@ function registrationView(league) {
       : `<div class="seat open"><span>${(i % c.size) + 1}</span><span>${dbl ? 'Open spot for a pair' : 'Open spot'}</span></div>`)).join('');
     return `<section class="card"><div class="card-head"><h2 class="tag">${catTitle(k)}</h2><span class="pill"><i></i>${left > 0 ? left + ' spot' + (left > 1 ? 's' : '') + ' left \u00b7 ' + names.length + ' of ' + cap : 'Full \u00b7 ' + cap + ' of ' + cap}</span></div><p class="fmt">${FORMATS[c.format]} \u00b7 ${c.size} ${dbl ? 'pairs' : 'players'} per group \u00b7 ${scoringText(scoringFor(c))}</p>${levelLine(k)}${rows}${koPreview(k, c)}</section>`;
   }).join('');
-  return head + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`) + legendsCard(league);
+  return head + (cards ? legendsCard(league) : '') + (cards || `<section class="card"><p class="foot" style="color:var(--ink)">No ${(leagueTitle(league) || 'team').toLowerCase()} categories are open yet.</p></section>`);
 }
 function openSetup(creating) {
   let d;
@@ -4103,6 +4104,7 @@ function seasonCards() {
   ms.forEach((m, i) => {
     if (i && ms[i - 1] <= '06' && m >= '10') out += '<p class="foot" style="margin:14px 6px 0">Summer break \u00b7 July to September</p>';
     const e = se.events[m], iso = seasonMonth(se, m), made = Object.keys(S.setups).filter(id => id.slice(0, 7) === iso).sort()[0];
+    if (made && made >= todayISO()) return;                // already listed above under Next tournaments
     const inner = `<b>${esc(e.name)}</b><em>${made ? shortDate(made) : MONTH_LONG[+m - 1] || ''}</em>${made ? `<span>${dateLong(made)} \u00b7 ${esc(S.setups[made].start || '')} \u00b7 ${statusLabel(S.setups[made])}</span>` : e.intro ? `<span>${esc(e.intro)}</span>` : ''}${e.format ? `<span class="hw"><span class="hr"><small class="k">Format</small><strong>${esc(e.format)}</strong></span></span>` : ''}`;
     if (made) out += `<button class="hl" data-act="calopen" data-id="${made}">${inner}<span class="tap">${S.setups[made].status === 'live' ? 'Open the order of play' : 'See who is registered'} \u203a</span></button>`;
     else if (S.canEdit) out += `<button class="hl" data-act="seasonopen" data-m="${m}">${inner}<span class="tap">Open registration \u203a</span></button>`;
