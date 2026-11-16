@@ -227,6 +227,9 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .pp .pr{font-size:12px;font-weight:700;color:var(--acc2);white-space:nowrap}
 .ph{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:4px 4px 5px}
 .pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
+.pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
+.pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
+.pm.k{grid-template-columns:84px 1fr auto;box-shadow:inset 3px 0 0 var(--acc2)}.pm.k span:first-child{font-size:11px;font-weight:800;opacity:1;color:var(--acc2);text-transform:uppercase;letter-spacing:.03em}
 .pm span:first-child{font-size:11px;opacity:.55}.pm b.w{color:#1f7a3d}.pm b.l{color:#b4432c}
 .bw{margin:10px 8px 0;font-size:12px;font-weight:600;line-height:1.5}
 .rest{margin:8px 4px 0;font-size:12px;font-weight:600;opacity:.85;text-align:center}
@@ -3063,7 +3066,7 @@ try { saved = JSON.parse(document.getElementById('state').textContent) || {}; } 
 
 const S = {
   data: { results: saved.results || {}, shareUrl: saved.shareUrl || '' },
-  tab: 'men', setups: {}, tid: '', cal: '', season: null, seasonJson: '', club: null, clubJson: '', hist: null, hsel: null, hview: 'events', hplayer: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
+  tab: 'men', setups: {}, tid: '', cal: '', season: null, seasonJson: '', club: null, clubJson: '', hist: null, hsel: null, hview: 'events', hplayer: '', hgender: '', sort: 'pos', filter: '', canEdit: false, modal: null, busy: false, sync: { status: 'connecting', at: null }
 };
 try {
   const t = sessionStorage.getItem('lt-tab'); if (t) S.tab = t;
@@ -3270,7 +3273,7 @@ function matchRules() {
     : `<li><b>First to win 4 games</b>${tag(sc)}: the first player to win 4 games wins the match (4\u20130, 4\u20131, 4\u20132 or 4\u20133). No tie\u2011breaks.</li>`);
   const kos = info.filter(c => c.ko !== 'none'), kt = x => x === 'set' ? 'full set' : 'first to win 4 games';
   if (kos.length) { const sem = [...new Set(kos.filter(c => c.ko === 'semis').map(c => kt(c.ks)))], fin = [...new Set(kos.map(c => kt(c.kf)))]; li.push(`<li><b>Knockout:</b> ${sem.length ? 'semifinals ' + sem.join(' / ') + '; ' : ''}final ${fin.join(' / ')}${kos.some(c => c.k3) ? '; 3rd place match: same as ' + (sem.length ? 'the semifinals' : 'the group stage') : ''}.</li>`); }
-  li.push('<li><b>Golden point</b> at 40\u201340: no advantage. The next point wins the game and the receiver chooses the side.</li>', '<li>Report your final score to the organizer right after the match.</li>');
+  li.push('<li><b>Deuce (40\u201340):</b> one advantage. Win the point after deuce to take the advantage, then win the next point to win the game. If the game goes back to deuce a second time, play the <b>golden point</b>: the next point wins the game and the receiver chooses the side.</li>', '<li>Report your final score to the organizer right after the match.</li>');
   return `<h4>Match format</h4><ul>${li.join('')}</ul>`;
 }
 function positionRules() {
@@ -3294,7 +3297,7 @@ function positionRules() {
 }
 const BASIC_RULES = `<h4>Basic rules</h4>
 <ul>
-<li><b>Scoring a game:</b> 0 (love), 15, 30, 40, game. At 40\u201340 play the golden point.</li>
+<li><b>Scoring a game:</b> 0 (love), 15, 30, 40, game. At 40\u201340 (deuce) there is one advantage; if it goes back to deuce a second time, play the golden point.</li>
 <li><b>Serve:</b> the server has two serves and alternates every game. A serve that clips the net and lands in the right box is a let: replay the serve.</li>
 <li><b>Ball in or out:</b> a ball touching the line is in. You make the calls on your side of the net. If you are not sure, the ball is good.</li>
 <li><b>Point lost</b> if the ball bounces twice, you hit it before it crosses the net, you touch the net, or you hit the ball twice.</li>
@@ -4190,11 +4193,14 @@ function eventView(ev) {
   }).join('');
 }
 function playersView(evs) {
-  const P = {};
+  const P = {}, gOf = c => c.league === 'men' ? 'm' : c.league === 'women' ? 'f' : '';
+  const KORD = { SF: 0, T: 1, F: 2 };
   evs.forEach(ev => {
     const rd = ev.rounds || (ev.id === TOURNAMENT.id ? Object.fromEntries(MATCHES.map(m => [m.id, m.round])) : {});
     ev.cats.forEach(c => (c.standings || []).forEach(s => {
-      const p = P[s.pid] = P[s.pid] || { pid: s.pid, name: evName(ev, s.pid), cat: c, pos: s.pos || 99, w: 0, l: 0, titles: 0, entries: [] };
+      const name = evName(ev, s.pid), key = normName(name), base = c.key.slice(0, 2);
+      const p = P[key] = P[key] || { key, name, gk: '', gi: '', w: 0, l: 0, titles: 0, events: 0, entries: [] };   // one record per person, even if the id changed between events
+      if (GENDER[s.pid]) p.gk = GENDER[s.pid]; else if (!p.gi && gOf(c)) p.gi = gOf(c);
       const mlist = ev.matches ? ev.matches.filter(m => m.cat === c.key) : Object.keys(ev.results || {}).filter(id => id.startsWith(c.key + '-')).map(id => { const [, a, b] = id.split('-'); return { id, A: [a], B: [b] }; });
       const ms = mlist.map(m => {
         const A = m.A || [], B = m.B || [], isA = A.indexOf(s.pid) >= 0; if (!isA && B.indexOf(s.pid) < 0) return null;
@@ -4202,23 +4208,35 @@ function playersView(evs) {
         const own = isA ? A : B, other = isA ? B : A;
         return { round: rd[m.id] || m.round || 99, opp: other.map(i => evName(ev, i)).join(' / '), with: own.length > 1 ? evName(ev, own.find(x => x !== s.pid)) : '', mine: isA ? r[0] : r[1], theirs: isA ? r[1] : r[0] };
       }).filter(Boolean).sort((x, y) => x.round - y.round);
-      p.w += s.w || 0; p.l += s.l || 0; if (c.complete && s.pos === 1) p.titles++;
-      p.entries.push({ ev, c, pos: s.pos, w: s.w, l: s.l, ms });
+      const hasKo = (ev.knockout || []).some(k => k.cat === base);
+      const ko = (ev.knockout || []).filter(k => k.cat === base && ((k.A || []).indexOf(s.pid) >= 0 || (k.B || []).indexOf(s.pid) >= 0)).map(k => {   // knockout matches of this player (final, 3rd place, semifinals)
+        const r = ev.results && ev.results[k.id]; if (!r) return null;
+        const isA = (k.A || []).indexOf(s.pid) >= 0, own = isA ? k.A : k.B, other = isA ? k.B : k.A;
+        return { label: k.name, stage: k.stage, opp: (other || []).map(i => evName(ev, i)).join(' / '), with: own.length > 1 ? evName(ev, own.find(x => x !== s.pid)) : '', mine: isA ? r[0] : r[1], theirs: isA ? r[1] : r[0] };
+      }).filter(Boolean).sort((x, y) => (KORD[x.stage] ?? 9) - (KORD[y.stage] ?? 9));
+      const fm = ko.find(m => m.stage === 'F'), tm = ko.find(m => m.stage === 'T');
+      const fin = fm ? (fm.mine > fm.theirs ? 'Champion' : 'Runner-up') : tm ? (tm.mine > tm.theirs ? '3rd place' : '4th place') : '';
+      p.w += (s.w || 0) + ko.filter(m => m.mine > m.theirs).length; p.l += (s.l || 0) + ko.filter(m => m.mine <= m.theirs).length; p.events++;
+      if (fin === 'Champion' || (!hasKo && c.complete && s.pos === 1)) p.titles++;
+      p.entries.push({ ev, c, pos: s.pos, w: s.w, l: s.l, ms, ko, fin });
     }));
   });
-  const all = Object.values(P), gk = c => ({ men: '0', women: '1', mixed: '2' })[c.league] + c.label;
-  const groups = {};
-  all.forEach(p => { (groups[gk(p.cat)] = groups[gk(p.cat)] || { cat: p.cat, list: [] }).list.push(p); });
-  const keys = Object.keys(groups).sort();
-  const sel = S.hplayer && P[S.hplayer] ? S.hplayer : '';
-  const opts = '<option value="">All players</option>' + keys.map(k => `<optgroup label="${esc(catFull(groups[k].cat))}">${groups[k].list.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.pid)}" ${p.pid === sel ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>`).join('');
-  const bar = `<div class="filter"><label for="hp">Find a player</label><select id="hp" data-act="hfilter">${opts}</select></div>`;
-  const entry = e => `<div class="ph">${fmtDate(e.ev.date)} \u00b7 ${esc(e.ev.name)} \u00b7 ${catShort(e.c)}${e.pos ? ' \u00b7 #' + e.pos : ''} \u00b7 ${e.w}${dash}${e.l}</div>` +
-    e.ms.map(m => `<div class="pm"><span>${m.round === 99 ? '' : 'R' + m.round}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' \u00b7 ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`).join('');
-  const block = p => `<details class="pp" ${sel ? 'open' : 'open'}><summary><span class="pname">${esc(p.name)}</span><span class="pr">${p.w}${dash}${p.l}${p.titles ? ' \u00b7 ' + p.titles + (p.titles > 1 ? ' titles' : ' title') : ''}</span></summary>${p.entries.map(entry).join('')}</details>`;
-  return bar + keys.map(k => {
-    const list = groups[k].list.filter(p => !sel || p.pid === sel).sort((a, b) => a.pos - b.pos || a.name.localeCompare(b.name));
-    return list.length ? `<section class="card"><div class="card-head"><h2 class="tag">${catFull(groups[k].cat)}</h2></div>${list.map(block).join('')}</section>` : '';
+  const all = Object.values(P); all.forEach(p => { p.g = p.gk || p.gi || ''; });
+  const gname = { m: 'Men', f: 'Women', '': 'Other' }, order = ['m', 'f', ''];
+  const byName = (a, b) => a.name.localeCompare(b.name);
+  const gsel = S.hgender || '', sel = S.hplayer && P[S.hplayer] ? S.hplayer : '';
+  const pool = all.filter(p => !gsel || p.g === gsel);
+  const opts = '<option value="">All players</option>' + order.map(g => { const l = pool.filter(p => p.g === g).sort(byName); return l.length ? `<optgroup label="${gname[g]}">${l.map(p => `<option value="${esc(p.key)}" ${p.key === sel ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>` : ''; }).join('');
+  const seg = `<div class="tools"><div class="seg" role="group" aria-label="Gender">${[['', 'All'], ['m', 'Men'], ['f', 'Women']].map(([v, t]) => `<button data-act="hgender" data-v="${v}" aria-pressed="${gsel === v}">${t}</button>`).join('')}</div></div>`;
+  const bar = seg + `<div class="filter"><label for="hp">Find a player</label><select id="hp" data-act="hfilter">${opts}</select></div>`;
+  const row = m => `<div class="pm"><span>${m.round === 99 ? '' : 'R' + m.round}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' · ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`;
+  const krow = m => `<div class="pm k"><span>${esc(m.label)}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' · ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`;
+  const entry = e => `<div class="ph">${fmtDate(e.ev.date)} · ${esc(e.ev.name)}</div><div class="pe"><b>${catShort(e.c)}</b>${e.pos ? '<i>Group #' + e.pos + '</i>' : ''}<i>${e.w}${dash}${e.l}</i>${e.fin ? `<em class="${e.fin === 'Champion' ? 'gold' : ''}">${e.fin}</em>` : ''}</div>` +
+    (e.ms.length ? `<div class="pgh">Group stage</div>${e.ms.map(row).join('')}` : '') + (e.ko.length ? `<div class="pgh">Knockout</div>${e.ko.map(krow).join('')}` : '');
+  const block = p => `<details class="pp" ${sel ? 'open' : ''}><summary><span class="pname">${esc(p.name)}</span><span class="pr">${p.events} ${p.events > 1 ? 'tournaments' : 'tournament'} · ${p.w}${dash}${p.l}${p.titles ? ' · ' + p.titles + (p.titles > 1 ? ' titles' : ' title') : ''}</span></summary>${p.entries.map(entry).join('')}</details>`;
+  return bar + order.map(g => {
+    const list = pool.filter(p => p.g === g && (!sel || p.key === sel)).sort(byName);
+    return list.length ? `<section class="card"><div class="card-head"><h2 class="tag">${gname[g]}</h2></div>${list.map(block).join('')}</section>` : '';
   }).join('');
 }
 
@@ -4265,6 +4283,7 @@ document.addEventListener('click', ev => {
   else if (act === 'seasondef') { readSeason(); S.modal.draft = defaultSeason(); renderModal(); }
   else if (act === 'calview') { S.cal = el.dataset.v; S.hsel = null; render(); }
   else if (act === 'calopen') openTournament(el.dataset.id);
+  else if (act === 'hgender') { S.hgender = el.dataset.v; S.hplayer = ''; render(); }
   else if (act === 'hview') { S.cal = 'past'; S.hview = el.dataset.v; S.hsel = null; render(); }
   else if (act === 'exitorg') exitOrganizer();
   else if (act === 'selecturl') el.select();
