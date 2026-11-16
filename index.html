@@ -238,6 +238,7 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .al{display:block;font-size:10.5px;font-weight:600;line-height:1.25;color:var(--acc2);letter-spacing:0;text-transform:none;margin-top:1px}
 .prow .al{color:var(--muted);font-weight:600}
 .lgl{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 12px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px}.lgl span{font-size:11px;font-weight:700;color:var(--win)}.lgl.taken{opacity:.55}.lgl.taken b{text-decoration:line-through}.lgl.taken span{color:var(--muted)}
+.hl .so{display:block;margin-top:10px;font-size:12px;font-weight:700}.hl button.so{width:auto;padding:8px 16px}.hl span.so{color:var(--win)}
 .rm.lgd{color:var(--acc2)}
 .pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
 .pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
@@ -3610,7 +3611,7 @@ async function loadSetup() {
   try { registerPlayers(await fetchJson('/tennis/players')); registerGenders(await fetchJson('/tennis/genders')); } catch (e) { /* offline: built-in names only */ }
   try { S.season = await fetchJson('/tennis/season'); S.seasonJson = JSON.stringify(S.season); } catch (e) { /* default season plan */ }
   try { S.club = await fetchJson('/tennis/club'); S.clubJson = JSON.stringify(S.club); } catch (e) { /* default club info */ }
-  let prefer = ''; try { prefer = new URLSearchParams(location.search).get('t') || sessionStorage.getItem('lt-tid') || ''; } catch (e) { /* ignore */ }
+  let prefer = ''; try { const ss = sessionStorage.getItem('lt-tid') || ''; prefer = new URLSearchParams(location.search).get('t') || (ss >= todayISO() ? ss : ''); } catch (e) { /* ignore */ }   // a finished tournament is not remembered: Men / Women go to the next one
   try { await loadSetups(); } catch (e) { /* offline */ }
   S.tid = chooseTid(prefer); S.cfg = S.setups[S.tid] || DEFAULT_CFG;
 }
@@ -3811,7 +3812,7 @@ async function saveSetup() {
   if (newId !== oldId && S.setups[newId]) errs.push('There is already a tournament on ' + dateLong(newId) + ' \u2014 choose another date.');
   if (errs.length) { md.error = errs.join(' '); renderModal(); return; }
   if (oldId && newId !== oldId && S.cfg && S.cfg.status === 'live' && Object.keys(S.data.results).length && !confirm('This tournament has scores. Changing its date starts a new, empty results sheet. Archive it first if you have not. Continue?')) return;
-  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, location: d.location || '', layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats, legends: md.creating ? undefined : (S.cfg || {}).legends, legendsOn: md.creating ? undefined : (S.cfg || {}).legendsOn };
+  const cfg = { month: d.month, date: d.date || '', name: d.name, start: d.start, roundMin: d.roundMin, courts: d.courts || 3, location: d.location || '', layout: d.layout || '', first: d.first || 'women', hold: d.hold || 2, koMin: d.koMin || 35, status: d.status, info: d.info || '', cats: d.cats, legends: d.legends, legendsOn: d.legendsOn };
   S.busy = true; renderModal();
   try {
     await ensureMigrated();
@@ -4101,10 +4102,23 @@ function seasonCards() {
   let out = `<p class="gh2" style="margin:18px 6px 0">Season ${esc(se.year)}</p>`;
   ms.forEach((m, i) => {
     if (i && ms[i - 1] <= '06' && m >= '10') out += '<p class="foot" style="margin:14px 6px 0">Summer break \u00b7 July to September</p>';
-    const e = se.events[m];
-    out += `<div class="hl"><b>${esc(e.name)}</b><em>${MONTH_LONG[+m - 1] || ''}</em>${e.intro ? `<span>${esc(e.intro)}</span>` : ''}${e.format ? `<span class="hw"><span class="hr"><small class="k">Format</small><strong>${esc(e.format)}</strong></span></span>` : ''}</div>`;
+    const e = se.events[m], iso = seasonMonth(se, m), made = Object.keys(S.setups).filter(id => id.slice(0, 7) === iso).sort()[0];
+    const inner = `<b>${esc(e.name)}</b><em>${made ? shortDate(made) : MONTH_LONG[+m - 1] || ''}</em>${made ? `<span>${dateLong(made)} \u00b7 ${esc(S.setups[made].start || '')} \u00b7 ${statusLabel(S.setups[made])}</span>` : e.intro ? `<span>${esc(e.intro)}</span>` : ''}${e.format ? `<span class="hw"><span class="hr"><small class="k">Format</small><strong>${esc(e.format)}</strong></span></span>` : ''}`;
+    if (made) out += `<button class="hl" data-act="calopen" data-id="${made}">${inner}<span class="tap">${S.setups[made].status === 'live' ? 'Open the order of play' : 'See who is registered'} \u203a</span></button>`;
+    else if (S.canEdit) out += `<button class="hl" data-act="seasonopen" data-m="${m}">${inner}<span class="tap">Open registration \u203a</span></button>`;
+    else out += `<div class="hl">${inner}</div>`;
   });
   return out;
+}
+function seasonMonth(se, m) {                              // 'YYYY-MM' of a month of the season plan
+  const yrs = String(se.year).match(/\d{4}/g) || [String(new Date().getFullYear())];
+  return (yrs.length > 1 ? (+m >= 7 ? yrs[0] : yrs[1]) : yrs[0]) + '-' + m;
+}
+function seasonOpen(m) {                                   // organizer: open registration for a month of the season plan
+  const se = currentSeason(), e = se.events[m] || {};
+  openSetup(true); const d = S.modal.draft;
+  d.month = seasonMonth(se, m); d.name = e.name || d.name; if (e.intro) d.info = e.intro; if (/legend/i.test(d.name)) d.legendsOn = true;
+  S.modal.error = ''; renderModal();
 }
 function upcomingCards() { const ids = upcomingIds(); return ids.length ? '<p class="gh2" style="margin:18px 6px 0">Next tournaments</p>' + ids.map(id => calCard(id, false)).join('') : ''; }
 function upcomingView() {
@@ -4221,6 +4235,7 @@ async function archiveTournament() {
     const res = await fetch(HISTORY_URL + '/' + encodeURIComponent(TOURNAMENT.id) + '.json', { method: 'PUT', body: JSON.stringify(snapshot()) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     toast('Archived \u2014 see the History tab'); loadHistory();
+    const nx = chooseTid(''); if (nx && nx !== S.tid && nx >= todayISO()) { selectTid(nx); S.tab = 'men'; render(); pollResults(); window.scrollTo(0, 0); }   // go on to the next tournament
   } catch (e) { toast('Could not archive. Check your connection and the Firebase rules for tennis/history.'); }
 }
 async function loadHistory() {
@@ -4361,6 +4376,7 @@ document.addEventListener('click', ev => {
   else if (act === 'reglegend') openLegend(el.dataset.cat, +el.dataset.i);
   else if (act === 'legpick') legendSet(el.dataset.id);
   else if (act === 'legtoggle') legendsToggle();
+  else if (act === 'seasonopen') seasonOpen(el.dataset.m);
   else if (act === 'regdel') removeEntry(el.dataset.cat, +el.dataset.i);
   else if (act === 'pickp') pickAdvance(el.dataset.n);
   else if (act === 'picknew') pickNew(el.dataset.n);
