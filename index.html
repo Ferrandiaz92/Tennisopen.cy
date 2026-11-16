@@ -35,6 +35,9 @@ button{cursor:pointer}
 .head{display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,30px);text-align:center}
 .head .racket{width:clamp(26px,5vw,44px);color:var(--acc);flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
 .head .racket.flip{transform:scaleX(-1)}
+.title.one{white-space:nowrap;font-size:clamp(20px,5vw,56px)}
+@media (max-width:600px){.head:has(.title.one){flex-direction:column;gap:6px}.head:has(.title.one) .fan:last-child{display:none}.head .fan{width:72px}.title.one{font-size:clamp(20px,6.9vw,40px)}}
+.head .fan{width:clamp(54px,12vw,110px);height:auto;aspect-ratio:296/190;color:var(--acc);flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
 .kicker{margin:0;font-size:clamp(10px,2.2vw,13px);font-weight:700;letter-spacing:.32em;color:var(--acc);text-transform:uppercase}
 .title{margin:2px 0 0;font-size:clamp(30px,7.4vw,56px);line-height:1.05;font-weight:800;letter-spacing:.01em;text-transform:uppercase;color:var(--cream)}
 .title span{color:var(--acc)}
@@ -224,9 +227,13 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .hl .tap{font-size:11px;font-weight:700;text-align:right;opacity:.55;margin-top:2px}
 .pp{border-top:1px solid var(--line);padding:0 2px 8px}
 .pp summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 4px;cursor:pointer}.pp summary::-webkit-details-marker{display:none}
+.pp .chev{font-size:22px;line-height:1;font-weight:700;color:var(--muted);transition:transform .15s}.pp[open] .chev{transform:rotate(90deg)}
 .pp .pr{font-size:12px;font-weight:700;color:var(--acc2);white-space:nowrap}
 .ph{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.65;margin:4px 4px 5px}
 .pm{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:7px 10px;margin-bottom:3px;border-radius:10px;background:var(--row);font-size:13px;font-weight:600}
+.dlg .seg{background:rgba(16,40,61,.12)}.dlg .seg button{color:var(--ink)}.dlg .seg button[aria-pressed="true"]{background:var(--head);color:#fff}
+.rk-seg{margin:12px 0 6px;display:flex;justify-content:center}
+.rk{margin-top:6px}.rkr{display:grid;grid-template-columns:24px minmax(0,1fr) 54px 60px 48px;gap:4px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;font-weight:600}.rkr .pn{text-align:left;font-weight:700}.rkr .n{color:var(--muted);font-size:11px}.rkr .wl{color:var(--acc2);font-weight:700;white-space:nowrap}.rkh{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:2px solid var(--line)}
 .pgh{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);margin:8px 4px 4px}
 .pe{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 4px 4px;font-size:12px}.pe i{font-style:normal;font-weight:700;opacity:.6}.pe em{font-style:normal;font-weight:800;font-size:10.5px;padding:1px 9px;border-radius:999px;background:var(--head);color:#fff}.pe em.gold{background:var(--acc);color:var(--head)}
 .pm.k{grid-template-columns:84px 1fr auto;box-shadow:inset 3px 0 0 var(--acc2)}.pm.k span:first-child{font-size:11px;font-weight:800;opacity:1;color:var(--acc2);text-transform:uppercase;letter-spacing:.03em}
@@ -3090,19 +3097,20 @@ const leagueOf = m => CAT_BY_KEY[m.cat].league;
 
 /* ---------- Building blocks ---------- */
 const RACKET = '<svg class="racket" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg>';
-const RACKET_SYMBOL = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="rc"><ellipse cx="20" cy="24" rx="14" ry="19"/></clipPath></defs><symbol id="racket" viewBox="0 0 40 84"><ellipse cx="20" cy="24" rx="16" ry="21" fill="none" stroke="currentColor" stroke-width="4"/><g clip-path="url(#rc)" stroke="currentColor" stroke-width="1.3" opacity=".8"><path d="M20 0v50M13 0v50M27 0v50M6 12h34M6 20h34M6 28h34M6 36h34"/></g><path d="M20 45v10" stroke="currentColor" stroke-width="4"/><rect x="16.5" y="54" width="7" height="27" rx="3.5" fill="currentColor"/></symbol></svg>';
+const FAN = '<svg class="fan" viewBox="0 0 296 190" aria-hidden="true"><use href="#fan"/></svg>';
+const RACKET_SYMBOL = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="rc"><ellipse cx="20" cy="24" rx="14" ry="19"/></clipPath></defs><symbol id="racket" viewBox="0 0 40 84"><ellipse cx="20" cy="24" rx="16" ry="21" fill="none" stroke="currentColor" stroke-width="4"/><g clip-path="url(#rc)" stroke="currentColor" stroke-width="1.3" opacity=".8"><path d="M20 0v50M13 0v50M27 0v50M6 12h34M6 20h34M6 28h34M6 36h34"/></g><path d="M20 45v10" stroke="currentColor" stroke-width="4"/><rect x="16.5" y="54" width="7" height="27" rx="3.5" fill="currentColor"/></symbol><symbol id="fan" viewBox="52 72 296 190"><defs><g id="fanr"><ellipse cx="0" cy="-112" rx="35" ry="44" fill="#000"/><path d="M-10 -66L0 -50L10 -66" fill="none" stroke="#000" stroke-width="14" stroke-linejoin="round"/><rect x="-11" y="-56" width="22" height="58" rx="8" fill="#000"/><ellipse cx="0" cy="-112" rx="27" ry="36" fill="#000" stroke="#fff" stroke-width="7"/><path d="M-13 -140.6V-83.4M0 -145V-79M13 -140.6V-83.4M-19.4 -132H19.4M-23.6 -118H23.6M-23.3 -104H23.3M-18.4 -90H18.4" stroke="#fff" stroke-width="3.5"/><path d="M-15 -80L-4 -54M15 -80L4 -54" stroke="#fff" stroke-width="6" stroke-linecap="round"/><rect x="-7" y="-58" width="14" height="58" rx="5" fill="#fff"/></g><mask id="fanm" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400"><rect width="400" height="400" fill="#000"/><use href="#fanr" transform="translate(200 232) rotate(-64)"/><use href="#fanr" transform="translate(200 232) rotate(64)"/><use href="#fanr" transform="translate(200 232) rotate(-32)"/><use href="#fanr" transform="translate(200 232) rotate(32)"/><use href="#fanr" transform="translate(200 232) rotate(0)"/><circle cx="200" cy="232" r="27" fill="#000"/><circle cx="200" cy="232" r="22" fill="#fff"/><path d="M179.1 225.4Q197.8 230.9 193.4 252.9M206.6 211.1Q202.2 233.1 220.9 238.6" fill="none" stroke="#000" stroke-width="3.8" stroke-linecap="round"/></mask></defs><rect width="400" height="400" fill="currentColor" mask="url(#fanm)"/></symbol></svg>';
 
 function header() {
   const t = {
-    men: ['Tournament standings', "Men\u2019s", 'League', SUB_LINE],
-    women: ['Tournament standings', "Women\u2019s", 'League', SUB_LINE],
-    mixed: ['Tournament standings', 'Mixed', 'League', SUB_LINE],
-    teams: ['Tournament standings', 'Team', 'Cup', SUB_LINE],
+    men: ['One-day tournaments', 'Tennis', 'Limassol', SUB_LINE],
+    women: ['One-day tournaments', 'Tennis', 'Limassol', SUB_LINE],
+    mixed: ['One-day tournaments', 'Tennis', 'Limassol', SUB_LINE],
+    teams: ['One-day tournaments', 'Tennis', 'Limassol', SUB_LINE],
     players: ['Registration', 'Players', 'List', 'Who is playing and which spots are still open'],
     history: ['Season', 'Tournament', 'Calendar', 'Upcoming tournaments and past results'],
     sched: ['Tournament', 'Order of', 'Play', SCHED_SUB]
   }[S.tab];
-  return `<header class="head">${RACKET}<div><p class="kicker">${t[0]}</p><h1 class="title">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${RACKET.replace('class="racket"', 'class="racket flip"')}</header>`;
+  return `<header class="head">${FAN}<div><p class="kicker">${t[0]}</p><h1 class="title${['men', 'women', 'mixed', 'teams'].includes(S.tab) ? ' one' : ''}">${t[1]} <span>${t[2]}</span></h1><p class="sub">${t[3]}</p></div>${FAN}</header>`;
 }
 
 function playerNotes() {
@@ -3121,7 +3129,7 @@ function nav() {
   const tabs = [['men', 'Men'], ['women', 'Women'], ...(hasLeague('mixed') ? [['mixed', 'Mixed']] : []), ...(hasLeague('teams') ? [['teams', 'Teams']] : []), ['sched', 'Order of play'], ['history', 'Calendar']];
   return `<div class="nav"><div class="tabs" role="tablist">${tabs.map(([k, l]) =>
     `<button class="tab" role="tab" aria-selected="${S.tab === k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>
-    <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="share">Share links</button></div></div>
+    <div class="gh"><button class="ghost" data-act="rules">Rules</button><button class="ghost" data-act="ranking">Ranking</button><button class="ghost" data-act="share">Share links</button></div></div>
     ${S.canEdit ? '<div class="banner">Organizer mode \u2014 tap any match to enter or change a score. Every save goes live for all players.<div class="bacts"><button data-act="setup">Edit setup</button><button data-act="clubedit">Club info</button><button data-act="newtour">+ New tournament</button><button data-act="archive">Archive tournament</button><button data-act="download">Download backup</button><button data-act="exitorg">Lock organizer mode</button></div>' + playerNotes() + '</div>' : ''}
     ${syncBar()}`;
 }
@@ -3313,6 +3321,20 @@ function openMatch(id) {
   const m = matchById(id); if (m && m.ko && (!m.A.length || !m.B.length)) { toast('Waiting for the earlier results'); return; }
   S.modal = { type: 'match', id, error: '' }; renderModal();
 }
+function rankingBody(md) {
+  const evs = S.hist === null ? null : Object.values(S.hist).filter(e => e && e.cats);
+  const head = '<p class="dmeta">Players who joined at least one tournament</p><h3 id="dt">Ranking</h3>';
+  if (!evs) return head + '<p class="hint">Loading…</p>';
+  if (!evs.length) return head + '<p class="hint">No archived tournaments yet.</p>';
+  const { all } = buildRecords(evs), has = g => all.some(p => p.g === g);
+  const gs = [['m', 'Men'], ['f', 'Women'], ...(has('') ? [['', 'Other']] : [])];
+  if (!gs.some(x => x[0] === md.g)) md.g = 'm';
+  const list = all.filter(p => p.g === md.g).sort((a, b) => b.events - a.events || (b.w + b.l) - (a.w + a.l) || b.w - a.w || a.l - b.l || a.name.localeCompare(b.name));
+  const seg = `<div class="tools rk-seg"><div class="seg" role="group" aria-label="Gender">${gs.map(([v, t]) => `<button data-act="rkg" data-v="${v}" aria-pressed="${md.g === v}">${t}</button>`).join('')}</div></div>`;
+  const rows = list.map((p, i) => `<div class="rkr"><span class="n">${i + 1}</span><span class="pn">${esc(p.name)}</span><span>${p.events}</span><span>${p.w + p.l}</span><span class="wl">${p.w}${dash}${p.l}</span></div>`).join('');
+  return head + seg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>Tourn.</span><span>Matches</span><span>W${dash}L</span></div>${rows}</div><p class="hint">Sorted by tournaments played, then matches, then wins. Group and knockout matches count.</p>`;
+}
+function openRanking() { S.modal = { type: 'ranking', g: 'm', error: '' }; renderModal(); if (S.hist === null) loadHistory(); }
 function openRules() { S.modal = { type: 'rules', error: '' }; renderModal(); }
 function openShare() { S.modal = { type: 'share', error: '' }; renderModal(); }
 function closeModal() { S.modal = null; renderModal(); }
@@ -3323,6 +3345,8 @@ function renderModal() {
   let body = '';
   if (md.type === 'rules') {
     body = rulesHtml();
+  } else if (md.type === 'ranking') {
+    body = rankingBody(md);
   } else if (md.type === 'setup') {
     body = setupBody(md);
   } else if (md.type === 'swap') {
@@ -4141,7 +4165,7 @@ async function loadHistory() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     S.hist = (await res.json()) || {};
   } catch (e) { if (!S.hist) S.hist = {}; }
-  if (S.tab === 'history' && !S.modal) render();
+  if (S.tab === 'history' && !S.modal) render(); else if (S.modal && S.modal.type === 'ranking') renderModal();
 }
 const fmtDate = iso => { const p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : esc(iso || ''); };
 const catShort = c => c.league === 'teams' ? 'Teams ' + lvl(c.label) : leagueWord(c.league) + ' ' + lvl(c.label);
@@ -4192,7 +4216,7 @@ function eventView(ev) {
     return `<section class="card"><div class="card-head"><h2 class="tag">${catFull(c)}</h2><span class="pill ${c.complete ? 'final' : ''}"><i></i>${c.complete ? 'Final classification' : 'Incomplete when archived'}</span></div><div class="scroll"><table class="hist"><thead><tr><th class="l">PLAYER</th>${heads}<th class="a2">W-L</th><th class="a2">GAMES<br>W-L</th><th class="pos">POS</th></tr></thead><tbody>${rows}</tbody></table></div>${list ? `<details class="hmatches"><summary>All match results (${ms.filter(m => m.r).length})</summary>${list}</details>` : ''}</section>`;
   }).join('');
 }
-function playersView(evs) {
+function buildRecords(evs) {
   const P = {}, gOf = c => c.league === 'men' ? 'm' : c.league === 'women' ? 'f' : '';
   const KORD = { SF: 0, T: 1, F: 2 };
   evs.forEach(ev => {
@@ -4222,6 +4246,10 @@ function playersView(evs) {
     }));
   });
   const all = Object.values(P); all.forEach(p => { p.g = p.gk || p.gi || ''; });
+  return { P, all };
+}
+function playersView(evs) {
+  const { P, all } = buildRecords(evs);
   const gname = { m: 'Men', f: 'Women', '': 'Other' }, order = ['m', 'f', ''];
   const byName = (a, b) => a.name.localeCompare(b.name);
   const gsel = S.hgender || '', sel = S.hplayer && P[S.hplayer] ? S.hplayer : '';
@@ -4233,7 +4261,7 @@ function playersView(evs) {
   const krow = m => `<div class="pm k"><span>${esc(m.label)}</span><span>${m.with ? 'w/ ' + esc(m.with) + ' · ' : ''}vs ${esc(m.opp)}</span><b class="${m.mine > m.theirs ? 'w' : 'l'}">${m.mine > m.theirs ? 'W' : 'L'} ${m.mine}${dash}${m.theirs}</b></div>`;
   const entry = e => `<div class="ph">${fmtDate(e.ev.date)} · ${esc(e.ev.name)}</div><div class="pe"><b>${catShort(e.c)}</b>${e.pos ? '<i>Group #' + e.pos + '</i>' : ''}<i>${e.w}${dash}${e.l}</i>${e.fin ? `<em class="${e.fin === 'Champion' ? 'gold' : ''}">${e.fin}</em>` : ''}</div>` +
     (e.ms.length ? `<div class="pgh">Group stage</div>${e.ms.map(row).join('')}` : '') + (e.ko.length ? `<div class="pgh">Knockout</div>${e.ko.map(krow).join('')}` : '');
-  const block = p => `<details class="pp" ${sel ? 'open' : ''}><summary><span class="pname">${esc(p.name)}</span><span class="pr">${p.events} ${p.events > 1 ? 'tournaments' : 'tournament'} · ${p.w}${dash}${p.l}${p.titles ? ' · ' + p.titles + (p.titles > 1 ? ' titles' : ' title') : ''}</span></summary>${p.entries.map(entry).join('')}</details>`;
+  const block = p => `<details class="pp" ${sel ? 'open' : ''}><summary><span class="pname">${esc(p.name)}</span><span class="chev" aria-hidden="true">\u203a</span></summary>${p.entries.map(entry).join('')}</details>`;
   return bar + order.map(g => {
     const list = pool.filter(p => p.g === g && (!sel || p.key === sel)).sort(byName);
     return list.length ? `<section class="card"><div class="card-head"><h2 class="tag">${gname[g]}</h2></div>${list.map(block).join('')}</section>` : '';
@@ -4252,6 +4280,8 @@ document.addEventListener('click', ev => {
   else if (act === 'match') openMatch(el.dataset.id);
   else if (act === 'share') openShare();
   else if (act === 'rules') openRules();
+  else if (act === 'ranking') openRanking();
+  else if (act === 'rkg') { S.modal.g = el.dataset.v; renderModal(); }
   else if (act === 'close') closeModal();
   else if (act === 'save') saveScore();
   else if (act === 'clear') clearScore();
