@@ -283,7 +283,7 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 
 .amx{color:var(--ink)}.amx .fmt{margin:4px 0 0;font-size:13px;color:var(--muted)}
 .amacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.amb{border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:12px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.amb{border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:12px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.amb:disabled{opacity:.5}
 .amb.pri{background:var(--head);border-color:var(--head);color:#fff}.amb.dng{border-color:#b3261e;color:#b3261e}
 .amchips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .amx .ac{font-size:11.5px;font-weight:700;border-radius:99px;padding:4px 10px;background:#e3dcc6;color:#10283d;display:inline-block}
@@ -297,12 +297,27 @@ td.gm i{font-style:normal;color:var(--acc2);font-weight:800;margin:0 4px}
 .amsc.done{border-style:solid;background:var(--head);color:#fff;font-size:17px}.amsc i{margin:0 4px;font-style:normal;opacity:.7}
 .rkr.am{grid-template-columns:22px minmax(0,1fr) 40px 44px 48px}.rkr.p1 .n,.rkr.p2 .n,.rkr.p3 .n{font-weight:800;color:var(--head)}.rkr.p1{background:rgba(207,233,63,.25)}
 .amchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.amchip{display:inline-flex;align-items:center;gap:4px;background:#e3dcc6;color:#10283d;border-radius:99px;padding:4px 4px 4px 10px;font-size:13px;font-weight:600}
+.amchip{display:inline-flex;align-items:center;gap:4px;background:#e3dcc6;color:#10283d;border-radius:12px;padding:4px 4px 4px 10px;font-size:13px;font-weight:600}
 .amchip button{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0}.amchip .x2{width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.12)}
 .amchip.sel{outline:2px solid var(--head)}.amchip.empty{opacity:.6;padding-right:10px}
 .amprow{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.amprow .n{color:var(--muted);font-size:11px;width:16px}.amprow .pl{font-weight:800}
 .amdate{display:flex;align-items:center;justify-content:space-between;gap:8px}.amdate b{font-size:14px;text-align:center}
 .prow small.al{display:block;font-weight:500;color:var(--muted);font-size:11.5px}.cnt{background:var(--head);color:#fff;border-radius:99px;padding:1px 8px;font-size:11px}
+.ambar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px 0}.ambar h1{margin:0;font-size:30px;color:var(--cream);line-height:1}.ambar .kicker{margin:0 0 4px;text-align:left}
+.amb.back{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}.amshell .tools{margin-top:14px;text-align:center}.amtop .amb{border-color:rgba(246,241,227,.6);color:var(--cream)}.amtop .amb.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}.amtop{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.seg.amseg{border-radius:12px}.seg.amseg button{border-radius:9px}
+.amfmts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.amfmt{border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:12px;padding:9px 10px;text-align:left;font:inherit;cursor:pointer}.amfmt b{display:block;font-size:13.5px}.amfmt small{display:block;font-size:11px;font-weight:500;opacity:.75}.amfmt.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.amrow{display:flex;align-items:center;gap:10px;margin-top:10px}.amrow>span{width:54px;font-size:12px;font-weight:700;flex:none}
+.amdate{display:flex;gap:8px;align-items:center}.amdate input{flex:1;min-width:0;font:inherit;font-size:15px;font-weight:700;padding:8px 10px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);text-align:center}
+.amph{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:16px}.amph b{margin-right:auto}
+.amnum{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.amnum .amchip{padding:4px 4px 4px 6px;min-width:0}.amnum .nm{flex:1;min-width:0;font-size:12px;line-height:1.15;overflow-wrap:anywhere}.amn{display:inline-block;width:20px;text-align:center;font-size:11px;font-weight:800;color:var(--head)}
+.amcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.amcol h4{margin:0 0 6px;font-size:12px;letter-spacing:.04em;text-transform:uppercase}.amcol h4 span{opacity:.6}
+.amp{display:block;width:100%;text-align:left;border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:10px;padding:6px 8px;margin-bottom:5px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}.amp.off{opacity:.38;border-style:dashed;cursor:default}
+.amed{margin-left:8px;border:0;background:none;color:var(--head);font:inherit;font-size:11px;font-weight:700;text-decoration:underline;text-transform:none;letter-spacing:0;cursor:pointer}.amrow select{flex:1;min-width:0;font:inherit;font-size:14px;padding:8px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink)}
+.amc{display:block}.amc .ct{display:block;margin-bottom:6px}.amt{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:4px 0}.amt .nm{font-weight:700;font-size:14px;line-height:1.25;min-width:0}.amt.w .nm{color:var(--head)}.amc .vs{display:block;font-size:10px;color:var(--muted);font-weight:700;margin:0 0 0 0;letter-spacing:.06em}
+.amsi{width:62px;flex:none;text-align:center;font:inherit;font-size:18px;font-weight:800;padding:8px 4px;border:2px solid var(--head);border-radius:12px;background:#fff;color:var(--ink);-moz-appearance:textfield}.amsi::-webkit-outer-spin-button,.amsi::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.amsi:disabled{background:transparent;border-color:transparent}.amt.w .amsi{background:var(--head);color:#fff}
+.amc.saved{outline:2px solid #2e9d5b}.amc.bad{outline:2px solid #b3261e}.amlist2{display:flex;flex-direction:column;gap:8px}.amlist2 .amb{text-align:left}
+.amnewp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;font-weight:700}.amnewp span{flex:1 1 100%}
 .nextb{display:block;width:100%;margin:14px 0 0;border:2px dashed var(--acc);background:rgba(255,255,255,.06);color:var(--cream);border-radius:14px;padding:11px 14px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
 .nextb b{color:var(--acc)}
 .dtrow input.full{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;color:var(--ink);font:inherit;font-size:16px}.dtrow select.full{width:100%;font-size:16px}
@@ -3296,9 +3311,8 @@ async function amLoad() {
 async function amPoll() {
   const vis = () => Object.keys(AM_SERIES).filter(k => S.canEdit || amSessions(k).length).join();
   const before = vis(), ch = await amLoad();
-  if (ch && !S.modal && (S.tab === 'am' || before !== vis())) render();
+  const ae = document.activeElement; if (ch && !S.modal && !S.amPend && !(ae && ae.classList && ae.classList.contains('amsi')) && (S.tab === 'am' || before !== vis())) render();
 }
-const amPool = () => { const m = {}, add = n => { if (n && !m[normName(n)]) m[normName(n)] = n; }; Object.values(PLAYERS).forEach(add); Object.keys(AM_SERIES).forEach(k => amSessions(k).forEach(se => se.players.forEach(add))); return Object.values(m).sort((a, b) => a.localeCompare(b)); };
 const amCoach = () => Object.values(PLAYERS).concat(Object.keys(AM_SERIES).flatMap(k => amSessions(k).flatMap(se => se.players))).find(n => /^ferran\b/i.test(n)) || 'Ferran Diaz';
 
 /* --- screens --- */
@@ -3306,100 +3320,13 @@ function seriesBar() {
   const ks = Object.keys(AM_SERIES).filter(k => S.canEdit || amSessions(k).length); if (!ks.length) return '';
   return '<div class="tbar" role="group" aria-label="Americano">' + ks.map(k => { const l = amSessions(k), live = l.find(x => x.status === 'live'); return `<button class="tchip ${S.tab === 'am' && S.amSeries === k ? 'on' : ''}" data-act="amopen" data-s="${k}"><b>${AM_SERIES[k].name}</b><small>${live ? 'Live now · ' + shortDate(live.date) : l.length ? l.length + (l.length > 1 ? ' sessions' : ' session') : 'Only you can see this'}</small></button>`; }).join('') + '</div>';
 }
-function amList(list) {
-  if (!list.length) return '<section class="card"><p class="foot" style="color:var(--ink)">No Americano created yet. Tap “+ New Americano” to start one.</p></section>';
-  return list.map(se => { const st = amStandings(se), win = se.status === 'finished' && st[0] && st[0].n ? st[0].name : '';
-    return `<button class="hl" data-act="amses" data-id="${esc(se.id)}"><b>${esc(shortDate(se.date))}</b><em>${se.status === 'finished' ? 'Finished' : 'Live'}</em><span>${AM_FORMATS[se.format][0]} · ${se.mode === 'friendly' ? 'Friendly' : 'Competitive'} · ${amPair(se.format) ? se.pairs.length + ' pairs' : se.players.length + ' players'} · ${se.courts} courts${win ? ' · Winner: ' + esc(win) : ''}</span><span class="tap">${se.status === 'finished' ? 'Final classification' : 'Matches and scores'} ›</span></button>`; }).join('');
-}
-function amView() {
-  const k = S.amSeries in AM_SERIES ? S.amSeries : 'sun', def = AM_SERIES[k], list = amSessions(k);
-  if (!S.canEdit && !list.length) return '<section class="card"><p class="foot" style="color:var(--ink)">No Americano has been created yet.</p></section>';
-  if (S.amSession && !list.some(x => x.id === S.amSession)) S.amSession = null;
-  const se = S.amSession ? list.find(x => x.id === S.amSession) : null;
-  const head = `<section class="card amx"><div class="card-head"><h2 class="tag">${esc(def.name)}</h2>${list.length ? '' : '<span class="pill"><i></i>Only you can see this</span>'}</div><p class="fmt">${esc(def.blurb)}</p><div class="amacts">${S.canEdit ? '<button class="amb pri" data-act="amnew">+ New Americano</button>' : ''}<button class="amb" data-act="amrank">Ranking</button>${se ? '<button class="amb" data-act="amback">‹ All sessions</button>' : ''}</div></section>`;
-  return head + (se ? amSessionView(se) : amList(list));
-}
 function amRoundDone(se, ri) { return se.rounds[ri].m.every(m => amScore(se, ri, m.c)); }
-function amSessionView(se) {
-  const fin = se.status === 'finished', pf = amPair(se.format), st = amStandings(se);
-  const chips = `<div class="amchips2"><span class="ac">${AM_FORMATS[se.format][0]}</span><span class="ac ${se.mode === 'friendly' ? 'fr' : 'co'}">${se.mode === 'friendly' ? 'Friendly · not ranked' : 'Competitive · ranked'}</span><span class="ac">${se.courts} courts</span><span class="ac">${se.pts} points</span><span class="ac ${fin ? 'fin' : 'live'}">${fin ? 'Finished' : 'Live'}</span></div>`;
-  const org = S.canEdit ? `<div class="amacts">${fin ? '<button class="amb" data-act="amreopen">Reopen</button>' : '<button class="amb pri" data-act="amadd">+ Add round</button><button class="amb" data-act="amfinish">Finish and show final classification</button>'}<button class="amb" data-act="ammode">${se.mode === 'friendly' ? 'Make it competitive' : 'Make it friendly'}</button>${!fin && se.rounds.length ? '<button class="amb" data-act="amdelround">Remove last round</button>' : ''}<button class="amb dng" data-act="amdelete">Delete</button></div>` : '';
-  const hdr = `<section class="card amx"><div class="card-head"><h2 class="tag">${esc(shortDate(se.date))}</h2></div><p class="fmt">${esc(dateLong(se.date))}</p>${chips}${org}</section>`;
-  const tabs = `<div class="tools"><div class="seg" role="tablist">${[['matches', 'Matches'], ['standings', fin ? 'Final classification' : 'Standings']].map(([v, t]) => `<button data-act="amtab" data-v="${v}" aria-pressed="${(S.amTab || 'matches') === v}">${t}</button>`).join('')}</div></div>`;
-  return hdr + tabs + ((S.amTab || 'matches') === 'matches' ? amMatches(se) : amStandingsView(se, st, fin, pf));
-}
-function amMatches(se) {
-  if (!se.rounds.length) return '<section class="card"><p class="foot" style="color:var(--ink)">No rounds yet.</p></section>';
-  const cur = Math.max(0, se.rounds.findIndex((r, i) => !amRoundDone(se, i))), fin = se.status === 'finished';
-  const cur2 = se.rounds.findIndex((r, i) => !amRoundDone(se, i)) < 0 ? se.rounds.length - 1 : cur;
-  return se.rounds.map((r, ri) => {
-    const done = r.m.filter(m => amScore(se, ri, m.c)).length, key = se.id + ':' + ri, open = S.amOpen && key in S.amOpen ? S.amOpen[key] : ri === cur2 && !fin;
-    const cards = r.m.map(m => { const s = amScore(se, ri, m.c), mid = 'R' + (ri + 1) + 'C' + m.c;
-      return `<div class="amc"><span class="ct">Court ${m.c}</span><div class="tm"><span class="${s && s[0] > s[1] ? 'w' : ''}">${esc(m.a.join(' & '))}</span><span class="vs">vs</span><span class="${s && s[1] > s[0] ? 'w' : ''}">${esc(m.b.join(' & '))}</span></div><button class="amsc ${s ? 'done' : ''}" data-act="amscore" data-mid="${mid}" aria-label="${s ? 'Edit score' : 'Add score'}">${s ? '<b>' + s[0] + '</b><i>–</i><b>' + s[1] + '</b>' : 'Add score'}</button></div>`; }).join('');
-    const bye = r.bye.length ? `<p class="hint" style="margin:2px 4px 8px"><b>Resting:</b> ${esc(r.bye.join(', '))}</p>` : '';
-    return `<button class="amrh" data-act="amround" data-i="${ri}" aria-expanded="${open}"><span>Round ${ri + 1}</span><span>${done}/${r.m.length} ${open ? '▾' : '▸'}</span></button>${open ? '<div class="amrb">' + cards + bye + '</div>' : ''}`;
-  }).join('');
-}
 function amStandingsView(se, st, fin, pf) {
   const rows = st.map((e, i) => `<div class="rkr am ${fin && i < 3 && e.n ? 'p' + (i + 1) : ''}"><span class="n">${i + 1}</span><span class="pn">${esc(e.name)}<small>${e.n} ${e.n === 1 ? 'match' : 'matches'}${e.t ? ' · ' + e.t + ' draw' + (e.t > 1 ? 's' : '') : ''}</small></span><span class="pt">${e.pts}</span><span>${e.pts - e.pa > 0 ? '+' : ''}${e.pts - e.pa}</span><span class="wl">${e.w}–${e.l}</span></div>`).join('');
   return `<section class="card amx">${fin ? `<div class="card-head"><h2 class="tag">Final classification</h2></div>` : ''}<div class="rk"><div class="rkr am rkh"><span></span><span class="pn">${pf ? 'Pair' : 'Player'}</span><span>Pts</span><span>+/−</span><span>W–L</span></div>${rows}</div><p class="hint">Points are the points won in every match. Ranked by points, then points difference, then wins.${se.mode === 'friendly' ? ' <b>Friendly session: it does not count for the ranking.</b>' : ''}${pf ? ' Each player of a pair gets the pair’s result.' : ''}</p></section>`;
 }
 /* --- ranking --- */
-function amRankRows(k, f) {
-  const se0 = currentSeason(), P = {};
-  amSessions(k).filter(se => se.status === 'finished' && se.mode !== 'friendly' && (f !== 'season' || inSeason(se0, se.date))).forEach(se => {
-    amStandings(se).forEach((e, i) => { if (!e.n) return; e.members.forEach(name => { const key = normName(name), p = P[key] = P[key] || { name, sess: 0, pts: 0, pa: 0, w: 0, l: 0, pod: [0, 0, 0], posSum: 0, best: 99 };
-      p.sess++; p.pts += e.pts; p.pa += e.pa; p.w += e.w; p.l += e.l; p.posSum += i + 1; p.best = Math.min(p.best, i + 1); if (i < 3) p.pod[i]++; }); });
-  });
-  return Object.values(P);
-}
-function amRankBody(md) {
-  const k = md.series, se0 = currentSeason(), f = md.f || 'all', sk = md.s || 'pts';
-  const head = `<p class="dmeta">${esc(AM_SERIES[k].name)}</p><h3 id="dt">Ranking</h3>`;
-  const fseg = `<div class="tools rk-seg"><div class="seg" role="group" aria-label="Period">${[['all', 'All history'], ['season', 'Season ' + esc(se0.year)]].map(([v, t]) => `<button data-act="amrkf" data-v="${v}" aria-pressed="${f === v}">${t}</button>`).join('')}</div></div>`;
-  const rows = amRankRows(k, f), m = p => p.w + p.l, pct = p => m(p) ? p.w / m(p) : 0;
-  if (!rows.length) return head + fseg + '<p class="hint">No finished competitive sessions yet. Friendly sessions and sessions still being played do not count.</p>';
-  const by = { sess: (a, b) => b.sess - a.sess || b.pts - a.pts, pts: (a, b) => b.pts - a.pts || b.sess - a.sess, wl: (a, b) => pct(b) - pct(a) || m(b) - m(a), titles: (a, b) => b.pod[0] - a.pod[0] || b.pod[1] - a.pod[1] || b.pod[2] - a.pod[2] || b.sess - a.sess }[sk];
-  const list = rows.sort((a, b) => by(a, b) || a.name.localeCompare(b.name));
-  const th = (key, t) => `<button class="rks" data-act="amrks" data-s="${key}" aria-pressed="${sk === key}">${t}${sk === key ? ' ▾' : ''}</button>`;
-  const body = list.map((p, i) => `<div class="rkr"><span class="n">${i + 1}</span><span class="pn">${esc(p.name)}<small>Best ${ord(p.best)} · avg position ${(p.posSum / p.sess).toFixed(1)} · ${(p.pts / p.sess).toFixed(1)} pts/session</small></span><span>${p.sess}</span><span class="pt">${p.pts}</span><span class="wl">${p.w}–${p.l}</span><span class="tt">${p.pod[0] || '–'}</span></div>`).join('');
-  return head + fseg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>${th('sess', 'Sess.')}</span><span>${th('pts', 'Points')}</span><span>${th('wl', 'W–L')}</span><span>${th('titles', 'Wins')}</span></div>${body}</div><p class="hint">Only finished competitive sessions count. Tap a column to change the order. Sess. = sessions played, Wins = sessions won (1st place). W–L ranks by win percentage.</p>`;
-}
 /* --- create a session --- */
-function amNewOpen(k) {
-  const last = amSessions(k)[0], coach = amCoach();
-  S.modal = { type: 'amnew', series: k, date: amNextDate(k), format: 'americano', mode: 'competitive', courts: 3, pts: 24, rounds: 6, players: [coach], q: '', sel: null, error: '', last: last ? last.players.slice() : null, lastPairs: last && last.pairs.length ? last.pairs.slice() : null };
-  renderModal();
-}
-function amSuggest(md) {
-  const have = new Set(md.players.map(normName)), toks = normName(md.q || '').split(' ').filter(Boolean);
-  const hit = amPool().filter(n => !have.has(normName(n)) && toks.every(t => normName(n).includes(t))).slice(0, 8);
-  const exact = amPool().some(n => normName(n) === normName(md.q || '')) || have.has(normName(md.q || ''));
-  const add = (md.q || '').trim() && !exact ? `<button class="prow new" data-act="amadd1" data-name="${esc(md.q.trim())}">+ Add “${esc(md.q.trim())}” as a new player</button>` : '';
-  return hit.map(n => `<button class="prow" data-act="amadd1" data-name="${esc(n)}">${esc(n)}</button>`).join('') + add || '<p class="hint">Everyone known is already in the list.</p>';
-}
-function amNewBody(md) {
-  const pf = amPair(md.format), n = md.players.length, coach = amCoach(), coachOn = md.players.some(x => normName(x) === normName(coach));
-  const seg = (act, cur, opts) => `<div class="seg" role="group">${opts.map(([v, t]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${t}</button>`).join('')}</div>`;
-  const chip = i => `<span class="amchip ${md.sel === i ? 'sel' : ''}">${pf ? `<button data-act="amsel" data-i="${i}">${esc(md.players[i])}</button>` : `<span>${esc(md.players[i])}</span>`}<button class="x2" data-act="amrm" data-i="${i}" aria-label="Remove ${esc(md.players[i])}">✕</button></span>`;
-  let list = '';
-  if (pf) for (let i = 0; i < n; i += 2) list += `<div class="amprow"><span class="n">${i / 2 + 1}</span>${chip(i)}<span class="pl">+</span>${i + 1 < n ? chip(i + 1) : '<span class="amchip empty">add a partner</span>'}</div>`;
-  else list = '<div class="amchips">' + md.players.map((p, i) => chip(i)).join('') + '</div>';
-  const note = pf ? (n % 2 ? 'Add one more player: pairs need an even number.' : n / 2 + ' pairs. Tap a name, then another name, to swap them.') : (n < 4 ? 'At least 4 players.' : n + ' players' + (n > md.courts * 4 ? ' — ' + (n - md.courts * 4) + ' rest in each round.' : '.'));
-  return `<p class="dmeta">${esc(AM_SERIES[md.series].name)}</p><h3 id="dt">New Americano</h3>
-  <div class="dl-lbl">Date</div><div class="amdate"><button class="amb" data-act="amdate" data-v="-7" aria-label="Previous week">‹</button><b>${esc(dateLong(md.date))}</b><button class="amb" data-act="amdate" data-v="7" aria-label="Next week">›</button></div>
-  <div class="dl-lbl">Format</div>${Object.keys(AM_FORMATS).map(f => `<button class="prow ${md.format === f ? 'new' : ''}" data-act="amfmt" data-v="${f}">${AM_FORMATS[f][0]}<small class="al">${AM_FORMATS[f][1]}</small></button>`).join('')}
-  <div class="dl-lbl">Type</div>${seg('ammodeset', md.mode, [['competitive', 'Competitive (ranked)'], ['friendly', 'Friendly (not ranked)']])}
-  <div class="dl-lbl">Courts</div>${seg('amcourts', md.courts, [[2, '2'], [3, '3'], [4, '4']])}
-  <div class="dl-lbl">Points per match</div>${seg('ampts', md.pts, [[16, '16'], [20, '20'], [24, '24'], [32, '32']])}
-  ${amMex(md.format) ? '<p class="hint">Mexicano: round 1 is random, then every round is built from the standings. Use “+ Add round” during the session.</p>' : `<div class="dl-lbl">Rounds to create now</div>${seg('amrounds', md.rounds, [[4, '4'], [5, '5'], [6, '6'], [7, '7'], [8, '8'], [10, '10']])}<p class="hint">You can add more random rounds at any time.</p>`}
-  <div class="dl-lbl">Players <span class="cnt">${n}</span></div>
-  <button class="prow ${coachOn ? 'new' : ''}" data-act="amcoach">${coachOn ? '✓ ' : ''}${esc(coach)} plays (coach)</button>
-  ${md.last && !n || (md.last && n <= 1) ? '<button class="prow" data-act="amlast">Use the players of the last session</button>' : ''}
-  ${list}<p class="hint">${note}</p>${pf && n > 1 ? '<button class="amb" data-act="amshuffle" style="margin-top:8px">Shuffle pairs</button>' : ''}
-  <input id="amq" class="sq" type="search" placeholder="Search or add a player…" autocomplete="off" value="${esc(md.q)}"><div id="amlist" style="margin-top:8px">${amSuggest(md)}</div>
-  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="amcreate" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Creating…' : 'Create'}</button><button class="btn txt" data-act="close">Cancel</button></div>`;
-}
 async function amCreate() {
   const md = S.modal, n = md.players.length, pf = amPair(md.format);
   if (n < 4) { md.error = 'Add at least 4 players.'; renderModal(); return; }
@@ -3410,7 +3337,10 @@ async function amCreate() {
   const cnt = amMex(md.format) ? 1 : md.rounds;
   for (let r = 0; r < cnt; r++) { const nr = amNextRound(se); if (!nr) { md.error = 'Could not build the rounds.'; renderModal(); return; } se.rounds.push(nr); }
   S.busy = true; renderModal();
-  try { await amWrite(k + '/' + id, se); await amLoad(); S.busy = false; S.modal = null; renderModal(); S.amSeries = k; S.amSession = id; S.amTab = 'matches'; S.tab = 'am'; render(); window.scrollTo(0, 0); toast('Americano created'); }
+  try {
+    if (Object.keys(NEW_IDS).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(NEW_IDS) });
+    if (Object.keys(NEW_GENDERS).length) { await fetch(DB_URL + '/tennis/genders.json', { method: 'PATCH', body: JSON.stringify(NEW_GENDERS) }); Object.keys(NEW_GENDERS).forEach(i => { delete NEW_GENDERS[i]; }); }
+    await amWrite(k + '/' + id, se); await amLoad(); S.busy = false; S.modal = null; renderModal(); S.amSeries = k; S.amSession = id; S.amTab = 'matches'; S.tab = 'am'; render(); window.scrollTo(0, 0); toast('Americano created'); }
   catch (e) { S.busy = false; md.error = 'Could not save. Check your connection.'; renderModal(); }
 }
 /* --- scores --- */
@@ -3422,15 +3352,15 @@ function amScoreOpen(mid) {
 }
 function amScoreBody(md) {
   const se = amGet(md.series, md.sid), m = se && se.rounds[md.ri] ? se.rounds[md.ri].m.find(x => 'R' + (md.ri + 1) + 'C' + x.c === md.mid) : null;
-  if (!m) return '<p class="hint">This match no longer exists.</p><div class="acts"><button class="btn" data-act="close">Close</button></div>';
+  if (!m) return '<p class="hint">This match no longer exists.</p><div class="acts"><button class="amb" data-act="close">Close</button></div>';
   const t = (arr) => esc(arr.join(' & ')), has = amScore(se, md.ri, m.c), lock = se.status === 'finished' && !S.canEdit;
   const meta = `Round ${md.ri + 1} · Court ${m.c}`;
-  if (lock) return `<p class="dmeta">${meta}</p><h3 id="dt">Session finished</h3><p class="hint">Scores are locked. Ask the organizer if something needs to change.</p><div class="acts"><button class="btn" data-act="close">Close</button></div>`;
+  if (lock) return `<p class="dmeta">${meta}</p><h3 id="dt">Session finished</h3><p class="hint">Scores are locked. Ask the organizer if something needs to change.</p><div class="acts"><button class="amb" data-act="close">Close</button></div>`;
   return `<p class="dmeta">${meta}</p><h3 id="dt">Enter the score</h3>
   <div class="dl-row"><label for="amA">${t(m.a)}</label><input id="amA" type="number" inputmode="numeric" min="0" max="99" value="${esc(md.a)}"></div>
   <div class="dl-row"><label for="amB">${t(m.b)}</label><input id="amB" type="number" inputmode="numeric" min="0" max="99" value="${esc(md.b)}"></div>
   <p class="hint">Points per match: ${se.pts}. Type one score and the other fills in. Every player can enter the score when the match is over.</p>
-  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="btn pri" data-act="amsave" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving…' : 'Save score'}</button>${has ? '<button class="btn dng" data-act="amclear">Clear score</button>' : ''}<button class="btn txt" data-act="close">Cancel</button></div>`;
+  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="amb pri" data-act="amsave" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Saving…' : 'Save score'}</button>${has ? '<button class="amb dng" data-act="amclear">Clear score</button>' : ''}<button class="amb" data-act="close">Cancel</button></div>`;
 }
 async function amSaveScore(clear) {
   const md = S.modal, a = parseInt(md.a, 10), b = parseInt(md.b, 10);
@@ -3466,6 +3396,202 @@ async function amAct(kind) {
     }
     await amLoad(); render();
   } catch (e) { toast('Could not save. Check your connection.'); }
+}
+
+/* --- Americano v2: clean section, gender-aware player picker, one global ranking --- */
+const amG = n => { const id = lookupName(n); return (id && GENDER[id]) || ''; };
+const amPool = () => { const m = {}, add = n => { if (n && !m[normName(n)]) m[normName(n)] = n; }; Object.keys(PLAYERS).filter(id => !/^(seat|tm_)/.test(id)).forEach(id => add(PLAYERS[id])); Object.keys(AM_SERIES).forEach(k => amSessions(k).forEach(se => se.players.forEach(add))); return Object.values(m).sort((a, b) => a.localeCompare(b)); };
+const amVisible = () => Object.keys(AM_SERIES).filter(k => S.canEdit || amSessions(k).length);
+function amShell() {
+  const ks = amVisible(), k = S.amSeries in AM_SERIES ? S.amSeries : (ks[0] || 'sun');
+  const sw = ks.length > 1 ? `<div class="tools"><div class="seg amseg" role="group" aria-label="Series">${ks.map(x => `<button data-act="amopen" data-s="${x}" aria-pressed="${k === x}">${AM_SERIES[x].name.replace('Americano ', '')}</button>`).join('')}</div></div>` : '';
+  return `<div class="wrap"><div class="frame amshell"><div class="ambar"><div><p class="kicker">Weekly doubles</p><h1>Americano</h1></div><button class="amb back" data-act="ammenu" aria-label="Back to menu">Menu →</button></div>${sw}${amView()}</div></div>`;
+}
+function amList(list) {
+  if (!list.length) return '<section class="card amx"><p class="foot" style="color:var(--ink)">No Americano created yet. Tap “+ New Americano” to start one.</p></section>';
+  return list.map(se => { const st = amStandings(se), win = se.status === 'finished' && st[0] && st[0].n ? st[0].name : '';
+    return `<button class="hl" data-act="amses" data-id="${esc(se.id)}"><b>${esc(shortDate(se.date))}</b><em>${se.status === 'finished' ? 'Finished' : 'Live'}</em><span>${AM_FORMATS[se.format][0]} · ${se.mode === 'friendly' ? 'Friendly' : 'Competitive'} · ${amPair(se.format) ? se.pairs.length + ' pairs' : se.players.length + ' players'} · ${se.courts} courts${win ? ' · Winner: ' + esc(win) : ''}</span><span class="tap">${se.status === 'finished' ? 'Final classification' : 'Matches and scores'} ›</span></button>`; }).join('');
+}
+function amView() {
+  const k = S.amSeries in AM_SERIES ? S.amSeries : 'sun', list = amSessions(k);
+  if (S.amSession && !list.some(x => x.id === S.amSession)) S.amSession = null;
+  const se = S.amSession ? list.find(x => x.id === S.amSession) : null;
+  const top = `<div class="amtop">${se ? '<button class="amb" data-act="amback">‹ Sessions</button>' : (S.canEdit ? '<button class="amb pri" data-act="amnew">+ New Americano</button>' : '')}<button class="amb" data-act="amrank">Ranking</button></div>`;
+  return top + (se ? amSessionView(se) : amList(list));
+}
+function amRankRows(f) {
+  const se0 = currentSeason(), P = {};
+  Object.keys(AM_SERIES).forEach(k => amSessions(k).filter(se => se.status === 'finished' && se.mode !== 'friendly' && (f !== 'season' || inSeason(se0, se.date))).forEach(se => {
+    amStandings(se).forEach((e, i) => { if (!e.n) return; e.members.forEach(name => { const key = normName(name), p = P[key] = P[key] || { name, sess: 0, pts: 0, pa: 0, w: 0, l: 0, pod: [0, 0, 0], posSum: 0, best: 99 };
+      p.sess++; p.pts += e.pts; p.pa += e.pa; p.w += e.w; p.l += e.l; p.posSum += i + 1; p.best = Math.min(p.best, i + 1); if (i < 3) p.pod[i]++; }); });
+  }));
+  return Object.values(P);
+}
+function amRankBody(md) {
+  const se0 = currentSeason(), f = md.f || 'all', sk = md.s || 'pts';
+  const head = `<p class="dmeta">Wednesdays and Sundays together</p><h3 id="dt">Americano ranking</h3>`;
+  const fseg = `<div class="tools rk-seg"><div class="seg amseg" role="group" aria-label="Period">${[['all', 'All history'], ['season', 'Season ' + esc(se0.year)]].map(([v, t]) => `<button data-act="amrkf" data-v="${v}" aria-pressed="${f === v}">${t}</button>`).join('')}</div></div>`;
+  const rows = amRankRows(f), m = p => p.w + p.l, pct = p => m(p) ? p.w / m(p) : 0;
+  if (!rows.length) return head + fseg + '<p class="hint">No finished competitive sessions yet. Friendly sessions and sessions still being played do not count.</p>';
+  const by = { sess: (a, b) => b.sess - a.sess || b.pts - a.pts, pts: (a, b) => b.pts - a.pts || b.sess - a.sess, wl: (a, b) => pct(b) - pct(a) || m(b) - m(a), titles: (a, b) => b.pod[0] - a.pod[0] || b.pod[1] - a.pod[1] || b.pod[2] - a.pod[2] || b.sess - a.sess }[sk];
+  const list = rows.sort((a, b) => by(a, b) || a.name.localeCompare(b.name));
+  const th = (key, t) => `<button class="rks" data-act="amrks" data-s="${key}" aria-pressed="${sk === key}">${t}${sk === key ? ' ▾' : ''}</button>`;
+  const body = list.map((p, i) => `<div class="rkr"><span class="n">${i + 1}</span><span class="pn">${esc(p.name)}<small>Best ${ord(p.best)} · avg position ${(p.posSum / p.sess).toFixed(1)} · ${(p.pts / p.sess).toFixed(1)} pts/session</small></span><span>${p.sess}</span><span class="pt">${p.pts}</span><span class="wl">${p.w}–${p.l}</span><span class="tt">${p.pod[0] || '–'}</span></div>`).join('');
+  return head + fseg + `<div class="rk"><div class="rkr rkh"><span></span><span class="pn">Player</span><span>${th('sess', 'Sess.')}</span><span>${th('pts', 'Points')}</span><span>${th('wl', 'W–L')}</span><span>${th('titles', 'Wins')}</span></div>${body}</div><p class="hint">Only finished competitive sessions count. Tap a column to change the order. Sess. = sessions played, Wins = sessions won (1st place). W–L ranks by win percentage.</p>`;
+}
+/* new session */
+function amNewOpen(k) {
+  const last = amSessions(k)[0], coach = amCoach();
+  S.modal = { type: 'amnew', series: k, date: amNextDate(k), format: 'americano', mode: 'competitive', courts: 3, pts: 24, rounds: 6, players: [coach], q: '', sel: null, error: '', last: last ? last.players.slice() : null };
+  renderModal();
+}
+function amSuggest(md) {
+  const have = new Set(md.players.map(normName)), toks = normName(md.q || '').split(' ').filter(Boolean);
+  const all = amPool().filter(n => toks.every(t => normName(n).includes(t)));
+  const btn = n => have.has(normName(n)) ? `<span class="amp off">${esc(n)}</span>` : `<button class="amp" data-act="amadd1" data-name="${esc(n)}">${esc(n)}</button>`;
+  const col = (g, t) => { const l = all.filter(n => amG(n) === g); return `<div class="amcol"><h4>${t} <span>${l.length}</span></h4>${l.map(btn).join('') || '<p class="hint">–</p>'}</div>`; };
+  const un = all.filter(n => !amG(n));
+  const typed = (md.q || '').trim().replace(/\s+/g, ' '), exact = amPool().some(n => normName(n) === normName(typed));
+  const add = typed.length > 1 && !exact ? `<div class="amnewp"><span>Add “${esc(typed)}” as a new</span><button class="amb" data-act="amnewp" data-g="m" data-name="${esc(typed)}">Man</button><button class="amb" data-act="amnewp" data-g="f" data-name="${esc(typed)}">Woman</button></div>` : '';
+  return add + `<div class="amcols">${col('m', 'Men')}${col('f', 'Women')}</div>` + (un.length ? `<div class="amcol" style="margin-top:8px"><h4>Gender not set <span>${un.length}</span></h4>${un.map(btn).join('')}</div>` : '');
+}
+function amNewBody(md) {
+  const pf = amPair(md.format), n = md.players.length, coach = amCoach(), coachOn = md.players.some(x => normName(x) === normName(coach));
+  const seg = (act, cur, opts) => `<div class="seg amseg" role="group">${opts.map(([v, t]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${t}</button>`).join('')}</div>`;
+  const row = (l, inner) => `<div class="amrow"><span>${l}</span>${inner}</div>`;
+  const chip = i => `<span class="amchip ${md.sel === i ? 'sel' : ''}">${pf ? `<button data-act="amsel" data-i="${i}">${esc(md.players[i])}</button>` : `<span>${esc(md.players[i])}</span>`}<button class="x2" data-act="amrm" data-i="${i}" aria-label="Remove ${esc(md.players[i])}">✕</button></span>`;
+  let list = '';
+  if (pf) { for (let i = 0; i < n; i += 2) list += `<div class="amprow"><span class="amn">${i / 2 + 1}</span>${chip(i)}<span class="pl">+</span>${i + 1 < n ? chip(i + 1) : '<span class="amchip empty">add a partner</span>'}</div>`; }
+  else list = '<div class="amnum">' + md.players.map((p, i) => `<div class="amchip"><span class="amn">${i + 1}</span><span class="nm">${esc(p)}</span><button class="x2" data-act="amrm" data-i="${i}" aria-label="Remove ${esc(p)}">✕</button></div>`).join('') + '</div>';
+  const note = pf ? (n % 2 ? 'Add one more player: pairs need an even number.' : n / 2 + ' pairs. Tap one name, then another, to swap them.') : (n < 4 ? 'At least 4 players.' : n > md.courts * 4 ? (n - md.courts * 4) + ' rest in each round.' : '');
+  return `<p class="dmeta">${esc(AM_SERIES[md.series].name)}</p><h3 id="dt">New Americano</h3>
+  <div class="amdate"><button class="amb" data-act="amdate" data-v="-1" aria-label="Previous day">‹</button><input id="amdt" type="date" value="${esc(md.date)}"><button class="amb" data-act="amdate" data-v="1" aria-label="Next day">›</button></div><p class="hint" id="amdl" style="margin:4px 0 0;text-align:center">${esc(dateLong(md.date))}</p>
+  <div class="amfmts">${Object.keys(AM_FORMATS).map(f => `<button class="amfmt ${md.format === f ? 'on' : ''}" data-act="amfmt" data-v="${f}"><b>${AM_FORMATS[f][0]}</b><small>${AM_FORMATS[f][1]}</small></button>`).join('')}</div>
+  ${row('Type', seg('ammodeset', md.mode, [['competitive', 'Ranked'], ['friendly', 'Friendly']]))}
+  ${row('Courts', seg('amcourts', md.courts, [[2, '2'], [3, '3'], [4, '4']]))}
+  ${row('Points', seg('ampts', md.pts, [[16, '16'], [20, '20'], [24, '24'], [32, '32']]))}
+  ${amMex(md.format) ? '<p class="hint">Mexicano: round 1 is random, then every round follows the standings (use “+ Add round”).</p>' : row('Rounds', seg('amrounds', md.rounds, [[4, '4'], [5, '5'], [6, '6'], [7, '7'], [8, '8'], [10, '10']]))}
+  <div class="amph"><b>Players <span class="cnt">${n}</span></b><button class="amb ${coachOn ? 'pri' : ''}" data-act="amcoach">${coachOn ? '✓ ' : ''}${esc(coach.split(' ')[0])} plays (coach)</button>${md.last && n <= 1 ? '<button class="amb" data-act="amlast">Last session’s players</button>' : ''}${pf && n > 1 ? '<button class="amb" data-act="amshuffle">Shuffle pairs</button>' : ''}</div>
+  ${list}<p class="hint">${note}</p>
+  <input id="amq" class="sq" type="search" placeholder="Search a player…" autocomplete="off" value="${esc(md.q)}"><div id="amlist" style="margin-top:8px">${amSuggest(md)}</div>
+  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="amb pri" data-act="amcreate" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Creating…' : 'Create'}</button><button class="amb" data-act="close">Cancel</button></div>`;
+}
+
+/* --- organizer edits: replace a player, change the players of one match --- */
+const amSel = (f, cur, opts, extra) => `<select data-amf="${f}" ${extra || ''}>${opts.map(([v, t]) => `<option value="${esc(v)}" ${String(v) === String(cur) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+function amReplOpen() {
+  const se = amGet(S.amSeries, S.amSession); if (!se) return;
+  S.modal = { type: 'amrepl', series: se.series, sid: se.id, from: se.players[0] || '', to: '', nn: '', ng: '', scope: '0', error: '' }; renderModal();
+}
+function amReplBody(md) {
+  const se = amGet(md.series, md.sid); if (!se) return '<p class="hint">Session not found.</p>';
+  const have = new Set(se.players.map(normName)), pool = amPool().filter(n => !have.has(normName(n)));
+  const gr = (g, t) => { const l = pool.filter(n => amG(n) === g); return l.length ? `<optgroup label="${t}">${l.map(n => `<option value="${esc(n)}" ${n === md.to ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>` : ''; };
+  const scope = amPair(se.format) ? '' : `<div class="amrow"><span>Apply</span>${amSel('scope', md.scope, [['0', 'Whole session (all rounds)'], ...se.rounds.map((r, i) => [String(i), 'From round ' + (i + 1) + ' onward']).slice(1)])}</div>`;
+  return `<p class="dmeta">${esc(dateLong(se.date))}</p><h3 id="dt">Replace a player</h3>
+  <div class="amrow"><span>Replace</span>${amSel('from', md.from, se.players.map(n => [n, n]))}</div>
+  <div class="amrow"><span>With</span><select data-amf="to"><option value="">Choose a player…</option>${gr('m', 'Men')}${gr('f', 'Women')}${pool.filter(n => !amG(n)).length ? '<optgroup label="Gender not set">' + pool.filter(n => !amG(n)).map(n => `<option value="${esc(n)}" ${n === md.to ? 'selected' : ''}>${esc(n)}</option>`).join('') + '</optgroup>' : ''}</select></div>
+  <p class="hint" style="margin:8px 0 4px">Or a new player:</p>
+  <div class="amrow"><span>Name</span><input class="sq" data-amf="nn" type="text" placeholder="New player name" value="${esc(md.nn)}" style="margin:0"></div>
+  <div class="amrow"><span>Gender</span><div class="seg amseg" role="group">${[['m', 'Man'], ['f', 'Woman']].map(([v, t]) => `<button data-act="amrg" data-v="${v}" aria-pressed="${md.ng === v}">${t}</button>`).join('')}</div></div>
+  ${scope}<p class="hint">Scores already entered stay and move to the new player.</p>
+  <p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="amb pri" data-act="amreplgo" ${S.busy ? 'disabled' : ''}>Replace</button><button class="amb" data-act="close">Cancel</button></div>`;
+}
+async function amReplApply() {
+  const md = S.modal, se = amGet(md.series, md.sid); if (!se) return;
+  const nn = md.nn.trim().replace(/\s+/g, ' '); let name = nn || md.to;
+  if (!name) { md.error = 'Choose a replacement or type a new name.'; renderModal(); return; }
+  if (se.players.some(p => normName(p) === normName(name))) { md.error = 'That player is already in this session.'; renderModal(); return; }
+  if (nn && !amPool().some(n => normName(n) === normName(nn)) && !md.ng) { md.error = 'Choose Man or Woman for the new player.'; renderModal(); return; }
+  S.busy = true; renderModal();
+  try {
+    if (nn) { const id = ensurePlayer(nn, md.ng || undefined); name = PLAYERS[id] || nn;
+      if (Object.keys(NEW_IDS).length) await fetch(DB_URL + '/tennis/players.json', { method: 'PATCH', body: JSON.stringify(NEW_IDS) });
+      if (Object.keys(NEW_GENDERS).length) { await fetch(DB_URL + '/tennis/genders.json', { method: 'PATCH', body: JSON.stringify(NEW_GENDERS) }); Object.keys(NEW_GENDERS).forEach(i => { delete NEW_GENDERS[i]; }); } }
+    const rep = x => normName(x) === normName(md.from) ? name : x, from = amPair(se.format) ? 0 : parseInt(md.scope, 10) || 0, base = k => se.series + '/' + se.id + '/' + k;
+    await amWrite(base('players'), se.players.map(rep));
+    if (se.pairs.length) await amWrite(base('pairs'), se.pairs.map(p => p.map(rep)));
+    await amWrite(base('rounds'), se.rounds.map((r, i) => i < from ? r : { m: r.m.map(m => ({ c: m.c, a: m.a.map(rep), b: m.b.map(rep) })), bye: r.bye.map(rep) }));
+    await amLoad(); S.busy = false; S.modal = null; renderModal(); render(); toast('Player replaced');
+  } catch (e) { S.busy = false; md.error = 'Could not save. Check your connection.'; renderModal(); }
+}
+function amEditOpen(mid) {
+  const se = amGet(S.amSeries, S.amSession), mm = /^R(\d+)C(\d+)$/.exec(mid); if (!se || !mm) return;
+  const ri = +mm[1] - 1, m = se.rounds[ri] && se.rounds[ri].m.find(x => x.c === +mm[2]); if (!m) return;
+  const pf = amPair(se.format), key = a => a.join(' / ');
+  S.modal = { type: 'amedit', series: se.series, sid: se.id, ri, c: m.c, error: '',
+    v: pf ? [String(se.pairs.findIndex(p => key(p) === key(m.a))), String(se.pairs.findIndex(p => key(p) === key(m.b)))] : [m.a[0], m.a[1], m.b[0], m.b[1]] };
+  renderModal();
+}
+function amEditBody(md) {
+  const se = amGet(md.series, md.sid); if (!se) return '<p class="hint">Session not found.</p>';
+  const pf = amPair(se.format), names = se.players.slice().sort((a, b) => a.localeCompare(b)), meta = `Round ${md.ri + 1} · Court ${md.c}`;
+  const sc = amScore(se, md.ri, md.c);
+  const f = (i, l) => `<div class="amrow"><span>${l}</span>${pf ? amSel('v' + i, md.v[i], se.pairs.map((p, j) => [String(j), p.join(' & ')])) : amSel('v' + i, md.v[i], names.map(n => [n, n]))}</div>`;
+  const body = pf ? f(0, 'Pair A') + f(1, 'Pair B') : f(0, 'Team A') + f(1, '') + '<p class="hint" style="margin:6px 0 0;text-align:center">vs</p>' + f(2, 'Team B') + f(3, '');
+  return `<p class="dmeta">${meta}</p><h3 id="dt">Change the players</h3>${body}${sc ? '<p class="hint">This match already has a score; it stays with the new players.</p>' : ''}<p class="err" role="alert">${esc(md.error)}</p><div class="acts"><button class="amb pri" data-act="ameditgo" ${S.busy ? 'disabled' : ''}>Save</button><button class="amb" data-act="close">Cancel</button></div>`;
+}
+async function amEditApply() {
+  const md = S.modal, se = amGet(md.series, md.sid); if (!se) return;
+  const pf = amPair(se.format), r = se.rounds[md.ri], v = md.v;
+  const a = pf ? se.pairs[+v[0]] : [v[0], v[1]], b = pf ? se.pairs[+v[1]] : [v[2], v[3]];
+  const all = a.concat(b), others = r.m.filter(x => x.c !== md.c).flatMap(x => x.a.concat(x.b));
+  if (new Set(all.map(normName)).size !== all.length) { md.error = 'A player can only appear once in a match.'; renderModal(); return; }
+  const clash = all.find(x => others.some(o => normName(o) === normName(x)));
+  if (clash) { md.error = clash + ' already plays on another court in this round.'; renderModal(); return; }
+  const m = r.m.map(x => x.c === md.c ? { c: x.c, a, b } : x), playing = new Set(m.flatMap(x => x.a.concat(x.b)).map(normName));
+  const units = pf ? se.pairs.flatMap(p => p) : se.players, bye = units.filter(u => !playing.has(normName(u)));
+  S.busy = true; renderModal();
+  try { await amWrite(se.series + '/' + se.id + '/rounds/' + md.ri, { m, bye }); await amLoad(); S.busy = false; S.modal = null; renderModal(); render(); toast('Match updated'); }
+  catch (e) { S.busy = false; md.error = 'Could not save. Check your connection.'; renderModal(); }
+}
+
+function amSessionView(se) {
+  const fin = se.status === 'finished', pf = amPair(se.format), st = amStandings(se);
+  const org = S.canEdit ? `<div class="amtop">${fin ? '<button class="amb pri" data-act="amreopen">Reopen</button>' : '<button class="amb pri" data-act="amadd">+ Add round</button><button class="amb" data-act="amfinish">Finish Americano</button>'}<button class="amb" data-act="amopts">Edit</button></div>` : '';
+  const tabs = `<div class="tools"><div class="seg amseg" role="tablist">${[['matches', 'Matches'], ['standings', fin ? 'Final classification' : 'Standings']].map(([v, t]) => `<button data-act="amtab" data-v="${v}" aria-pressed="${(S.amTab || 'matches') === v}">${t}</button>`).join('')}</div></div>`;
+  return org + tabs + ((S.amTab || 'matches') === 'matches' ? amMatches(se) : amStandingsView(se, st, fin, pf));
+}
+function amMatches(se) {
+  if (!se.rounds.length) return '<section class="card amx"><p class="foot" style="color:var(--ink)">No rounds yet.</p></section>';
+  const fin = se.status === 'finished', lock = fin && !S.canEdit, nd = se.rounds.findIndex((r, i) => !amRoundDone(se, i)), cur = nd < 0 ? se.rounds.length - 1 : nd;
+  return se.rounds.map((r, ri) => {
+    const done = r.m.filter(m => amScore(se, ri, m.c)).length, key = se.id + ':' + ri, open = S.amOpen && key in S.amOpen ? S.amOpen[key] : ri === cur && !fin;
+    const cards = r.m.map(m => { const s = amScore(se, ri, m.c), mid = 'R' + (ri + 1) + 'C' + m.c;
+      const row = (arr, i) => `<div class="amt ${s && s[i] > s[1 - i] ? 'w' : ''}"><span class="nm">${esc(arr.join(' & '))}</span><input class="amsi" type="number" inputmode="numeric" min="0" max="99" data-mid="${mid}" data-i="${i}" value="${s ? s[i] : ''}" placeholder="–" ${lock ? 'disabled' : ''} aria-label="Score ${esc(arr.join(' and '))}"></div>`;
+      return `<div class="amc"><span class="ct">Court ${m.c}${S.canEdit ? ' <button class="amed" data-act="amedit" data-mid="' + mid + '">Edit players</button>' : ''}</span>${row(m.a, 0)}<span class="vs">vs</span>${row(m.b, 1)}</div>`; }).join('');
+    const bye = r.bye.length ? `<p class="hint" style="margin:2px 4px 8px"><b>Resting:</b> ${esc(r.bye.join(', '))}</p>` : '';
+    return `<button class="amrh" data-act="amround" data-i="${ri}" aria-expanded="${open}"><span>Round ${ri + 1}</span><span>${done}/${r.m.length} ${open ? '▾' : '▸'}</span></button>${open ? '<div class="amrb">' + cards + bye + '</div>' : ''}`;
+  }).join('');
+}
+function amOptsBody() {
+  const se = amGet(S.amSeries, S.amSession); if (!se) return '';
+  return `<p class="dmeta">${esc(AM_SERIES[se.series].name)} · ${esc(dateLong(se.date))}</p><h3 id="dt">Edit Americano</h3>
+  <p class="hint" style="margin:0 0 8px">${AM_FORMATS[se.format][0]} · ${se.courts} courts · ${se.pts} points · ${se.mode === 'friendly' ? 'Friendly (not ranked)' : 'Competitive (ranked)'}</p>
+  <div class="amlist2"><button class="amb" data-act="amrepl">Replace a player</button><button class="amb" data-act="ammode2">${se.mode === 'friendly' ? 'Make it competitive (ranked)' : 'Make it friendly (not ranked)'}</button>${se.rounds.length && se.status !== 'finished' ? '<button class="amb" data-act="amdelround2">Remove last round</button>' : ''}<button class="amb dng" data-act="amdelete2">Delete this Americano</button></div>
+  <div class="acts"><button class="amb" data-act="close">Close</button></div>`;
+}
+async function amInlineSave(card) {
+  const ins = [...card.querySelectorAll('.amsi')], mid = ins[0].dataset.mid, se = amGet(S.amSeries, S.amSession); if (!se) return;
+  const a = ins[0].value, b = ins[1].value, none = a === '' && b === '';
+  const ok = /^\d{1,2}$/.test(a) && /^\d{1,2}$/.test(b);
+  if (!none && !ok) { S.amPend = 0; return; }
+  try {
+    await amWrite(se.series + '/' + se.id + '/scores/' + mid, none ? null : [+a, +b]); await amLoad();
+    const sc = none ? null : [+a, +b]; card.querySelectorAll('.amt').forEach((t, i) => t.classList.toggle('w', !!sc && sc[i] > sc[1 - i]));
+    const mm = /^R(\d+)/.exec(mid), rh = document.querySelectorAll('.amrh')[+mm[1] - 1]; // keep the "x/3" counter in step
+    const n = amGet(S.amSeries, S.amSession), ri = +mm[1] - 1; if (rh && n) rh.firstElementChild.nextElementSibling.textContent = n.rounds[ri].m.filter(m => amScore(n, ri, m.c)).length + '/' + n.rounds[ri].m.length + ' ▾';
+    card.classList.remove('bad'); card.classList.add('saved'); setTimeout(() => card.classList.remove('saved'), 900);
+  } catch (e) { card.classList.add('bad'); toast('Could not save. Check your connection.'); }
+  S.amPend = 0;
+}
+function amScoreInput(t) {
+  const se = amGet(S.amSeries, S.amSession); if (!se) return;
+  const card = t.closest('.amc'), ins = [...card.querySelectorAll('.amsi')], me = +t.dataset.i, o = ins[1 - me], v = parseInt(t.value, 10);
+  t.dataset.man = '1';
+  if (t.value === '') { if (!o.dataset.man) o.value = ''; }
+  else if (!o.dataset.man && v >= 0 && v <= se.pts) o.value = se.pts - v;
+  S.amPend = 1; clearTimeout(S.amTimer); S.amTimer = setTimeout(() => amInlineSave(card), 900);
 }
 
 function mcell(x) {
@@ -3566,7 +3692,7 @@ function render() {
   updateKnockouts(S.data);
   document.documentElement.dataset.theme = S.tab === 'women' ? 'women' : 'men';
   const deco = `<svg class="deco d1" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg><svg class="deco d2" viewBox="0 0 40 84" aria-hidden="true"><use href="#racket"/></svg>`;
-  $page.innerHTML = `<div class="wrap"><div class="frame">${deco}${header()}${tourBar()}${seriesBar()}${nav()}${otherBanner()}${bodyHtml()}</div></div>`;
+  $page.innerHTML = S.tab === 'am' ? amShell() : `<div class="wrap"><div class="frame">${deco}${header()}${tourBar()}${seriesBar()}${nav()}${otherBanner()}${bodyHtml()}</div></div>`;
 }
 
 /* ---------- Modals ---------- */
@@ -3692,6 +3818,12 @@ function renderModal() {
     body = amRankBody(md);
   } else if (md.type === 'amnew') {
     body = amNewBody(md);
+  } else if (md.type === 'amopts') {
+    body = amOptsBody();
+  } else if (md.type === 'amrepl') {
+    body = amReplBody(md);
+  } else if (md.type === 'amedit') {
+    body = amEditBody(md);
   } else if (md.type === 'amscore') {
     body = amScoreBody(md);
   } else if (md.type === 'legend') {
@@ -3738,7 +3870,7 @@ function renderModal() {
   $modal.innerHTML = `<div class="scrim" data-act="scrim"><div class="dlg${md.type === 'ranking' || md.type === 'amrank' ? ' rkd' : ''}${md.type === 'rules' || md.type === 'amnew' || md.type === 'setup' || md.type === 'season' ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt"><button class="x" data-act="close" aria-label="Close">\u00d7</button><div class="dbody">${body}</div></div></div>`;
   if (md.type === 'setup') { $modal.querySelector('.dbody').scrollTop = keep; if (md.focus) { const x = $modal.querySelector(md.focus); if (x) x.focus({ preventScroll: true }); md.focus = null; } return; }
   if (md.type === 'tpick') { const fx = md.step === 0 ? $modal.querySelector('#tn') : null; if (fx) fx.focus(); return; }
-  if (md.type === 'amnew' || md.type === 'pick' || md.type === 'legend' || md.type === 'season' || md.type === 'swap' || md.type === 'club') return;
+  if (md.type === 'amnew' || md.type === 'amrepl' || md.type === 'amedit' || md.type === 'pick' || md.type === 'legend' || md.type === 'season' || md.type === 'swap' || md.type === 'club') return;
   if (md.type === 'rules') { const d = $modal.querySelector('.dlg'); d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); $modal.querySelector('.dbody').scrollTop = 0; return; }
   const first = $modal.querySelector('input:not([readonly])') || $modal.querySelector('button');
   if (first) first.focus();
@@ -4182,6 +4314,9 @@ async function removeEntry(k, i) {
 }
 document.addEventListener('input', ev => {
   if (ev.target.id === 'lq' && S.modal && S.modal.type === 'legend') { S.modal.q = ev.target.value; const el = $modal.querySelector('#llist'); if (el) el.innerHTML = legendList(S.modal); }
+  if (ev.target.dataset && ev.target.dataset.amf && S.modal && (S.modal.type === 'amrepl' || S.modal.type === 'amedit')) { const f = ev.target.dataset.amf, md = S.modal; if (/^v\d$/.test(f)) md.v[+f[1]] = ev.target.value; else md[f] = ev.target.value; return; }
+  if (ev.target.classList && ev.target.classList.contains('amsi')) { amScoreInput(ev.target); return; }
+  if (ev.target.id === 'amdt' && S.modal && S.modal.type === 'amnew') { if (ev.target.value) { S.modal.date = ev.target.value; const l = $modal.querySelector('#amdl'); if (l) l.textContent = dateLong(S.modal.date); } return; }
   if (ev.target.id === 'amq' && S.modal && S.modal.type === 'amnew') { S.modal.q = ev.target.value; const el = $modal.querySelector('#amlist'); if (el) el.innerHTML = amSuggest(S.modal); return; }
   if ((ev.target.id === 'amA' || ev.target.id === 'amB') && S.modal && S.modal.type === 'amscore') {
     const md = S.modal, se = amGet(md.series, md.sid), A = ev.target.id === 'amA', v = ev.target.value; md[A ? 'a' : 'b'] = v; md[A ? 'tA' : 'tB'] = true;
@@ -4671,7 +4806,9 @@ document.addEventListener('click', ev => {
   else if (act === 'ammode') amAct('mode');
   else if (act === 'amdelround') amAct('delround');
   else if (act === 'amdelete') amAct('delete');
-  else if (act === 'amrank') { S.modal = { type: 'amrank', series: S.amSeries, f: 'all', s: 'pts' }; renderModal(); }
+  else if (act === 'amrank') { S.modal = { type: 'amrank', f: 'all', s: 'pts' }; renderModal(); }
+  else if (act === 'ammenu') { S.tab = 'men'; S.amSession = null; render(); window.scrollTo(0, 0); }
+  else if (act === 'amnewp') { const md = S.modal, id = ensurePlayer(el.dataset.name, el.dataset.g); md.players.push(PLAYERS[id] || el.dataset.name); md.q = ''; md.error = ''; renderModal(); }
   else if (act === 'amrkf') { S.modal.f = el.dataset.v; renderModal(); }
   else if (act === 'amrks') { S.modal.s = el.dataset.s; renderModal(); }
   else if (act === 'amfmt') { S.modal.format = el.dataset.v; renderModal(); }
@@ -4687,6 +4824,15 @@ document.addEventListener('click', ev => {
   else if (act === 'amshuffle') { S.modal.players = shuf(S.modal.players); S.modal.sel = null; renderModal(); }
   else if (act === 'amlast') { S.modal.players = S.modal.last.slice(); renderModal(); }
   else if (act === 'amcreate') amCreate();
+  else if (act === 'amrepl') amReplOpen();
+  else if (act === 'amopts') { S.modal = { type: 'amopts' }; renderModal(); }
+  else if (act === 'ammode2') { closeModal(); amAct('mode'); }
+  else if (act === 'amdelround2') { closeModal(); amAct('delround'); }
+  else if (act === 'amdelete2') { closeModal(); amAct('delete'); }
+  else if (act === 'amreplgo') amReplApply();
+  else if (act === 'amrg') { S.modal.ng = el.dataset.v; renderModal(); }
+  else if (act === 'amedit') amEditOpen(el.dataset.mid);
+  else if (act === 'ameditgo') amEditApply();
   else if (act === 'rkf') { S.modal.f = el.dataset.v; renderModal(); }
   else if (act === 'rksort') { S.modal.s = el.dataset.s; renderModal(); }
   else if (act === 'rkg') { S.modal.g = el.dataset.v; renderModal(); }
